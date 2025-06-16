@@ -1,0 +1,4 @@
+tensorflow>=2.15.0
+transformers>=4.36.0
+gensim>=4.3.0
+tf-keras>=2.15.0
