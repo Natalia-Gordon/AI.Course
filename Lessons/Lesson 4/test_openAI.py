@@ -7,7 +7,7 @@ load_dotenv()
 client = OpenAI()
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="gpt-4.1-nano",
     messages=[
         {"role": "user", "content": "Write a one-sentence bedtime story about a unicorn."}
     ]
