@@ -4,3 +4,5 @@ gensim>=4.3.0
 tf-keras>=2.15.0
 pandas>=2.2.0
 scikit-learn>=1.4.0
+openai
+python-dotenv
