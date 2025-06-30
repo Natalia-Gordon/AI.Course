@@ -6,3 +6,7 @@ pandas>=2.2.0
 scikit-learn>=1.4.0
 openai
 python-dotenv
+langchain
+langchain_community
+langchain-openai
+gradio
