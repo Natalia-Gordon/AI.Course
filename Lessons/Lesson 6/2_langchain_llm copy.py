@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from gradio_chats.gradio_chat import start_gradio
 import gradio as gr
 
+#Set your OpenAI key in the .env file
 load_dotenv()
 
 # Create an OpenAI chat model instance
