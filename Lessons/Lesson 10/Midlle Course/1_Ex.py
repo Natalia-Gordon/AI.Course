@@ -11,6 +11,10 @@ from langchain.prompts import PromptTemplate
 from fpdf import FPDF
 from pathlib import Path
 import datetime
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision
+from datasets import Dataset
+import textwrap
 
 # Set your OpenAI key in the .env file
 load_dotenv()
@@ -82,34 +86,17 @@ Refined summary with updated timeline:
 )
 
 # === Helper functions ====
-def save_summary_as_pdf(summary_text: str, file_path: str):
-    output_path = Path(file_path)
 
-    # Ensure the parent directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
-    pdf.set_font("Arial", style="B", size=14)
-    pdf.cell(0, 10, "Document Summary with Timeline", ln=True)
-
-    pdf.set_font("Arial", size=12)
-    for line in summary_text.strip().split("\n"):
-        pdf.multi_cell(0, 10, line.strip())
-
-    pdf.output(str(output_path))
-    print(f"✅ PDF saved to: {output_path.resolve()}")
-
-def save_summary_as_markdown(summary_text: str, file_path: str):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    markdown_content = f"# Summary with Timeline\n\n*Generated on {timestamp}*\n\n{summary_text}"
-
-    output_path = Path(file_path)
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(markdown_content)
-
-    print(f"✅ Markdown file saved to: {output_path.resolve()}")
+def save_agent_response(response, log_dir, base_name):
+    """Save agent response to a log file with date and time in the filename."""
+    import os
+    import datetime
+    os.makedirs(log_dir, exist_ok=True)
+    now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = os.path.join(log_dir, f"{base_name}_{now_str}.txt")
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write(str(response))
+    print(f"Agent response saved to: {log_path}")
 
 # === PDF LOADER FUNCTION ===
 def load_pdf(file_path: str) -> list[Document]:
@@ -125,19 +112,6 @@ def split_docs(docs: list[Document]):
     return splitter.split_documents(docs)
 
 # === SUMMARIZATION TOOL FUNCTIONS ===
-def summarize_map_reduce_pdf(file_path: str) -> str:
-    docs = load_pdf(file_path)
-    split = split_docs(docs)
-    #chain = load_summarize_chain(llm, chain_type="map_reduce")
-    chain = load_summarize_chain(
-        llm,
-        chain_type="map_reduce",
-        map_prompt=map_prompt,
-        combine_prompt=combine_prompt,
-        verbose=True
-    )
-    return chain.run(split)
-
 def summarize_refine_pdf(file_path: str) -> str:
     docs = load_pdf(file_path)
     split = split_docs(docs)
@@ -151,6 +125,60 @@ def summarize_refine_pdf(file_path: str) -> str:
     )
     return chain.run(split)
 
+def summarize_map_reduce_pdf(file_path: str) -> str:
+    docs = load_pdf(file_path)
+    split = split_docs(docs)
+    print(f"Generated {len(split)} documents.")
+    #chain = load_summarize_chain(llm, chain_type="map_reduce")
+    chain = load_summarize_chain(
+        llm,
+        chain_type="map_reduce",
+        map_prompt=map_prompt,
+        combine_prompt=combine_prompt,
+        verbose=True,
+        return_intermediate_steps=True
+    )
+    #return chain.run(split)
+    chain = load_summarize_chain(llm, chain_type="map_reduce", return_intermediate_steps=True)
+    result = chain.invoke({"input_documents": split})
+
+    return {
+        "summary": result["output_text"],
+        "contexts": result["intermediate_steps"]
+    }
+
+
+def evaluate_summary_accuracy(question: str, ground_truth: str, summary: str, contexts: list[str]) -> str:
+
+    dataset = Dataset.from_dict({
+        "question": [question],
+        "answer": [summary],
+        "contexts": [contexts],
+        "ground_truth": [ground_truth]
+    })
+    result = evaluate(
+        dataset,
+        metrics=[
+            faithfulness,
+            answer_relevancy,
+            context_precision,
+        ]
+    )
+    return f"Answer Accuracy Score: {result['answer_relevancy']:.2f}"
+
+def evaluate_summary_accuracy_tool(input_text: str) -> str:
+    import json
+
+    try:
+        data = json.loads(input_text)
+        question = data["question"]
+        ground_truth = data["ground_truth"]
+        summary = data["summary"]
+        contexts = data["contexts"]
+        return evaluate_summary_accuracy(question, ground_truth, summary, contexts)
+    except Exception as e:
+        return f"[Evaluation Tool Error] {str(e)}"
+
 # === Define Tools for Agent ===
 
 tools = [
@@ -163,6 +191,11 @@ tools = [
         name="Summarize with Refine",
         func=summarize_refine_pdf,
         description="Use this when a more accurate, step-by-step summary is preferred."
+    ),
+    Tool(
+        name="EvaluateAnswerAccuracy",
+        description="Evaluates the answer accuracy of generated answers against ground truth using RAGAS.",
+        func=evaluate_summary_accuracy_tool
     )
 ]
 
@@ -170,9 +203,11 @@ tools = [
 agent = initialize_agent(
     tools=tools,
     llm=llm,
-    agent="zero-shot-react-description",
+    #agent="zero-shot-react-description",
+    agent_type="openai-functions",
     verbose=True
 )
+
 
 # === Use the Agent ===
 # === RUNNING ===
@@ -184,20 +219,44 @@ pdf_path = 'Lessons/Lesson 10/Midlle Course/data/incident_report_short_refine.pd
 # Confirm it exists
 print("PDF Exists:", Path(pdf_path).exists())
 
-# prompt = f"""
-#Please summarize the content of the PDF located at: {pdf_path}
-#Pick the best summarization tool depending on length and needed accuracy.
-#"""
+# Example Input
+pdf_path = "Lessons/Lesson 10/Midlle Course/data/house_robbery_incident.pdf"
+question = "What events occurred during the house robbery incident at 45 Elm Street?"
+ground_truth = (
+    "The robbery occurred on April 13, 2024, at 45 Elm Street while the homeowner was away. "
+    "The intruder entered between 8:00–10:00 PM by disabling the alarm and forcing the backdoor. "
+    "Items stolen included electronics, jewelry, and cash totaling $15,700. "
+    "The incident was discovered the next day and reported to police and insurance on April 14–15."
+)
 
-# Use in prompt
+# Prompt for Agent
 prompt = f"""
-Please summarize the PDF at the following path:
-{pdf_path}
-Use the best summarization method depending on document length.
-"""
-summary = agent.run(prompt)
+Please analyze the following PDF: {pdf_path}
 
-# Save to both formats
-save_summary_as_pdf(summary, file_path="Lessons/Lesson 10/Midlle Course/summary/cyber_summary.pdf")
-save_summary_as_markdown(summary, file_path="Lessons/Lesson 10/Midlle Course/summary/cyber_summary.md")
+1. Use Map-Reduce summarization to summarize the document.
+2. Extract the intermediate summaries (Map phase) and treat them as context.
+3. Evaluate the accuracy of the summary using RAGAS's Answer Accuracy metric.
+
+To call the evaluation tool, provide a JSON string with the following format:
+{{
+  "question": "{question}",
+  "ground_truth": "{ground_truth}",
+  "summary": "<the summary from step 1>",
+  "contexts": <list of texts from step 2>
+}}
+
+Return the final summary, the extracted contexts, and the evaluation score.
+"""
+
+response = agent.run(prompt)
+
+print("\n===== Final Output =====")
+print(response)
+# Save agent response to log file as plain text with date and time in filename
+save_agent_response(
+    response,
+    log_dir="Lessons/Lesson 10/Midlle Course/output",
+    base_name="house_robbery_incident"
+)
+
 
