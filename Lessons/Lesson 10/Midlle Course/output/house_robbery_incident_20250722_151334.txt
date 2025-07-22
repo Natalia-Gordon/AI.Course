@@ -1,0 +1,1 @@
+{'input': '\nPlease load the PDF: Lessons/Lesson 10/Midlle Course/data/house_robbery_incident.pdf\ninto Pinecone for future similarity-based semantic search and RAG evaluations.\n', 'output': 'The PDF file has been loaded into Pinecone for future similarity-based semantic search and RAG evaluations.'}

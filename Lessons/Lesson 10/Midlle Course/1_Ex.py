@@ -10,7 +10,9 @@ from pathlib import Path
 from langchain.prompts import PromptTemplate
 from pathlib import Path
 from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevancy, context_precision
+from ragas.metrics import Faithfulness, ResponseRelevancy, LLMContextPrecisionWithoutReference
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
 from datasets import Dataset
 from pinecone import Pinecone, ServerlessSpec
 from langchain_openai import OpenAIEmbeddings
@@ -215,6 +217,13 @@ def evaluate_summary_accuracy(question: str, ground_truth: str, summary: str, co
         "contexts": [contexts],
         "ground_truth": [ground_truth]
     })
+    llm_wrapper = LangchainLLMWrapper(llm)
+    embedding_wrapper = LangchainEmbeddingsWrapper(embedding)
+
+    faithfulness = Faithfulness(llm=llm_wrapper)
+    answer_relevancy = ResponseRelevancy(llm=llm_wrapper)
+    context_precision = LLMContextPrecisionWithoutReference(embedding=embedding_wrapper)
+
     result = evaluate(
         dataset,
         metrics=[
