@@ -8,21 +8,80 @@ from langchain_core.tools import Tool
 from langchain.agents import initialize_agent
 from pathlib import Path
 from langchain.prompts import PromptTemplate
-from fpdf import FPDF
 from pathlib import Path
-import datetime
 from ragas import evaluate
 from ragas.metrics import faithfulness, answer_relevancy, context_precision
 from datasets import Dataset
-import textwrap
+from pinecone import Pinecone, ServerlessSpec
+from langchain_openai import OpenAIEmbeddings
+import os
 
-# Set your OpenAI key in the .env file
+
+# Load environment variables from .env file
 load_dotenv()
+
+# Configure Pinecone
+# Set your Pinecone API key and environment
+PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
+PINECONE_REGION = os.environ.get("PINECONE_REGION")
+PINECONE_CLOUD = os.environ.get("PINECONE_CLOUD")  # Or your preferred cloud
+PINECONE_METRIC = os.environ.get("PINECONE_METRIC")  # Or "cosine", depending on your use case
+INDEX_NAME = "ai-course-index"
+DIMENSION = 1536  # Set this to your embedding dimension
+
+# Set your Pinecone API key and environment
+pc = Pinecone(api_key=PINECONE_API_KEY)
+# Check if index exists, create if not
+if INDEX_NAME not in pc.list_indexes().names():
+    pc.create_index(
+        name=INDEX_NAME,
+        dimension=DIMENSION,
+        metric=PINECONE_METRIC,
+        spec=ServerlessSpec(
+            cloud=PINECONE_CLOUD,
+            region=PINECONE_REGION
+        )
+    )
+
+index = pc.Index(INDEX_NAME)
+embedding = OpenAIEmbeddings()  # Use the new class from langchain_openai
+
+def upload_docs_to_pinecone(docs, namespace="default"):
+    # 1. Get text and metadata from docs
+    texts = [doc.page_content for doc in docs]
+    metadatas = [doc.metadata for doc in docs]
+
+    # 2. Get embeddings (batched)
+    vectors = embedding.embed_documents(texts)  # shape: (len(texts), DIMENSION)
+
+    # 3. Prepare Pinecone upsert payload
+    # Each vector must have a unique ID
+    items = []
+    for i, (vec, meta) in enumerate(zip(vectors, metadatas)):
+        items.append({
+            "id": f"doc-{i}",
+            "values": vec,
+            "metadata": meta
+        })
+
+    # 4. Upsert to Pinecone
+    pc.Index(INDEX_NAME).upsert(
+        vectors=items,
+        namespace=namespace
+    )    
+
+def store_pdf_to_pinecone(file_path: str, namespace="default"):
+    docs = load_pdf(file_path)  # your existing loader
+    split = split_docs(docs)
+    upload_docs_to_pinecone(split, namespace)
+    return f"{len(split)} documents uploaded to Pinecone index '{INDEX_NAME}' in namespace '{namespace}'."
+
+# ============== End Configure Pinecone ===================
+
 # Create the LLM Chain - Option A: map_reduce Chain
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 # === MAP-REDUCE PROMPTS ===
-
 map_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
@@ -196,6 +255,11 @@ tools = [
         name="EvaluateAnswerAccuracy",
         description="Evaluates the answer accuracy of generated answers against ground truth using RAGAS.",
         func=evaluate_summary_accuracy_tool
+    ), 
+    Tool(
+        name="Store Insurance Incidents to Pinecone",
+        func=store_pdf_to_pinecone,
+        description="Upload PDF insurance reports to Pinecone vector DB for semantic search and later retrieval."
     )
 ]
 
@@ -214,7 +278,7 @@ agent = initialize_agent(
 # Works with any kind of text-based PDF (not scanned images — unless OCR is added)
 # Provide your PDF path here
 # Clean input
-pdf_path = 'Lessons/Lesson 10/Midlle Course/data/incident_report_short_refine.pdf'
+pdf_path = 'Lessons/Lesson 10/Midlle Course/data/house_robbery_incident.pdf'
 
 # Confirm it exists
 print("PDF Exists:", Path(pdf_path).exists())
@@ -230,6 +294,7 @@ ground_truth = (
 )
 
 # Prompt for Agent
+'''
 prompt = f"""
 Please analyze the following PDF: {pdf_path}
 
@@ -247,8 +312,15 @@ To call the evaluation tool, provide a JSON string with the following format:
 
 Return the final summary, the extracted contexts, and the evaluation score.
 """
+'''
 
-response = agent.run(prompt)
+prompt = f"""
+Please load the PDF: {pdf_path}
+into Pinecone for future similarity-based semantic search and RAG evaluations.
+"""
+
+# Use invoke instead of deprecated run
+response = agent.invoke({"input": prompt})
 
 print("\n===== Final Output =====")
 print(response)
