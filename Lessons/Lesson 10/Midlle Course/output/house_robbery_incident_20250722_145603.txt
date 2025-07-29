@@ -1,1 +1,0 @@
-The PDF file has been loaded into Pinecone for future retrieval and semantic search.

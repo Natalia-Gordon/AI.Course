@@ -1,0 +1,1 @@
+{'input': '\nSearch the policy database and answer:\n\nIf the user asks a question about insurance incidents, open chatbot UI.\n\nQuestion: What time did the robbery occur in the Elm Street report?\n', 'output': 'The robbery in the Elm Street report occurred between 8:00 PM and 10:00 PM.'}
