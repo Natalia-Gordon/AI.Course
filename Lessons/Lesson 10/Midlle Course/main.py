@@ -2,13 +2,12 @@ from langchain_core.tools import Tool
 from langchain.agents import initialize_agent
 from pathlib import Path
 from pydantic import BaseModel
-from langchain.tools import StructuredTool
+import gradio as gr
 
 import gradio as gr
 # local Imports
 import my_llm
 import helper_functions
-import chatboot_ui
 import tool_functions
 
 class RAGASEvalInput(BaseModel):
@@ -16,6 +15,66 @@ class RAGASEvalInput(BaseModel):
     ground_truth: str
     summary: str
     contexts: list[str]
+
+# === Gradio chatbot ===
+def chatbot_interface():
+    with gr.Blocks(title="Insurance Document Q&A Chatbot") as demo:
+        gr.Markdown("# 🏠 Insurance Document Q&A Chatbot")
+        gr.Markdown("Ask questions about insurance documents and get AI-powered answers!")
+        
+        chatbot = gr.Chatbot(height=400)
+        msg = gr.Textbox(
+            placeholder="Ask a question about the insurance documents...",
+            label="Your Question"
+        )
+        clear = gr.Button("Clear Chat", variant="secondary")
+        
+        # Add some example questions
+        with gr.Row():
+            gr.Markdown("**Example questions:**")
+        with gr.Row():
+            example1 = gr.Button("What time did the robbery occur in the Elm Street?", size="sm")
+            example2 = gr.Button("What items were stolen?", size="sm")
+            example3 = gr.Button("What is the policy number for the house robbery incident?", size="sm")
+
+        def respond(message, chat_history):
+            if not message.strip():
+                return "", chat_history
+            
+            try:
+                # Use the real agent from main.py to get a response
+                response = agent.invoke({"input": message})
+                bot_message = response.get('output', 'Sorry, I could not process your request.')
+                chat_history.append((message, bot_message))
+                return "", chat_history
+            except Exception as e:
+                error_message = f"Error: {str(e)}"
+                chat_history.append((message, error_message))
+                return "", chat_history
+
+        def clear_chat():
+            return []
+
+        # Set up event handlers
+        msg.submit(respond, [msg, chatbot], [msg, chatbot])
+        clear.click(clear_chat, None, chatbot, queue=False)
+        
+        # Example question handlers
+        example1.click(lambda: "What time did the robbery occur in the Elm Street?", None, msg)
+        example2.click(lambda: "What items were stolen?", None, msg)
+        example3.click(lambda: "What is the policy number for the house robbery incident?", None, msg)
+        
+    return demo
+
+def launch_chatbot(input_text=""):
+    """Function to launch the chatbot interface"""
+    try:
+        demo = chatbot_interface()
+        demo.launch(share=False, inbrowser=True)
+        return "✅ Chatbot UI launched successfully! The Gradio interface should open in your browser."
+    except Exception as e:
+        return f"❌ Error launching chatbot: {str(e)}"
+    
 # === Define Tools for Agent ===
 tools = [
     Tool(
@@ -39,13 +98,13 @@ tools = [
         description="Upload PDF insurance reports to Pinecone vector DB for semantic search and later retrieval."
     ),
     Tool(
-        name="Insurance QnA", #chatbot tool
+        name="Insurance QnA",
         func=tool_functions.chat_with_documents,
         description="Ask questions about stored insurance documents in Pinecone vector DB"
     ),
     Tool(
         name="Chatbot UI", 
-        func=chatboot_ui.chatbot_interface,
+        func=launch_chatbot,
         description="Launches a Gradio chatbot for QnA."
     )
 ]
@@ -104,12 +163,16 @@ Please load the PDF: {pdf_path}
 into Pinecone for future similarity-based semantic search and RAG evaluations.
 """
 '''
-
+'''
 prompt = f"""
 Search the policy database and answer:
 Question: What is the policy number for the house robbery incident?
 """
-
+'''
+# Prompt for Agent - Launch Chatbot UI
+prompt = """
+Please launch the Chatbot UI tool to open a Gradio interface for interactive Q&A about the insurance documents.
+"""
 '''
 prompt = f"""
 You are analyzing the PDF: {pdf_path}

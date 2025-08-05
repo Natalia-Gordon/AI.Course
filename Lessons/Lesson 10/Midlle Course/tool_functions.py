@@ -5,7 +5,11 @@ from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datasets import Dataset
-import json
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from langchain_openai import OpenAIEmbeddings
+from ragas import SingleTurnSample
+import asyncio
 # local Imports
 import my_llm
 import helper_functions
@@ -58,7 +62,7 @@ def load_documents_to_pinecone(file_path: str):
     docs = helper_functions.load_pdf(file_path)
    
     # פיצול מסמכים לקטעים קטנים
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
 
     vectors = []
@@ -93,15 +97,7 @@ def ragas_evaluate_summary(payload=None, question=None, ground_truth=None, summa
     if not all([question, ground_truth, summary]) or contexts is None:
         return "[Evaluation Tool Error] Missing required data for evaluation."
 
-    try:
-        # Use RAGAS answer_correctness metric with LLM
-        from datasets import Dataset
-        from ragas.llms import LangchainLLMWrapper
-        from ragas.embeddings import LangchainEmbeddingsWrapper
-        from langchain_openai import OpenAIEmbeddings
-        from ragas import SingleTurnSample
-        import asyncio
-        
+    try:        
         # Configure RAGAS with LLM and embeddings
         ragas_llm = LangchainLLMWrapper(langchain_llm=my_llm.llm)
         embeddings = LangchainEmbeddingsWrapper(embeddings=OpenAIEmbeddings())
