@@ -1,0 +1,7 @@
+gradio==3.50.2
+pandas
+numpy
+Pillow
+pytesseract
+PyPDF2
+python-dotenv 

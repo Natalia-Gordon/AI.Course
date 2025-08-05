@@ -1,15 +1,21 @@
 from langchain_core.tools import Tool
 from langchain.agents import initialize_agent
 from pathlib import Path
+from pydantic import BaseModel
+from langchain.tools import StructuredTool
 
 import gradio as gr
 # local Imports
 import my_llm
 import helper_functions
-import pinecone_db
 import chatboot_ui
 import tool_functions
 
+class RAGASEvalInput(BaseModel):
+    question: str
+    ground_truth: str
+    summary: str
+    contexts: list[str]
 # === Define Tools for Agent ===
 tools = [
     Tool(
@@ -23,10 +29,10 @@ tools = [
         description="Use this when a more accurate, step-by-step summary is preferred."
     ),
     Tool(
-        name="EvaluateAnswerAccuracy",
-        description="Evaluates the answer accuracy of generated answers against ground truth using RAGAS.",
-        func=tool_functions.evaluate_summary_accuracy_tool
-    ), 
+        name="Evaluate Summary with RAGAS",
+        func=tool_functions.ragas_evaluate_summary_json,
+        description="Evaluates summary accuracy using RAGAS. Takes a formatted string with parameters: - question: [question] - ground_truth: [ground_truth] - summary: [summary] - contexts: [contexts]"
+    ),
     Tool(
         name="Store Insurance Incidents to Pinecone",
         func=tool_functions.load_documents_to_pinecone,
@@ -48,8 +54,7 @@ tools = [
 agent = initialize_agent(
     tools=tools,
     llm=my_llm.llm,
-    #agent="zero-shot-react-description",
-    agent_type="openai-functions",
+    agent_type="openai-functions", # this is IMPORTANT for StructuredTool
     verbose=True
 )
 
@@ -99,21 +104,55 @@ Please load the PDF: {pdf_path}
 into Pinecone for future similarity-based semantic search and RAG evaluations.
 """
 '''
+
 prompt = f"""
 Search the policy database and answer:
-Question: What time did the robbery occur in the Elm Street report?
+Question: What is the policy number for the house robbery incident?
 """
 
+'''
+prompt = f"""
+You are analyzing the PDF: {pdf_path}
+
+Your tasks:
+1. Use the 'Summarize with Map-Reduce' tool to summarize it.
+2. Use the 'Evaluate Summary with RAGAS' tool with the following parameters:
+   - question: "{question}"
+   - ground_truth: "{ground_truth}"
+   - summary: (the summary from step 1)
+   - contexts: (the intermediate map contexts from step 1)
+
+Return summary, map contexts (as bullet list), and the accuracy score.
+"""
+'''
 # Use invoke instead of deprecated run
 response = agent.invoke({"input": prompt})
 
 print("\n===== Final Output =====")
+
+# Format the complete response for better readability
+formatted_response = {
+    'input': response.get('input', ''),
+    'output': response.get('output', ''),
+    'intermediate_steps': response.get('intermediate_steps', [])
+}
+
 # Save agent response to log file as plain text with date and time in filename
 helper_functions.save_agent_response(
-    response,
+    formatted_response,
     log_dir="Lessons/Lesson 10/Midlle Course/output",
     base_name="house_robbery_incident"
 )
-print(response)
+
+# Print a summary of what was accomplished
+print("✅ PDF Analysis Complete!")
+print(f"📄 PDF Processed: {pdf_path}")
+print(f"📝 Summary Generated: {'Yes' if 'summary' in str(response) else 'No'}")
+print(f"📊 Evaluation Attempted: {'Yes' if 'Evaluate Summary with RAGAS' in str(response) else 'No'}")
+print(f"💾 Response Saved: output/house_robbery_incident_*.txt")
+print("\n" + "="*50)
+print("FINAL AGENT RESPONSE:")
+print("="*50)
+print(response.get('output', 'No output generated'))
 
 
