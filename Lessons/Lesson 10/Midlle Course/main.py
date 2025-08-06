@@ -143,41 +143,20 @@ ground_truth = (
     "The security panel lost connection at 8:13 PM, likely due to an RF jammer."
 )
 
-'''
-prompt = f"""
-1. Use Map-Reduce summarization to summarize the document.
-2. Extract the intermediate summaries (Map phase) and treat them as context.
-3. Evaluate the accuracy of the summary using RAGAS's Answer Accuracy metric.
-
-To call the evaluation tool, provide a JSON string with the following format:
-{{
-  "question": "{question}",
-  "ground_truth": "{ground_truth}",
-  "summary": "<the summary from step 1>",
-  "contexts": <list of texts from step 2>
-}}
-
-Return the final summary, the extracted contexts, and the evaluation score.
-"""
-'''
-'''
-prompt = f"""
-Please load the PDF: {pdf_path}
-into Pinecone for future similarity-based semantic search and RAG evaluations.
-"""
-'''
+# Prompt for Agent - Load PDF into Pinecone
 '''
 prompt = f"""
 Search the policy database and answer:
 Question: What is the policy number for the house robbery incident?
 """
 '''
-# Prompt for Agent - Launch Chatbot UI
+# Prompt for Agent - Launch Chatbot UI with Insurance QnA tool
 '''
 prompt = """
 Please launch the Chatbot UI tool to open a Gradio interface for interactive Q&A about the insurance documents.
 """
 '''
+# Prompt for Agent - Summarize with Map-Reduce and RAGAS Evaluation
 prompt = f"""
 You are an AI assistant helping an insurance claims team analyze documents.
 
