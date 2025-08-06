@@ -1,15 +1,15 @@
-from ragas import evaluate
-from ragas.metrics import answer_correctness
+
 from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from datasets import Dataset
 from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_openai import OpenAIEmbeddings
 from ragas import SingleTurnSample
+from ragas.metrics import AnswerCorrectness, AnswerSimilarity
 import asyncio
+import traceback
 # local Imports
 import my_llm
 import helper_functions
@@ -20,7 +20,6 @@ import pinecone_db
 def summarize_refine_pdf(file_path: str) -> str:
     docs = helper_functions.load_pdf(file_path)
     split = helper_functions.split_docs(docs)
-    #chain = load_summarize_chain(llm, chain_type="refine")
     chain = load_summarize_chain(
         my_llm.llm,
         chain_type="refine",
@@ -28,7 +27,8 @@ def summarize_refine_pdf(file_path: str) -> str:
         refine_prompt=tool_prompts.refine_update_prompt,
         verbose=True
     )
-    return chain.run(split)
+    result = chain.invoke({"input_documents": split})
+    return result["output_text"]
 
 def summarize_map_reduce_pdf(file_path: str) -> str:
     docs = helper_functions.load_pdf(file_path)
@@ -78,7 +78,7 @@ def load_documents_to_pinecone(file_path: str):
     pinecone_db.pinecone_index.upsert(vectors)
     return f"{len(vectors)} chunks were loaded into Pinecone for querying."
 
-def ragas_evaluate_summary(payload=None, question=None, ground_truth=None, summary=None, contexts=None):
+def ragas_evaluate_summary(question=None, ground_truth=None, summary=None, contexts=None):
     """
     ✅ Summary evaluation tool using RAGAS answer_correctness.
     Can accept:
@@ -86,16 +86,14 @@ def ragas_evaluate_summary(payload=None, question=None, ground_truth=None, summa
        • or separate args (question, ground_truth, summary, contexts)
     """
 
-    # If payload is passed, extract fields from it
-    if payload:
-        question = payload.get("question")
-        ground_truth = payload.get("ground_truth")
-        summary = payload.get("summary")
-        contexts = payload.get("contexts", [])
-
     # Safety check for required fields
     if not all([question, ground_truth, summary]) or contexts is None:
-        return "[Evaluation Tool Error] Missing required data for evaluation."
+        missing = []
+        if not question: missing.append("question")
+        if not ground_truth: missing.append("ground_truth")
+        if not summary: missing.append("summary")
+        if contexts is None: missing.append("contexts")
+        return f"[Evaluation Tool Error] Missing required data: {', '.join(missing)}"
 
     try:        
         # Configure RAGAS with LLM and embeddings
@@ -103,8 +101,9 @@ def ragas_evaluate_summary(payload=None, question=None, ground_truth=None, summa
         embeddings = LangchainEmbeddingsWrapper(embeddings=OpenAIEmbeddings())
         
         # Create a new instance with the LLM and embeddings
-        from ragas.metrics import AnswerCorrectness
-        metric = AnswerCorrectness(llm=ragas_llm, embeddings=embeddings)
+        # Fix: AnswerSimilarity no longer takes llm argument in recent RAGAS versions
+        answer_similarity = AnswerSimilarity(embeddings=embeddings)
+        metric = AnswerCorrectness(llm=ragas_llm, embeddings=embeddings, answer_similarity=answer_similarity)
         
         # Use the single_turn_ascore method for individual evaluation
         sample = SingleTurnSample(
@@ -120,6 +119,8 @@ def ragas_evaluate_summary(payload=None, question=None, ground_truth=None, summa
         return f"RAGAS Answer Correctness Score: {result:.2f}"
         
     except Exception as e:
+        print("[RAGAS DEBUG] Advanced metric failed, falling back to keyword match.")
+        traceback.print_exc()
         # Fallback to simple evaluation if RAGAS fails
         try:
             # Convert to lowercase for comparison
@@ -145,110 +146,34 @@ def ragas_evaluate_summary(payload=None, question=None, ground_truth=None, summa
 def ragas_evaluate_summary_json(input_text: str):
     """
     RAGAS evaluation tool for LangChain agent calls.
-    Accepts a formatted string with parameters and parses them.
+    Accepts a JSON string with parameters: question, ground_truth, summary, contexts.
     """
+    import json
     try:
-        # Try to parse as JSON first
-        if input_text.strip().startswith('{'):
-            try:
-                import json
-                import re
-                
-                # Clean and extract JSON more robustly
-                input_text = input_text.strip()
-                
-                # Find the complete JSON object by counting braces
-                if input_text.count('{') != input_text.count('}'):
-                    # Find the last complete JSON object
-                    brace_count = 0
-                    end_pos = 0
-                    for i, char in enumerate(input_text):
-                        if char == '{':
-                            brace_count += 1
-                        elif char == '}':
-                            brace_count -= 1
-                            if brace_count == 0:
-                                end_pos = i + 1
-                                break
-                    if end_pos > 0:
-                        input_text = input_text[:end_pos]
-                
-                # Clean up any trailing text after the JSON
-                input_text = re.sub(r'}\s*[^}]*$', '}', input_text)
-                
-                data = json.loads(input_text)
-                question = data.get("question", "")
-                ground_truth = data.get("ground_truth", "")
-                summary = data.get("summary", "")
-                contexts = data.get("contexts", [])
-                
-                # Validate that we have the required data
-                if question and ground_truth and summary:
-                    return ragas_evaluate_summary(
-                        question=question,
-                        ground_truth=ground_truth,
-                        summary=summary,
-                        contexts=contexts
-                    )
-                else:
-                    raise ValueError("Missing required data in JSON")
-                    
-            except (json.JSONDecodeError, ValueError) as e:
-                # If JSON parsing fails, try to extract from the text
-                pass
-        
-        # Parse the agent's formatted input
-        lines = input_text.split('\n')
-        parsed_params = {}
-        current_key = None
-        current_value = []
-        
-        for line in lines:
-            line = line.strip()
-            if line.startswith("- question:"):
-                if current_key and current_value:
-                    parsed_params[current_key] = '\n'.join(current_value).strip()
-                current_key = "question"
-                current_value = [line.replace("- question:", "").strip()]
-            elif line.startswith("- ground_truth:"):
-                if current_key and current_value:
-                    parsed_params[current_key] = '\n'.join(current_value).strip()
-                current_key = "ground_truth"
-                current_value = [line.replace("- ground_truth:", "").strip()]
-            elif line.startswith("- summary:"):
-                if current_key and current_value:
-                    parsed_params[current_key] = '\n'.join(current_value).strip()
-                current_key = "summary"
-                current_value = [line.replace("- summary:", "").strip()]
-            elif line.startswith("- contexts:"):
-                if current_key and current_value:
-                    parsed_params[current_key] = '\n'.join(current_value).strip()
-                current_key = "contexts"
-                current_value = [line.replace("- contexts:", "").strip()]
-            elif line.startswith("-") and current_key:
-                # End of current parameter
-                if current_key and current_value:
-                    parsed_params[current_key] = '\n'.join(current_value).strip()
-                break
-            elif current_key and line:
-                current_value.append(line)
-        
-        # Add the last parameter
-        if current_key and current_value:
-            parsed_params[current_key] = '\n'.join(current_value).strip()
-        
-        # Extract parameters
-        question = parsed_params.get("question", "")
-        ground_truth = parsed_params.get("ground_truth", "")
-        summary = parsed_params.get("summary", "")
-        contexts_str = parsed_params.get("contexts", "")
-        
-        # Convert contexts string to list if needed
-        if isinstance(contexts_str, str) and contexts_str:
-            contexts = [contexts_str]  # For now, treat as single context
-        else:
-            contexts = []
-        
+        # Remove code block markers and whitespace
+        cleaned_input = input_text.strip()
+        if cleaned_input.startswith('```'):
+            cleaned_input = cleaned_input[3:]
+        if cleaned_input.endswith('```'):
+            cleaned_input = cleaned_input[:-3]
+        cleaned_input = cleaned_input.strip()
+        # Parse as JSON
+        data = json.loads(cleaned_input)
+        question = data.get("question", "")
+        ground_truth = data.get("ground_truth", "")
+        summary = data.get("summary", "")
+        contexts = data.get("contexts", [])
+        print(f"\n🔍 DEBUG: Parsed JSON - question: {question[:50]}...")
+        print(f"🔍 DEBUG: Parsed JSON - ground_truth: {ground_truth[:50]}...")
+        print(f"🔍 DEBUG: Parsed JSON - summary: {summary[:50]}...")
+        print(f"🔍 DEBUG: Parsed JSON - contexts: {len(contexts)} items")
+        # Validate required fields
+        if not question or not ground_truth or not summary:
+            missing = []
+            if not question: missing.append("question")
+            if not ground_truth: missing.append("ground_truth")
+            if not summary: missing.append("summary")
+            return f"[RAGAS Tool Error] Missing required parameters: {', '.join(missing)}"
         return ragas_evaluate_summary(
             question=question,
             ground_truth=ground_truth,
@@ -256,7 +181,7 @@ def ragas_evaluate_summary_json(input_text: str):
             contexts=contexts
         )
     except Exception as e:
-        return f"[RAGAS Tool Error] {str(e)}"
+        return f"[RAGAS Tool Error] JSON parsing failed: {str(e)}\nInput must be a valid JSON object with keys: question, ground_truth, summary, contexts."
     
 #=========================End Of Functions =====================================
 

@@ -3,8 +3,7 @@ from langchain.agents import initialize_agent
 from pathlib import Path
 from pydantic import BaseModel
 import gradio as gr
-
-import gradio as gr
+from datetime import datetime
 # local Imports
 import my_llm
 import helper_functions
@@ -90,7 +89,7 @@ tools = [
     Tool(
         name="Evaluate Summary with RAGAS",
         func=tool_functions.ragas_evaluate_summary_json,
-        description="Evaluates summary accuracy using RAGAS. Takes a formatted string with parameters: - question: [question] - ground_truth: [ground_truth] - summary: [summary] - contexts: [contexts]"
+        description="Evaluates summary accuracy using RAGAS. Input should be a formatted string with: - question: [question] - ground_truth: [ground_truth] - summary: [summary] - contexts: [contexts]"
     ),
     Tool(
         name="Store Insurance Incidents to Pinecone",
@@ -114,7 +113,10 @@ agent = initialize_agent(
     tools=tools,
     llm=my_llm.llm,
     agent_type="openai-functions", # this is IMPORTANT for StructuredTool
-    verbose=True
+    verbose=True,
+    handle_parsing_errors=True,
+    max_iterations=20,
+    max_execution_time=120
 )
 
 
@@ -130,18 +132,19 @@ print("PDF Exists:", Path(pdf_path).exists())
 
 # Example Input
 question = "What events occurred during the house robbery incident at 45 Elm Street?"
+# score 0.69
+# ground_truth = "The robbery occurred on April 13, 2024, at 45 Elm Street while the homeowner was away. The intruder entered between 8:00–10:00 PM by disabling the alarm and forcing the backdoor. Items stolen included electronics, jewelry, and cash totaling $15,700. The incident was discovered the next day and reported to police and insurance on April 14–15."
+
 ground_truth = (
     "The robbery occurred on April 13, 2024, at 45 Elm Street while the homeowner was away. "
     "The intruder entered between 8:00–10:00 PM by disabling the alarm and forcing the backdoor. "
-    "Items stolen included electronics, jewelry, and cash totaling $15,700. "
-    "The incident was discovered the next day and reported to police and insurance on April 14–15."
+    "Stolen items included a MacBook Pro, Rolex watch, Sony camera, designer handbag, and cash, totaling $15,700. "
+    "The incident was discovered April 14 and reported to police and insurance. "
+    "The security panel lost connection at 8:13 PM, likely due to an RF jammer."
 )
 
-# Prompt for Agent
-''''
+'''
 prompt = f"""
-Please analyze the following PDF: {pdf_path}
-
 1. Use Map-Reduce summarization to summarize the document.
 2. Extract the intermediate summaries (Map phase) and treat them as context.
 3. Evaluate the accuracy of the summary using RAGAS's Answer Accuracy metric.
@@ -170,52 +173,91 @@ Question: What is the policy number for the house robbery incident?
 """
 '''
 # Prompt for Agent - Launch Chatbot UI
+'''
 prompt = """
 Please launch the Chatbot UI tool to open a Gradio interface for interactive Q&A about the insurance documents.
 """
 '''
 prompt = f"""
-You are analyzing the PDF: {pdf_path}
+You are an AI assistant helping an insurance claims team analyze documents.
 
 Your tasks:
-1. Use the 'Summarize with Map-Reduce' tool to summarize it.
-2. Use the 'Evaluate Summary with RAGAS' tool with the following parameters:
-   - question: "{question}"
-   - ground_truth: "{ground_truth}"
-   - summary: (the summary from step 1)
-   - contexts: (the intermediate map contexts from step 1)
 
-Return summary, map contexts (as bullet list), and the accuracy score.
+1. Summarize the provided PDF using the tool `Summarize with Map-Reduce`, Here is the PDF to analyze: `{pdf_path}`.
+   - Extract the final summary.
+   - Extract the intermediate summaries (map-phase contexts).
+   - **When summarizing, ensure you include all key facts, names, dates, and numbers from the document. Use the same or similar wording as the ground truth for important terms (e.g., names, locations, amounts). Do not omit any main events or details.**
+   - Keep the summary concise and under 500 characters, but do not leave out any important information.
+
+2. Evaluate the generated summary using the tool `Evaluate Summary with RAGAS`.
+   - When calling this tool, you **must** provide the input as a valid JSON object (not a code block, not Markdown, not YAML, not a Python dict).
+   - The JSON object must have the following keys:
+     - question: The evaluation question.
+     - ground_truth: The expected answer.
+     - summary: The summary you generated (limit to 500 characters, remove newlines and special formatting).
+     - contexts: A list of the map-phase context strings (include no more than 3, each under 300 characters, remove newlines and special formatting).
+   - If you encounter a tool error (e.g., JSON parsing failed), reformat and retry with a simpler, shorter summary and contexts.
+   - If you reach the iteration or time limit, output a message indicating this and return the best partial result you have.
+
+   Example of correct input for the tool:
+   {{
+     "question": "What events occurred during the house robbery incident at 45 Elm Street?",
+     "ground_truth": "The robbery occurred on April 13, 2024, at 45 Elm Street while the homeowner was away...",
+     "summary": "A robbery occurred at Jennifer Lawson's residence on April 13, 2024...",
+     "contexts": [
+       "A robbery occurred at Jennifer Lawson's residence on April 13, 2024...",
+       "The house was unoccupied during the incident, and evidence of forced entry was found."
+     ]
+   }}
+
+   - Do not wrap the JSON in triple backticks or any code block markers.
+   - Do not add any extra text before or after the JSON object.
+
+3. Return a final answer in this structure:
+---
+**Summary:** [summary text]  
+**Contexts Used:** [short bullet points of map-phase contexts]  
+**RAGAS Accuracy Score:** [score from the RAGAS tool]
+---
+
+Here is the question to evaluate: `{question}`  
+Here is the expected ground truth: `{ground_truth}`
+
+If you need to call tools, do so step by step.
+
+When you are ready to return the final answer, always start the line with 'Final Answer:' followed by your answer in the required format. Do not output any 'Thought:' without a following 'Action:' or 'Final Answer:'.
 """
-'''
 # Use invoke instead of deprecated run
 response = agent.invoke({"input": prompt})
 
 print("\n===== Final Output =====")
-
-# Format the complete response for better readability
-formatted_response = {
-    'input': response.get('input', ''),
-    'output': response.get('output', ''),
-    'intermediate_steps': response.get('intermediate_steps', [])
-}
-
-# Save agent response to log file as plain text with date and time in filename
-helper_functions.save_agent_response(
-    formatted_response,
-    log_dir="Lessons/Lesson 10/Midlle Course/output",
-    base_name="house_robbery_incident"
-)
-
-# Print a summary of what was accomplished
 print("✅ PDF Analysis Complete!")
 print(f"📄 PDF Processed: {pdf_path}")
-print(f"📝 Summary Generated: {'Yes' if 'summary' in str(response) else 'No'}")
-print(f"📊 Evaluation Attempted: {'Yes' if 'Evaluate Summary with RAGAS' in str(response) else 'No'}")
-print(f"💾 Response Saved: output/house_robbery_incident_*.txt")
-print("\n" + "="*50)
-print("FINAL AGENT RESPONSE:")
-print("="*50)
-print(response.get('output', 'No output generated'))
 
 
+print(f"\n=== Output generated at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
+
+# Print intermediate steps if available
+if isinstance(response, dict) and 'intermediate_steps' in response and response['intermediate_steps']:
+    print(f"{helper_functions.CYAN}{helper_functions.BOLD}Intermediate Steps:{helper_functions.ENDC}")
+    for step in response['intermediate_steps']:
+        print(f"- {step}")
+    print("\n" + "-"*60)
+
+# Format output for display
+if isinstance(response, dict) and 'output' in response:
+    output_text = response['output']
+else:
+    output_text = str(response)
+
+plain_output = helper_functions.plain_sections(output_text)
+
+# Warn if agent stopped due to iteration/time limit
+if 'Agent stopped due to iteration limit or time limit.' in output_text:
+    print(f"{helper_functions.RED}{helper_functions.BOLD}WARNING: Agent stopped due to iteration or time limit. Consider simplifying the task or increasing the limits further.{helper_functions.ENDC}")
+
+print("\n" + "="*60)
+
+# Save formatted output to log file as plain text with date and time in filename
+output_dir = "Lessons/Lesson 10/Midlle Course/output"
+helper_functions.save_agent_log(response, plain_output, output_dir)
