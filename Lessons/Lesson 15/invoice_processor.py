@@ -8,6 +8,17 @@ Features:
 - Display tables and charts
 - Category-based analysis
 """
+import os
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables from .env file before other imports
+load_dotenv(find_dotenv())
+
+# Suppress TensorFlow warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
 import gradio as gr
 import json
@@ -15,7 +26,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
-import os
 from datetime import datetime
 import base64
 from typing import List, Dict, Any
@@ -25,8 +35,8 @@ import numpy as np
 try:
     import google.generativeai as genai
     from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain_community.vectorstores import Chroma
-    from langchain_community.embeddings import HuggingFaceEmbeddings
+    from langchain_chroma import Chroma
+    from langchain_huggingface import HuggingFaceEmbeddings
     from langchain.schema import Document
 except ImportError as e:
     print(f"Warning: Some dependencies not available: {e}")
@@ -106,27 +116,35 @@ class InvoiceProcessor:
             """
             
             # Use Gemini to extract data
-            response = self.llm.invoke([
-                {
-                    "type": "text",
-                    "text": prompt
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{image_data}"
-                    }
-                }
-            ])
+            from langchain_core.messages import HumanMessage
+            message = HumanMessage(
+                content=[
+                    {
+                        "type": "text",
+                        "text": prompt,
+                    },
+                    {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_data}"},
+                ]
+            )
+            response = self.llm.invoke([message])
             
             # Parse JSON response
             try:
-                data = json.loads(response.content)
+                # Clean up the response from markdown and extra text
+                response_text = response.content.strip()
+                if response_text.startswith("```json"):
+                    response_text = response_text[7:]
+                if response_text.endswith("```"):
+                    response_text = response_text[:-3]
+                
+                print(f"DEBUG: Cleaned response text:\n{response_text}") # Debug print
+                
+                data = json.loads(response_text)
                 data['source_image'] = image_path
                 data['extraction_timestamp'] = datetime.now().isoformat()
                 return data
             except json.JSONDecodeError:
-                print("Failed to parse JSON response, using mock data")
+                print(f"Failed to parse JSON response. Raw content:\n{response.content}")
                 return self.generate_mock_invoice_data()
                 
         except Exception as e:
@@ -211,7 +229,6 @@ class InvoiceProcessor:
         """Process a single invoice file"""
         invoice_data = self.extract_invoice_data(file_path)
         self.store_in_vector_db(invoice_data)
-        self.invoices_data.append(invoice_data)
         return invoice_data
     
     def get_categories_summary(self) -> pd.DataFrame:
@@ -220,12 +237,13 @@ class InvoiceProcessor:
             return pd.DataFrame()
         
         df = pd.DataFrame(self.invoices_data)
-        category_summary = df.groupby('category').agg({
-            'total_amount': ['sum', 'count', 'mean'],
-            'invoice_number': 'count'
-        }).round(2)
+        category_summary = df.groupby('category').agg(
+            total_amount=('total_amount', 'sum'),
+            invoice_count=('invoice_number', 'count'),
+            average_amount=('total_amount', 'mean')
+        ).round(2)
         
-        category_summary.columns = ['Total Amount', 'Invoice Count', 'Average Amount', 'Invoice Count']
+        category_summary.columns = ['Total Amount', 'Invoice Count', 'Average Amount']
         return category_summary.reset_index()
     
     def get_items_by_category(self) -> pd.DataFrame:
@@ -260,6 +278,10 @@ def create_gradio_interface():
         if not files:
             return "No files uploaded", "No data", "No data", None, None
         
+        
+        # Clear previous data
+        processor.invoices_data = []
+
         processed_data = []
         for file in files:
             try:
@@ -269,7 +291,7 @@ def create_gradio_interface():
                 print(f"Error processing {file.name}: {e}")
         
         # Update global data
-        processor.invoices_data.extend(processed_data)
+        processor.invoices_data = processed_data
         
         # Generate outputs
         summary_df = processor.get_categories_summary()
@@ -305,6 +327,10 @@ def create_gradio_interface():
     
     def load_sample_data():
         """Load sample invoice data for demonstration"""
+        
+        # Clear previous data
+        processor.invoices_data = []
+        
         sample_invoices = [
             {
                 "invoice_number": "INV-2024-001",

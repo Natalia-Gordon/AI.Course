@@ -4,18 +4,26 @@ Main entry point for the Invoice Processing System
 """
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables from .env file before other imports
+load_dotenv(find_dotenv())
+
+# Suppress TensorFlow warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+
 from invoice_processor import create_gradio_interface
+
 
 def main():
     """Main function to run the invoice processing system"""
     
-    # Load environment variables
-    load_dotenv()
-    
     # Check for Google API key
-    api_key = os.getenv('GOOGLE_API_KEY')
-    if not api_key:
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+    if not GOOGLE_API_KEY:
         print("⚠️  GOOGLE_API_KEY not found in environment variables.")
         print("   The system will use mock data for demonstration.")
         print("   To use Gemini Flash, set your API key:")

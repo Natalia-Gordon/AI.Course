@@ -4,4 +4,11 @@ numpy
 Pillow
 pytesseract
 PyPDF2
-python-dotenv 
+python-dotenv
+google-generativeai
+langchain-google-genai
+langchain-community
+sentence-transformers
+chromadb
+langchain-huggingface
+langchain-chroma
