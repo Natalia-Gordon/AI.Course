@@ -17,3 +17,4 @@ langchain
 tiktoken
 pinecone
 plotly
+dspy<2.5.0
