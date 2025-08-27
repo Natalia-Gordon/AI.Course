@@ -1,0 +1,23 @@
+[
+  {
+    "id": "q_text_001",
+    "type": "textual",
+    "client_id": "C123",
+    "question": "Summarize the key operational changes reported in the quarterly report.",
+    "expected_answer_notes": "Should mention 14% increase in on-time deliveries and trend line increase."
+  },
+  {
+    "id": "q_table_001",
+    "type": "table",
+    "client_id": "C123",
+    "question": "What is the average on-time percentage across the months in the shipments table?",
+    "expected_answer_notes": "Average of [0.88, 0.90] over shown rows."
+  },
+  {
+    "id": "q_figure_001",
+    "type": "figure",
+    "client_id": "C123",
+    "question": "Describe the delivery trend depicted in the figure.",
+    "expected_answer_notes": "Trend is increasing."
+  }
+]

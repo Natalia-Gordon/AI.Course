@@ -1,0 +1,6 @@
+dspy-ai
+gradio
+faiss-cpu
+google-generativeai
+sentence-transformers
+python-dotenv

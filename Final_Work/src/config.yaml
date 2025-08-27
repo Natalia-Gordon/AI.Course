@@ -1,0 +1,42 @@
+project_name: metadata-hybrid-rag
+
+# Document processing paths
+documents_dir: data/documents
+processed_dir: data/processed
+
+# Embedding configuration
+embedding:
+  provider: openai
+  model: text-embedding-3-small
+  dim: 1536
+
+# Pinecone configuration (matching Middle Course pattern)
+pinecone:
+  index_name: hybrid-rag
+
+# Chunking configuration
+chunking:
+  max_chunk_tokens: 400
+  overlap_tokens: 60
+  budget_ratio: 0.05
+
+# Retrieval configuration
+retrieval:
+  dense_k: 10
+  sparse_k: 10
+  final_k: 6
+
+# Reranker configuration
+reranker:
+  model: cross-encoder/ms-marco-MiniLM-L-6-v2
+
+# Filter configuration
+filters:
+  section_types: [Summary, Financial, Timeline, Table, Figure, Analysis, Conclusion, Content]
+
+# Financial document specific settings
+financial:
+  extract_metrics: true
+  extract_dates: true
+  extract_keywords: true
+  table_detection: true

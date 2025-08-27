@@ -1,0 +1,36 @@
+[
+  {
+    "id": "AYL_Q1",
+    "type": "text",
+    "client_id": "C123",
+    "case_id": "AYL-2024-QN",
+    "question": "מה הרווח הנקי של חברת איילון ברבעון זה? צייני מקור (עמוד/טבלה).",
+    "anchor": {
+      "page": 5,
+      "table": "T2",
+      "column": "רווח נקי"
+    }
+  },
+  {
+    "id": "AYL_Q2",
+    "type": "table",
+    "client_id": "C123",
+    "case_id": "AYL-2024-QN",
+    "question": "מה הממוצע של שיעור X לפי הטבלה בעמוד Y? צייני TableId.",
+    "anchor": {
+      "page": 6,
+      "table": "T3"
+    }
+  },
+  {
+    "id": "AYL_Q3",
+    "type": "graph",
+    "client_id": "C123",
+    "case_id": "AYL-2024-QN",
+    "question": "מה המגמה הגרפית בתרשים המרכזי?",
+    "anchor": {
+      "page": 12,
+      "figure": "F1"
+    }
+  }
+]

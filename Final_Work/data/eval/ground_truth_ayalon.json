@@ -1,0 +1,27 @@
+[
+  {
+    "id": "AYL_Q1",
+    "answer": "TO_FILL_AFTER_CHUNKING",
+    "source_anchor": {
+      "page": 5,
+      "table": "T2",
+      "cell": "ROW?,COL?"
+    }
+  },
+  {
+    "id": "AYL_Q2",
+    "answer": "TO_FILL_AFTER_CHUNKING",
+    "source_anchor": {
+      "page": 6,
+      "table": "T3"
+    }
+  },
+  {
+    "id": "AYL_Q3",
+    "answer": "TO_FILL_AFTER_CHUNKING",
+    "source_anchor": {
+      "page": 12,
+      "figure": "F1"
+    }
+  }
+]
