@@ -5,14 +5,41 @@ import pandas as pd
 def run_table_qa(query: str, contexts: List[Dict]) -> str:
     """Answer questions about tables in financial documents."""
     
-    # Extract table-related contexts
+    # Extract table-related contexts - look for our indexed table chunks
     table_contexts = []
     for context in contexts:
-        if context.get("has_tables") or "|" in context.get("text", ""):
+        # Check if this is a table chunk from our indexing
+        metadata = context.get('metadata', {})
+        if (metadata.get('section_type') == 'Table' or 
+            context.get('section_type') == 'Table' or
+            context.get('has_tables') or 
+            "|" in context.get("text", "")):
             table_contexts.append(context)
     
+    # If no table chunks found in retrieved contexts, try to find them directly
     if not table_contexts:
-        return "No tables found in the retrieved content."
+        try:
+            # Import here to avoid circular imports
+            from index.pinecone_index import PineconeIndex
+            
+            # Search directly for table chunks
+            pinecone_index = PineconeIndex()
+            table_results = pinecone_index.search("table", k=20, namespace='ayalon_q1_2025')
+            
+            # Filter to actual table chunks
+            for result in table_results:
+                metadata = result.get('metadata', {})
+                if metadata.get('section_type') == 'Table':
+                    table_contexts.append(result)
+            
+            if table_contexts:
+                print(f"🔍 Found {len(table_contexts)} table chunks directly from Pinecone")
+            else:
+                return "No tables found in the retrieved content or in the database."
+                
+        except Exception as e:
+            print(f"⚠️ Could not search Pinecone directly: {e}")
+            return "No tables found in the retrieved content."
     
     # Analyze the query to determine what we're looking for
     query_lower = query.lower()
@@ -22,27 +49,37 @@ def run_table_qa(query: str, contexts: List[Dict]) -> str:
     
     for context in table_contexts:
         text = context.get("text", "")
-        if not text:
-            continue
-            
-        # Try to parse as table
-        tables = extract_tables_from_text(text)
+        metadata = context.get('metadata', {})
         
-        for table_idx, table_data in enumerate(tables):
-            if not table_data or len(table_data) < 2:
-                continue
-                
-            try:
-                df = create_dataframe(table_data)
-                if df is not None and not df.empty:
-                    table_answer = analyze_table(df, query_lower, analysis_type, context, table_idx)
-                    if table_answer:
-                        answers.append(table_answer)
-            except Exception as e:
-                continue
+        # Check if this is our indexed table chunk
+        if metadata.get('section_type') == 'Table' or context.get('section_type') == 'Table':
+            # This is our indexed table chunk - use the metadata and summary
+            table_answer = analyze_indexed_table(context, query_lower, analysis_type)
+            if table_answer:
+                answers.append(table_answer)
+        elif text:
+            # Try to parse as traditional table format
+            tables = extract_tables_from_text(text)
+            
+            for table_idx, table_data in enumerate(tables):
+                if not table_data or len(table_data) < 2:
+                    continue
+                    
+                try:
+                    df = create_dataframe(table_data)
+                    if df is not None and not df.empty:
+                        table_answer = analyze_table(df, query_lower, analysis_type, context, table_idx)
+                        if table_answer:
+                            answers.append(table_answer)
+                except Exception as e:
+                    continue
     
     if not answers:
         return "Could not extract meaningful table data to answer your question."
+    
+    # Create a comprehensive summary for table queries
+    if 'revenue' in query_lower or 'financial' in query_lower or 'metrics' in query_lower:
+        return create_comprehensive_table_summary(answers, query_lower)
     
     return "\n\n".join(answers)
 
@@ -88,6 +125,106 @@ def extract_tables_from_text(text: str) -> List[List[List[str]]]:
                 tables.append(table_data)
     
     return tables
+
+def analyze_indexed_table(context: Dict, query: str, analysis_type: str) -> str:
+    """Analyze indexed table chunks from our Pinecone indexing."""
+    
+    metadata = context.get('metadata', {})
+    table_id = metadata.get('table_id', context.get('table_id', 'Unknown'))
+    chunk_summary = metadata.get('chunk_summary', context.get('chunk_summary', ''))
+    text = context.get('text', '')
+    
+    # Extract key information from the table
+    table_info = f"Table ID: {table_id}\n"
+    
+    if chunk_summary:
+        table_info += f"Summary: {chunk_summary}\n"
+    
+    # Look for specific data based on query
+    query_lower = query.lower()
+    
+    if 'revenue' in query_lower:
+        # Look for revenue-related numbers in text
+        revenue_patterns = [
+            r'(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(?:NIS|₪|million|billion|thousand)',
+            r'revenue[:\s]*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)',
+            r'income[:\s]*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)'
+        ]
+        
+        for pattern in revenue_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                table_info += f"Revenue/Income figures found: {', '.join(matches[:5])}\n"
+                break
+    
+    if 'financial' in query_lower or 'metrics' in query_lower:
+        # Look for financial metrics
+        financial_patterns = [
+            r'(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(?:NIS|₪|million|billion|thousand)',
+            r'(\d+(?:\.\d+)?)\s*%',
+            r'ratio[:\s]*(\d+(?:\.\d+)?)'
+        ]
+        
+        all_numbers = []
+        for pattern in financial_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            all_numbers.extend(matches)
+        
+        if all_numbers:
+            table_info += f"Financial metrics found: {', '.join(all_numbers[:10])}\n"
+    
+    # Add table structure information
+    if 'rows' in metadata or 'columns' in metadata:
+        rows = metadata.get('rows', 'Unknown')
+        cols = metadata.get('columns', 'Unknown')
+        table_info += f"Table structure: {rows} rows × {cols} columns\n"
+    
+    return table_info
+
+def create_comprehensive_table_summary(answers: List[str], query: str) -> str:
+    """Create a comprehensive summary of table data for financial queries."""
+    
+    summary = "📊 COMPREHENSIVE TABLE ANALYSIS\n"
+    summary += "=" * 50 + "\n\n"
+    
+    # Count tables found
+    summary += f"Found {len(answers)} relevant tables\n\n"
+    
+    # Group by table type and extract key information
+    revenue_tables = []
+    financial_tables = []
+    
+    for answer in answers:
+        if 'revenue' in answer.lower() or 'income' in answer.lower():
+            revenue_tables.append(answer)
+        else:
+            financial_tables.append(answer)
+    
+    if revenue_tables:
+        summary += "💰 REVENUE & INCOME TABLES:\n"
+        summary += "-" * 30 + "\n"
+        for i, table in enumerate(revenue_tables[:3], 1):
+            summary += f"{i}. {table}\n"
+        summary += "\n"
+    
+    if financial_tables:
+        summary += "📈 FINANCIAL METRICS TABLES:\n"
+        summary += "-" * 30 + "\n"
+        for i, table in enumerate(financial_tables[:3], 1):
+            summary += f"{i}. {table}\n"
+        summary += "\n"
+    
+    # Add overall summary
+    summary += "📋 SUMMARY:\n"
+    summary += "-" * 20 + "\n"
+    summary += f"• Total tables analyzed: {len(answers)}\n"
+    summary += f"• Revenue-focused tables: {len(revenue_tables)}\n"
+    summary += f"• Financial metrics tables: {len(financial_tables)}\n"
+    
+    if 'revenue' in query:
+        summary += "\n💡 For detailed revenue figures, examine the revenue tables above."
+    
+    return summary
 
 def create_dataframe(table_data: List[List[str]]) -> pd.DataFrame:
     """Create a pandas DataFrame from table data."""

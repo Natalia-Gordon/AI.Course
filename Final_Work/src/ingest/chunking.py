@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from .metadata import summarize_text, extract_keywords, analyze_document_structure
 from .entity_extractor import EntityExtractor
-from .table_processor import TableProcessor
+# TableProcessor removed - table processing now handled by table_enhancer.py
 from utils.schema import DocumentChunk, SectionType, Language, Audience, Permission, Collection, CriticalEntity
 
 def _split_by_headings(text: str) -> List[str]:
@@ -35,7 +35,7 @@ def chunk_document(file_name: str, blocks: List[Dict], budget_ratio: float = 0.0
     
     # Initialize processors
     entity_extractor = EntityExtractor()
-    table_processor = TableProcessor()
+    # TableProcessor removed - table processing now handled by table_enhancer.py
     
     for block in blocks:
         text = block.get("text", "")
@@ -56,9 +56,9 @@ def chunk_document(file_name: str, blocks: List[Dict], budget_ratio: float = 0.0
             amount_range = entity_extractor.extract_amount_range(section)
             language = entity_extractor.detect_language(section)
             
-            # Process tables if present
-            tables = table_processor.process_document_tables(section, file_name, block.get("page_number", 1))
-            has_tables = len(tables) > 0
+            # Table processing removed - now handled by table_enhancer.py
+            tables = []
+            has_tables = False
             
             # Create chunk with complete metadata
             chunk = DocumentChunk(

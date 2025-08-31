@@ -124,15 +124,31 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
     """
     q = query.lower()
     
-    # Summary queries - look for summary-related keywords first
+    # PRIORITY 1: Location-specific queries (NEEDLE) - check these FIRST
+    location_patterns = [
+        "page number for", "location of", "where to find", "reference to",
+        "find the page", "show me the", "where can i find", "in which section"
+    ]
+    if any(pattern in q for pattern in location_patterns):
+        return "needle"
+    
+    # PRIORITY 2: Specific section requests (NEEDLE)
+    specific_sections = [
+        "executive summary", "financial highlights", "management discussion",
+        "risk factors", "notes to financial statements"
+    ]
+    if any(section in q for section in specific_sections):
+        return "needle"
+    
+    # PRIORITY 3: Summary queries - look for summary-related keywords
     summary_keywords = [
-        "summarize", "summary", "overview", "highlight", "executive", 
-        "brief", "general", "describe", "key points", "main points"
+        "summarize", "overview", "highlight", "brief", "general", 
+        "describe", "key points", "main points", "tell me about"
     ]
     if any(keyword in q for keyword in summary_keywords):
         return "summary"
     
-    # Table queries - look for quantitative analysis
+    # PRIORITY 4: Table queries - look for quantitative analysis
     table_keywords = [
         "table", "average", "avg", "sum", "total", "median", "percent", 
         "percentage", "chart", "graph", "calculate", "compute", "statistics",
@@ -141,7 +157,7 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
     if any(keyword in q for keyword in table_keywords):
         return "table"
     
-    # Needle queries - look for specific information requests
+    # PRIORITY 5: Needle queries - look for specific information requests
     needle_keywords = [
         "page ", "tableid", "figure", "anchor", "paragraph", "section",
         "find", "locate", "where is", "specific", "exact", "precise",
@@ -149,13 +165,6 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
         "page number", "which page", "on what page", "in which section"
     ]
     if any(keyword in q for keyword in needle_keywords):
-        return "needle"
-    
-    # Special case: queries asking for specific locations or references
-    location_patterns = [
-        "page number for", "location of", "where to find", "reference to"
-    ]
-    if any(pattern in q for pattern in location_patterns):
         return "needle"
     
     # Default to summary for general queries

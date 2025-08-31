@@ -112,6 +112,12 @@ def run_summary(query: str, contexts: List[Dict]) -> str:
         for metric in financial_metrics[:5]:
             summary_parts.append(f"• {metric}")
     
+    # AUTOMATIC TABLE INCLUSION - Fetch relevant tables from Pinecone
+    table_summary = generate_table_summary_from_pinecone(contexts)
+    if table_summary:
+        summary_parts.append(f"\nTABLE SUMMARIES:")
+        summary_parts.append(table_summary)
+    
     # Other sections
     other_sections = [s for s in by_section.keys() if s not in ["Summary", "Financial"]]
     for section in other_sections[:2]:  # Top 2 other sections
@@ -178,3 +184,83 @@ def extract_financial_highlights(contexts: List[Dict]) -> List[str]:
     
     # Return unique highlights, limited to reasonable number
     return list(set(highlights))[:8]
+
+def generate_table_summary_from_pinecone(contexts: List[Dict]) -> str:
+    """Automatically fetch and generate table summaries from Pinecone based on context relevance."""
+    try:
+        # Import PineconeIndex here to avoid circular imports
+        from index.pinecone_index import PineconeIndex
+        
+        # Initialize Pinecone connection
+        pinecone_index = PineconeIndex()
+        namespace = 'ayalon_q1_2025'
+        
+        # Extract relevant keywords from contexts for table search
+        search_terms = extract_search_terms_from_contexts(contexts)
+        
+        # Search for relevant tables
+        table_results = []
+        for term in search_terms[:3]:  # Use top 3 most relevant terms
+            results = pinecone_index.search(term, k=5, namespace=namespace)
+            for result in results:
+                metadata = result.get('metadata', {})
+                if metadata.get('section_type') == 'Table':
+                    # Check if this table is already in our results
+                    table_id = metadata.get('table_id')
+                    if not any(t.get('metadata', {}).get('table_id') == table_id for t in table_results):
+                        table_results.append(result)
+        
+        # Limit to top 5 most relevant tables
+        table_results = table_results[:5]
+        
+        if not table_results:
+            return ""
+        
+        # Generate table summaries
+        table_summaries = []
+        for table in table_results:
+            metadata = table.get('metadata', {})
+            table_id = metadata.get('table_id', 'Unknown')
+            summary = metadata.get('chunk_summary', '')
+            page = metadata.get('page_number', 'Unknown')
+            
+            if summary:
+                # Format table summary
+                formatted_summary = format_hebrew_summary(summary, 150)
+                table_summaries.append(f"• {formatted_summary} (Table: {table_id}, Page: {page})")
+        
+        return "\n".join(table_summaries)
+        
+    except Exception as e:
+        # If there's any error, return empty string (don't break the summary)
+        print(f"Warning: Could not fetch table summaries: {e}")
+        return ""
+
+def extract_search_terms_from_contexts(contexts: List[Dict]) -> List[str]:
+    """Extract relevant search terms from contexts for table search."""
+    search_terms = []
+    
+    for context in contexts:
+        # Extract from text content
+        text = context.get("text", "")
+        if text:
+            # Look for financial terms
+            financial_terms = ['revenue', 'income', 'profit', 'assets', 'liabilities', 'הכנסה', 'רווח', 'נכסים', 'התחייבויות']
+            for term in financial_terms:
+                if term.lower() in text.lower() and term not in search_terms:
+                    search_terms.append(term)
+        
+        # Extract from keywords
+        keywords = context.get("keywords", [])
+        if keywords:
+            for keyword in keywords[:3]:  # Top 3 keywords
+                if keyword not in search_terms:
+                    search_terms.append(str(keyword))
+        
+        # Extract from table_id if present (for table-related contexts)
+        table_id = context.get("table_id")
+        if table_id and table_id not in search_terms:
+            search_terms.append(str(table_id))
+    
+    # Return unique terms, prioritizing financial terms
+    return list(dict.fromkeys(search_terms))  # Preserves order while removing duplicates

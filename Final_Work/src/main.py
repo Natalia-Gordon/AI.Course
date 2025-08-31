@@ -360,6 +360,27 @@ def main():
             data_loader.save_chunks(chunks, args.document)
             logger.info(f"✓ Document processed and saved: {len(chunks)} chunks created")
         
+        # Add table chunks to the existing chunks for comprehensive indexing
+        try:
+            from ingest.table_processor import TableProcessor
+            table_processor = TableProcessor()
+            
+            # Get table chunks from Pinecone to include in search
+            pinecone_index = PineconeIndex()
+            table_chunks = pinecone_index.search("table", k=100, namespace='ayalon_q1_2025')
+            
+            if table_chunks:
+                # Filter to only include actual table chunks
+                filtered_table_chunks = [chunk for chunk in table_chunks if chunk.get('metadata', {}).get('section_type') == 'Table']
+                if filtered_table_chunks:
+                    logger.info(f"Found {len(filtered_table_chunks)} table chunks to include in search")
+                    # Add table chunks to the main chunks list
+                    chunks.extend(filtered_table_chunks)
+                    logger.info(f"Total chunks for search: {len(chunks)} (document + table chunks)")
+        except Exception as e:
+            logger.warning(f"Could not load table chunks: {e}")
+            logger.info("Continuing with document chunks only")
+        
         # Process query
         use_langchain = args.langchain and LANGCHAIN_AVAILABLE
         
