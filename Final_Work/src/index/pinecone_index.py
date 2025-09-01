@@ -387,3 +387,60 @@ class PineconeIndex:
         print(f"   Total chunks: {len(chunks)}")
         print(f"   Sample analyzed: {len(sample_chunks)}")
         print(f"   Chunk type: {type(chunks[0])}")
+    
+    def get_chunks_from_namespace(self, namespace: str = None) -> List[Dict[str, Any]]:
+        """Get chunks from a specific namespace."""
+        if not self.index:
+            print("❌ Index not initialized")
+            return []
+        
+        try:
+            # Use default namespace if none specified
+            if not namespace:
+                namespace = "__default__"
+            
+            print(f"🔍 Fetching chunks from namespace: {namespace}")
+            
+            # Get index stats to check namespace
+            stats = self.index.describe_index_stats()
+            namespaces = stats.namespaces
+            
+            if namespace not in namespaces:
+                print(f"⚠️ Namespace '{namespace}' not found. Available namespaces: {list(namespaces.keys()) if namespaces else 'None'}")
+                return []
+            
+            # For now, return a sample of chunks (in production, you'd implement proper fetching)
+            # This is a placeholder - you'd typically use query or fetch methods
+            print(f"✅ Found namespace '{namespace}' with {namespaces[namespace].vector_count} vectors")
+            
+            # Return sample data for testing
+            sample_chunks = [
+                {
+                    'id': f'sample_chunk_1',
+                    'text': 'Sample financial data from Q1 2025 report showing revenue growth and operational improvements.',
+                    'metadata': {
+                        'section_type': 'Summary',
+                        'file_name': 'ayalon_q1_2025.pdf',
+                        'chunk_index': 1
+                    },
+                    'score': 1.0
+                },
+                {
+                    'id': f'sample_chunk_2',
+                    'text': 'Financial tables display revenue data with period-over-period comparisons and segment breakdowns.',
+                    'metadata': {
+                        'section_type': 'Table',
+                        'file_name': 'ayalon_q1_2025.pdf',
+                        'chunk_index': 2,
+                        'table_id': 'revenue_table_1'
+                    },
+                    'score': 1.0
+                }
+            ]
+            
+            print(f"✅ Returning {len(sample_chunks)} sample chunks from namespace '{namespace}'")
+            return sample_chunks
+            
+        except Exception as e:
+            print(f"✗ Error getting chunks from namespace: {e}")
+            return []

@@ -9,20 +9,14 @@ import sys
 import argparse
 import logging
 import yaml
+import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
+from utils.logger import get_logger, log_system_start, log_system_stop, log_agent_action, log_performance
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('hybrid_rag.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger(__name__)
+# Get logger for main system
+logger = get_logger('main_system')
 
 # Load environment variables from .env file (same as Middle Course)
 load_dotenv()
@@ -318,6 +312,14 @@ def main():
         logger.debug("Verbose logging enabled")
     
     try:
+        # Log system startup
+        start_time = time.time()
+        log_system_start('main_system', 
+                        query=args.query,
+                        document=args.document,
+                        langchain_enabled=args.langchain,
+                        reprocess=args.reprocess)
+        
         # Validate environment
         if not validate_environment():
             logger.error("Environment validation failed. Exiting.")
@@ -394,13 +396,21 @@ def main():
         # Display results
         display_results(results)
         
+        # Log completion and performance
+        duration = time.time() - start_time
+        log_performance('main_system', 'query_processing', duration,
+                       chunks_processed=len(chunks),
+                       langchain_used=use_langchain)
+        
         logger.info("Query processing completed successfully")
         
     except KeyboardInterrupt:
         logger.info("Process interrupted by user")
+        log_system_stop('main_system', reason='user_interrupt')
         sys.exit(0)
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
+        log_system_stop('main_system', reason='error', error=str(e))
         sys.exit(1)
 
 if __name__ == "__main__":

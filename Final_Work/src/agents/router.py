@@ -1,6 +1,8 @@
 from typing import Literal, Optional
 import logging
+import time
 from enum import Enum
+from utils.agent_logger import log_router_agent
 
 # Try to import LangChain components
 try:
@@ -170,6 +172,7 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
     # Default to summary for general queries
     return "summary"
 
+@log_router_agent
 def route_intent(query: str) -> Literal["summary", "table", "needle"]:
     """
     Main routing function that tries LLM-based classification first,
