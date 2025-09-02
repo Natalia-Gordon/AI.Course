@@ -259,35 +259,49 @@ def display_results(results: Dict[str, Any]) -> None:
     answer = results['answer']
     method = results.get('processing_method', 'unknown')
     
-    print("\n" + "="*60)
-    print("QUERY RESULTS")
-    print("="*60)
-    print(f"Query: {query}")
-    print(f"Intent: {intent}")
-    print(f"Processing Method: {method.upper()}")
-    print(f"Retrieved chunks: {len(hits)}")
+    # Create formatted result string for logging
+    result_lines = []
+    result_lines.append("="*60)
+    result_lines.append("QUERY RESULTS")
+    result_lines.append("="*60)
+    result_lines.append(f"Query: {query}")
+    result_lines.append(f"Intent: {intent}")
+    result_lines.append(f"Processing Method: {method.upper()}")
+    result_lines.append(f"Retrieved chunks: {len(hits)}")
     
-    print("\nTOP CHUNKS:")
+    result_lines.append("\nTOP CHUNKS:")
     for i, hit in enumerate(hits[:3]):
         summary = hit.get('chunk_summary', hit.get('text', '')[:100])
-        print(f"{i+1}. {summary}...")
-        print(f"   Source: {hit.get('file_name')} | Page: {hit.get('page_number')} | Type: {hit.get('section_type')}")
+        result_lines.append(f"{i+1}. {summary}...")
+        result_lines.append(f"   Source: {hit.get('file_name')} | Page: {hit.get('page_number')} | Type: {hit.get('section_type')}")
         
         # Show extracted data if available
         if hit.get('extracted_financial_data'):
             financial_data = hit['extracted_financial_data']
-            print(f"   📊 Enhanced with extracted financial data:")
+            result_lines.append(f"   📊 Enhanced with extracted financial data:")
             if financial_data.get('company_name'):
-                print(f"      Company: {financial_data['company_name']}")
+                result_lines.append(f"      Company: {financial_data['company_name']}")
             if financial_data.get('revenue'):
-                print(f"      Revenue: {financial_data['revenue']}")
+                result_lines.append(f"      Revenue: {financial_data['revenue']}")
             if financial_data.get('kpis'):
-                print(f"      KPIs: {', '.join(financial_data['kpis'][:3])}")
-        print()
+                result_lines.append(f"      KPIs: {', '.join(financial_data['kpis'][:3])}")
+        result_lines.append("")
     
-    print("\nANSWER:")
-    print(answer)
-    print("="*60)
+    result_lines.append("\nANSWER:")
+    result_lines.append(answer)
+    result_lines.append("="*60)
+    
+    # Join all lines for logging
+    formatted_result = "\n".join(result_lines)
+    
+    # Log the complete query results to file
+    logger.info("QUERY RESULTS GENERATED")
+    logger.info(f"Query: {query}")
+    logger.info(f"Intent: {intent}")
+    logger.info(f"Processing Method: {method.upper()}")
+    logger.info(f"Retrieved chunks: {len(hits)}")
+    logger.info(f"Answer length: {len(answer)} characters")
+    logger.info("FULL QUERY RESULTS:\n" + formatted_result)
 
 def main():
     """Main function."""
@@ -369,7 +383,7 @@ def main():
             
             # Get table chunks from Pinecone to include in search
             # Use index name from config
-            index_name = cfg.get('pinecone', {}).get('index_name', 'financial-reports')
+            index_name = cfg.get('pinecone', {}).get('index_name', 'hybrid-rag')
             pinecone_index = PineconeIndex(index_name=index_name)
             table_chunks = pinecone_index.search("table", k=100, namespace='ayalon_q1_2025')
             

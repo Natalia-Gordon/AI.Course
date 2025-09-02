@@ -59,7 +59,7 @@ class TableQAAgent:
                     # Get index name from config
                     from core.config_manager import ConfigManager
                     config = ConfigManager()
-                    index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'financial-reports'
+                    index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'hybrid-rag'
                     
                     # Search directly for table chunks
                     pinecone_index = PineconeIndex(index_name=index_name)

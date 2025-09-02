@@ -140,6 +140,10 @@ logging:
     enabled: true
     level: INFO
   
+  # Capture console output to log files
+  capture_console_output: true
+  console_output_file: "system_output_{date}.log"
+  
   # Evaluation components logging to single file
   evaluation_logging:
     # Use single file for all evaluation components

@@ -90,7 +90,7 @@ class NeedleAgent:
                 # Get index name from config
                 from core.config_manager import ConfigManager
                 config = ConfigManager()
-                index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'financial-reports'
+                index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'hybrid-rag'
                 pinecone_index = PineconeIndex(index_name=index_name)
                 namespace = 'ayalon_q1_2025'
                 
