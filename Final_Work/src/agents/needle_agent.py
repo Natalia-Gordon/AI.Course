@@ -306,7 +306,7 @@ class NeedleAgent:
         else:
             return text[:max_length-3] + "..."
 
-    def run_context_based_ownership_search(self, query: str, contexts: List[Dict]) -> str:
+    def run_context_based_ownership_search(self, query: str, contexts: List[Dict]) -> tuple[str, List[Dict]]:
         """Fallback ownership search using provided contexts."""
         try:
             self.logger.info("🔍 Running context-based ownership search...")
@@ -363,7 +363,7 @@ class NeedleAgent:
                         answer += f"• מקור {i+1}: {ref}\n"
                 
                 self.logger.info(f"✅ Context-based ownership search completed, found {len(best_matches)} matches")
-                return answer
+                return answer, best_matches
             else:
                 # Fallback to original format if no clear ownership info found
                 answer_parts = []
@@ -385,11 +385,11 @@ class NeedleAgent:
                 
                 result = "\n".join(answer_parts)
                 self.logger.info(f"✅ Context-based ownership search completed, found {len(best_matches)} matches")
-                return result
+                return result, best_matches
             
         except Exception as e:
             self.logger.error(f"❌ Error in context-based ownership search: {e}")
-            return f"Error in context-based ownership search: {str(e)}"
+            return f"Error in context-based ownership search: {str(e)}", []
     
     def extract_clear_ownership_info(self, matches: List[Dict]) -> str:
         """Extract and format clear ownership information from matches."""
@@ -1048,7 +1048,7 @@ class NeedleAgent:
         else:
             return 'general_docs'
     
-    def run_revenue_search(self, query: str, contexts: List[Dict]) -> str:
+    def run_revenue_search(self, query: str, contexts: List[Dict]) -> tuple[str, List[Dict]]:
         """Specialized search for revenue/financial information using extracted data."""
         try:
             self.logger.info("💰 Running specialized revenue search...")
@@ -1092,7 +1092,7 @@ class NeedleAgent:
                 
                 result = "\n".join(answer_parts)
                 self.logger.info(f"✅ Revenue search completed successfully")
-                return result
+                return result, [context]
             
             # Fallback to regular search if no extracted data found
             self.logger.info("⚠️ No extracted revenue data found, falling back to regular search")
@@ -1100,9 +1100,9 @@ class NeedleAgent:
             
         except Exception as e:
             self.logger.error(f"❌ Error in revenue search: {e}")
-            return f"Error in revenue search: {str(e)}"
+            return f"Error in revenue search: {str(e)}", []
     
-    def run_regular_needle_search(self, query: str, contexts: List[Dict]) -> str:
+    def run_regular_needle_search(self, query: str, contexts: List[Dict]) -> tuple[str, List[Dict]]:
         """Regular needle search as fallback."""
         # Extract key terms from query
         query_terms = self.extract_query_terms(query)
@@ -1121,7 +1121,7 @@ class NeedleAgent:
         best_matches = sorted(scored, key=lambda x: x["_score"], reverse=True)[:3]
         
         if not best_matches or best_matches[0]["_score"] == 0:
-            return "No relevant information found for your query."
+            return "No relevant information found for your query.", []
         
         # Generate answer
         answer_parts = []
@@ -1138,7 +1138,7 @@ class NeedleAgent:
         
         result = "\n".join(answer_parts)
         self.logger.info(f"✅ Regular needle search completed, found {len(best_matches)} matches")
-        return result
+        return result, best_matches
     
     def extract_relevant_snippet(self, query_terms: List[str], text: str, max_length: int = 400) -> str:
         """Extract the most relevant snippet from the text with Hebrew support."""
