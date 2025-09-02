@@ -26,6 +26,23 @@ class SummaryAgent:
         self.config = ConfigManager(config_path) if config_path else None
         self.logger.info("🚀 Summary Agent initialized")
     
+    def _determine_namespace_from_contexts(self, contexts: List[Dict]) -> str:
+        """Determine namespace from context metadata."""
+        if not contexts:
+            return 'default'
+        
+        # Try to get namespace from first context
+        first_context = contexts[0]
+        file_name = first_context.get('file_name', '').lower()
+        
+        # Use same logic as main.py
+        if 'ayalon' in file_name:
+            return 'ayalon_q1_2025'
+        elif 'financial' in file_name:
+            return 'financial_reports'
+        else:
+            return 'general_docs'
+    
     def clean_hebrew_text(self, text: str) -> str:
         """Clean and format Hebrew text for better readability."""
         if not text:
@@ -233,7 +250,9 @@ class SummaryAgent:
             
             # Initialize Pinecone connection
             pinecone_index = PineconeIndex(index_name=index_name)
-            namespace = 'ayalon_q1_2025'
+            
+            # Determine namespace from contexts
+            namespace = self._determine_namespace_from_contexts(contexts)
             
             # Extract relevant keywords from contexts for table search
             search_terms = self.extract_search_terms_from_contexts(contexts)

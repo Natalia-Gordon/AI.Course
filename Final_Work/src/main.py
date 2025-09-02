@@ -224,10 +224,10 @@ def process_query(query: str, chunks: List[Any], config: Dict[str, Any], use_lan
             
         except Exception as e:
             logger.warning(f"LangChain processing failed: {e}, falling back to standard agents")
-            answer = _fallback_to_standard_agents(query, intent, hits)
+            answer = _fallback_to_standard_agents(query, intent, hits, namespace)
     else:
         # Use standard agents (your current implementation)
-        answer = _fallback_to_standard_agents(query, intent, hits)
+        answer = _fallback_to_standard_agents(query, intent, hits, namespace)
     
     return {
         'query': query,
@@ -237,7 +237,7 @@ def process_query(query: str, chunks: List[Any], config: Dict[str, Any], use_lan
         'processing_method': 'langchain' if (use_langchain and LANGCHAIN_AVAILABLE) else 'standard'
     }
 
-def _fallback_to_standard_agents(query: str, intent: str, hits: List[Dict]) -> str:
+def _fallback_to_standard_agents(query: str, intent: str, hits: List[Dict], namespace: str = None) -> str:
     """Fallback to standard agent functions."""
     logger.info(f"Using standard agent processing for intent: {intent}")
     
@@ -246,7 +246,7 @@ def _fallback_to_standard_agents(query: str, intent: str, hits: List[Dict]) -> s
         return run_summary(query, hits)
     elif intent == 'needle':
         from agents.needle_agent import run_needle
-        return run_needle(query, hits)
+        return run_needle(query, hits, namespace)
     else:  # table
         from agents.table_qa_agent import run_table_qa
         return run_table_qa(query, hits)
@@ -385,7 +385,7 @@ def main():
             # Use index name from config
             index_name = cfg.get('pinecone', {}).get('index_name', 'hybrid-rag')
             pinecone_index = PineconeIndex(index_name=index_name)
-            table_chunks = pinecone_index.search("table", k=100, namespace='ayalon_q1_2025')
+            table_chunks = pinecone_index.search("table", k=100, namespace=namespace)
             
             if table_chunks:
                 # Filter to only include actual table chunks

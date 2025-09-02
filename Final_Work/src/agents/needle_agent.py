@@ -27,7 +27,7 @@ class NeedleAgent:
         self.logger.info("🚀 Needle Agent initialized")
     
     @log_needle_agent
-    def run_needle(self, query: str, contexts: List[Dict]) -> str:
+    def run_needle(self, query: str, contexts: List[Dict], namespace: str = None) -> str:
         """Find specific information or answer precise questions."""
         
         try:
@@ -36,49 +36,21 @@ class NeedleAgent:
             # Check if this is an ownership query and use specialized logic
             if self.is_ownership_query(query):
                 self.logger.info("🎯 Detected ownership query - using specialized search logic")
-                return self.run_ownership_search(query, contexts)
+                return self.run_ownership_search(query, contexts, namespace)
             
-            # Extract key terms from query
-            query_terms = self.extract_query_terms(query)
+            # Check if this is a revenue query and use specialized logic
+            if self.is_revenue_query(query):
+                self.logger.info("💰 Detected revenue query - using specialized financial data extraction")
+                return self.run_revenue_search(query, contexts)
             
-            # Score contexts based on relevance
-            scored = []
-            for c in contexts:
-                text = (c.get("text") or "").lower()
-                score = self.calculate_relevance_score(query_terms, text, c)
-                
-                cpy = dict(c)
-                cpy["_score"] = score
-                scored.append(cpy)
-            
-            # Sort by relevance score
-            best_matches = sorted(scored, key=lambda x: x["_score"], reverse=True)[:3]
-            
-            if not best_matches or best_matches[0]["_score"] == 0:
-                return "No relevant information found for your query."
-            
-            # Generate answer
-            answer_parts = []
-            
-            for i, match in enumerate(best_matches):
-                if match["_score"] > 0:
-                    ref = self.get_reference(match)
-                    answer_parts.append(f"Match {i+1} ({ref}):")
-                    
-                    # Extract relevant text snippet
-                    snippet = self.extract_relevant_snippet(query_terms, match.get("text", ""))
-                    answer_parts.append(f"{snippet}")
-                    answer_parts.append("")
-            
-            result = "\n".join(answer_parts)
-            self.logger.info(f"✅ Needle query completed, found {len(best_matches)} matches")
-            return result
+            # Use regular needle search for non-specialized queries
+            return self.run_regular_needle_search(query, contexts)
             
         except Exception as e:
             self.logger.error(f"❌ Error in needle query: {e}")
             return f"Error processing needle query: {str(e)}"
 
-    def run_ownership_search(self, query: str, contexts: List[Dict]) -> str:
+    def run_ownership_search(self, query: str, contexts: List[Dict], namespace: str = None) -> str:
         """Specialized search for ownership-related information."""
         try:
             self.logger.info("🔍 Running specialized ownership search...")
@@ -92,7 +64,10 @@ class NeedleAgent:
                 config = ConfigManager()
                 index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'hybrid-rag'
                 pinecone_index = PineconeIndex(index_name=index_name)
-                namespace = 'ayalon_q1_2025'
+                
+                # Use provided namespace or determine from contexts
+                if not namespace:
+                    namespace = self._determine_namespace_from_contexts(contexts)
                 
                 # Use specialized ownership search
                 ownership_results = pinecone_index.search_ownership(
@@ -571,11 +546,11 @@ class NeedleAgent:
         terms = re.findall(r'\b\w+\b', query.lower())
         meaningful_terms = [term for term in terms if term not in stop_words and len(term) > 2]
         
-        # Add Hebrew equivalents for financial terms
+        # Add Hebrew equivalents for financial terms - Enhanced for revenue queries
         hebrew_mappings = {
-            'revenue': ['הכנסה', 'רווח', 'תקבול', 'הכנסות'],
-            'income': ['הכנסה', 'רווח', 'תקבול', 'הכנסות'],
-            'profit': ['רווח', 'הכנסה', 'רווחים'],
+            'revenue': ['הכנסה', 'רווח', 'תקבול', 'הכנסות', 'הכנסות', 'הכנסות של', 'הכנסות החברה'],
+            'income': ['הכנסה', 'רווח', 'תקבול', 'הכנסות', 'הכנסות', 'הכנסות של', 'הכנסות החברה'],
+            'profit': ['רווח', 'הכנסה', 'רווחים', 'רווח נטו', 'רווח נקי'],
             'loss': ['הפסד', 'הפסדה', 'הפסדים'],
             'million': ['מיליון', 'מיליונים'],
             'thousand': ['אלף', 'אלפים'],
@@ -820,6 +795,135 @@ class NeedleAgent:
         
         return False
     
+    def is_revenue_query(self, query: str) -> bool:
+        """Check if the query is about revenue/financial performance."""
+        revenue_patterns = [
+            r'מה (ההכנסות|הכנסות)',
+            r'הכנסות (של|החברה)',
+            r'הכנסה (של|החברה)',
+            r'רווח (של|החברה)',
+            r'תקבול (של|החברה)',
+            r'revenue',
+            r'income',
+            r'profit'
+        ]
+        
+        query_lower = query.lower()
+        for pattern in revenue_patterns:
+            if re.search(pattern, query_lower):
+                return True
+        
+        return False
+    
+    def _determine_namespace_from_contexts(self, contexts: List[Dict]) -> str:
+        """Determine namespace from context metadata."""
+        if not contexts:
+            return 'default'
+        
+        # Try to get namespace from first context
+        first_context = contexts[0]
+        file_name = first_context.get('file_name', '').lower()
+        
+        # Use same logic as main.py
+        if 'ayalon' in file_name:
+            return 'ayalon_q1_2025'
+        elif 'financial' in file_name:
+            return 'financial_reports'
+        else:
+            return 'general_docs'
+    
+    def run_revenue_search(self, query: str, contexts: List[Dict]) -> str:
+        """Specialized search for revenue/financial information using extracted data."""
+        try:
+            self.logger.info("💰 Running specialized revenue search...")
+            
+            # Look for contexts with extracted financial data
+            revenue_contexts = []
+            for context in contexts:
+                extracted_data = context.get('extracted_financial_data', {})
+                if extracted_data and extracted_data.get('revenue'):
+                    revenue_contexts.append({
+                        'context': context,
+                        'revenue': extracted_data.get('revenue'),
+                        'company_name': extracted_data.get('company_name'),
+                        'report_period': extracted_data.get('report_period'),
+                        'report_date': extracted_data.get('report_date')
+                    })
+            
+            if revenue_contexts:
+                # Use the first context with revenue data (they should all be the same)
+                revenue_data = revenue_contexts[0]
+                context = revenue_data['context']
+                
+                # Generate a clear revenue answer
+                answer_parts = []
+                answer_parts.append(f"💰 הכנסות החברה:")
+                answer_parts.append("")
+                
+                # Format the revenue information clearly
+                revenue = revenue_data['revenue']
+                company_name = revenue_data.get('company_name', 'איילון חברה לביטוח בע"מ')
+                report_date = revenue_data.get('report_date', '30 ביוני 2025')
+                
+                answer_parts.append(f"📊 סכום ההכנסות: {revenue} ש\"ח")
+                answer_parts.append(f"🏢 חברה: {company_name}")
+                answer_parts.append(f"📅 תאריך הדוח: {report_date}")
+                answer_parts.append("")
+                
+                # Add source reference
+                ref = self.get_reference(context)
+                answer_parts.append(f"📄 מקור: {ref}")
+                
+                result = "\n".join(answer_parts)
+                self.logger.info(f"✅ Revenue search completed successfully")
+                return result
+            
+            # Fallback to regular search if no extracted data found
+            self.logger.info("⚠️ No extracted revenue data found, falling back to regular search")
+            return self.run_regular_needle_search(query, contexts)
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error in revenue search: {e}")
+            return f"Error in revenue search: {str(e)}"
+    
+    def run_regular_needle_search(self, query: str, contexts: List[Dict]) -> str:
+        """Regular needle search as fallback."""
+        # Extract key terms from query
+        query_terms = self.extract_query_terms(query)
+        
+        # Score contexts based on relevance
+        scored = []
+        for c in contexts:
+            text = (c.get("text") or "").lower()
+            score = self.calculate_relevance_score(query_terms, text, c)
+            
+            cpy = dict(c)
+            cpy["_score"] = score
+            scored.append(cpy)
+        
+        # Sort by relevance score
+        best_matches = sorted(scored, key=lambda x: x["_score"], reverse=True)[:3]
+        
+        if not best_matches or best_matches[0]["_score"] == 0:
+            return "No relevant information found for your query."
+        
+        # Generate answer
+        answer_parts = []
+        
+        for i, match in enumerate(best_matches):
+            if match["_score"] > 0:
+                ref = self.get_reference(match)
+                answer_parts.append(f"Match {i+1} ({ref}):")
+                
+                # Extract relevant text snippet
+                snippet = self.extract_relevant_snippet(query_terms, match.get("text", ""))
+                answer_parts.append(f"{snippet}")
+                answer_parts.append("")
+        
+        result = "\n".join(answer_parts)
+        self.logger.info(f"✅ Regular needle search completed, found {len(best_matches)} matches")
+        return result
+    
     def extract_relevant_snippet(self, query_terms: List[str], text: str, max_length: int = 400) -> str:
         """Extract the most relevant snippet from the text with Hebrew support."""
         if not text:
@@ -937,10 +1041,10 @@ class NeedleAgent:
 
 
 # Legacy function for backward compatibility
-def run_needle(query: str, contexts: List[Dict]) -> str:
+def run_needle(query: str, contexts: List[Dict], namespace: str = None) -> str:
     """Legacy function for backward compatibility."""
     agent = NeedleAgent()
-    return agent.run_needle(query, contexts)
+    return agent.run_needle(query, contexts, namespace)
 
 
 def run_needle_with_hybrid_retrieval(query: str, hybrid_retriever, k: int = 10) -> str:

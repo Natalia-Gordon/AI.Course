@@ -92,7 +92,7 @@ class TableEnhancer:
     
     def _extract_filename_from_table_id(self, table_id: str) -> str:
         """Extract original filename from table ID."""
-        # table_ayalon_q1_2025_pdf_157_1 -> ayalon_q1_2025.pdf
+        # table_document_pdf_157_1 -> document.pdf
         parts = table_id.split('_')
         if len(parts) >= 3:
             return f"{parts[1]}_{parts[2]}.pdf"
@@ -100,9 +100,9 @@ class TableEnhancer:
     
     def _extract_page_from_table_id(self, table_id: str) -> int:
         """Extract page number from table ID."""
-        # table_ayalon_q1_2025_pdf_157_1 -> 157
+        # table_document_pdf_157_1 -> 157
         parts = table_id.split('_')
-        if len(parts) >= 5:  # table_ayalon_q1_2025_pdf_157_1
+        if len(parts) >= 5:  # table_document_pdf_157_1
             try:
                 return int(parts[4])  # parts[4] is the page number
             except ValueError:

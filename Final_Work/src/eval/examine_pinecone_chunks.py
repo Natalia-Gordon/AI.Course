@@ -49,7 +49,17 @@ class PineconeChunksExaminer:
             log_agent_action('pinecone_examiner', 'Examining namespace chunks', namespace=namespace)
             
             if not namespace:
-                namespace = "ayalon_q1_2025"  # Use the actual namespace from Pinecone
+                # Try to determine namespace from index stats
+                stats = self.pinecone_index.get_index_stats()
+                if stats and stats.namespaces:
+                    # Use the first non-default namespace found
+                    available_namespaces = [ns for ns in stats.namespaces.keys() if ns != "__default__"]
+                    if available_namespaces:
+                        namespace = available_namespaces[0]
+                    else:
+                        namespace = "__default__"
+                else:
+                    namespace = "__default__"
             
             self.logger.info(f"🔍 Examining chunks in namespace: {namespace}")
             

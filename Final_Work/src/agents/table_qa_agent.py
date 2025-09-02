@@ -32,6 +32,23 @@ class TableQAAgent:
         self.config = ConfigManager(config_path) if config_path else None
         self.logger.info("🚀 Table QA Agent initialized")
     
+    def _determine_namespace_from_contexts(self, contexts: List[Dict]) -> str:
+        """Determine namespace from context metadata."""
+        if not contexts:
+            return 'default'
+        
+        # Try to get namespace from first context
+        first_context = contexts[0]
+        file_name = first_context.get('file_name', '').lower()
+        
+        # Use same logic as main.py
+        if 'ayalon' in file_name:
+            return 'ayalon_q1_2025'
+        elif 'financial' in file_name:
+            return 'financial_reports'
+        else:
+            return 'general_docs'
+    
     @log_table_qa_agent
     def run_table_qa(self, query: str, contexts: List[Dict]) -> str:
         """Answer questions about tables in financial documents."""
@@ -63,7 +80,10 @@ class TableQAAgent:
                     
                     # Search directly for table chunks
                     pinecone_index = PineconeIndex(index_name=index_name)
-                    table_results = pinecone_index.search("table", k=20, namespace='ayalon_q1_2025')
+                    
+                    # Determine namespace from contexts
+                    namespace = self._determine_namespace_from_contexts(contexts)
+                    table_results = pinecone_index.search("table", k=20, namespace=namespace)
                     
                     # Filter to actual table chunks
                     for result in table_results:

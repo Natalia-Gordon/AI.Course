@@ -686,7 +686,7 @@ class PineconeIndex:
                     'text': 'Sample financial data from Q1 2025 report showing revenue growth and operational improvements.',
                     'metadata': {
                         'section_type': 'Summary',
-                        'file_name': 'ayalon_q1_2025.pdf',
+                        'file_name': 'sample_document.pdf',
                         'chunk_index': 1
                     },
                     'score': 1.0
@@ -696,7 +696,7 @@ class PineconeIndex:
                     'text': 'Financial tables display revenue data with period-over-period comparisons and segment breakdowns.',
                     'metadata': {
                         'section_type': 'Table',
-                        'file_name': 'ayalon_q1_2025.pdf',
+                        'file_name': 'sample_document.pdf',
                         'chunk_index': 2,
                         'table_id': 'revenue_table_1'
                     },
