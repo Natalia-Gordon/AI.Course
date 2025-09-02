@@ -11,6 +11,9 @@ class SectionType(str, Enum):
     FIGURE = "Figure"
     ANALYSIS = "Analysis"
     CONCLUSION = "Conclusion"
+    OWNERSHIP = "Ownership"  # New section type for ownership information
+    SHAREHOLDERS = "Shareholders"  # New section type for shareholder details
+    CORPORATE_GOVERNANCE = "Corporate_Governance"  # New section type for governance info
 
 class Language(str, Enum):
     """Supported languages."""
@@ -45,6 +48,14 @@ class CriticalEntity(str, Enum):
     ID = "ID"
     KPI = "KPI"
 
+class OwnershipEntity(str, Enum):
+    """Ownership entity types for extraction."""
+    CONTROLLING_OWNER = "CONTROLLING_OWNER"
+    SHAREHOLDER = "SHAREHOLDER"
+    MAJORITY_OWNER = "MAJORITY_OWNER"
+    MINORITY_OWNER = "MINORITY_OWNER"
+    VOTING_RIGHTS_HOLDER = "VOTING_RIGHTS_HOLDER"
+
 class DocumentChunk(BaseModel):
     """Complete metadata schema for document chunks as per project requirements."""
     
@@ -71,6 +82,14 @@ class DocumentChunk(BaseModel):
     # Extracted metadata
     keywords: List[str] = Field(default_factory=list, description="Extracted keywords")
     critical_entities: List[CriticalEntity] = Field(default_factory=list, description="Critical entities found")
+    
+    # NEW: Ownership-specific metadata
+    ownership_entities: List[OwnershipEntity] = Field(default_factory=list, description="Ownership entity types found in chunk")
+    ownership_percentages: List[float] = Field(default_factory=list, description="Ownership percentages mentioned")
+    ownership_companies: List[str] = Field(default_factory=list, description="Company names mentioned in ownership context")
+    ownership_dates: List[str] = Field(default_factory=list, description="Dates mentioned in ownership context")
+    has_ownership_info: bool = Field(default=False, description="Whether chunk contains ownership information")
+    ownership_confidence: float = Field(default=0.0, description="Confidence score for ownership information (0.0-1.0)")
     
     # Incident-specific fields
     incident_type: Optional[str] = Field(None, description="Type of incident if applicable")

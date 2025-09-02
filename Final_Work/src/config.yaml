@@ -12,7 +12,8 @@ embedding:
 
 # Pinecone configuration (matching Middle Course pattern)
 pinecone:
-  index_name: hybrid-rag
+  #index_name: hybrid-rag 
+  index_name: financial-reports
 
 # Chunking configuration
 chunking:

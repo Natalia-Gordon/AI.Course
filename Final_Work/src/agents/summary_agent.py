@@ -226,8 +226,13 @@ class SummaryAgent:
             # Import PineconeIndex here to avoid circular imports
             from index.pinecone_index import PineconeIndex
             
+            # Get index name from config
+            from core.config_manager import ConfigManager
+            config = ConfigManager()
+            index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'financial-reports'
+            
             # Initialize Pinecone connection
-            pinecone_index = PineconeIndex()
+            pinecone_index = PineconeIndex(index_name=index_name)
             namespace = 'ayalon_q1_2025'
             
             # Extract relevant keywords from contexts for table search

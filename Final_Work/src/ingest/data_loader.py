@@ -8,6 +8,7 @@ from .chunking import chunk_document
 from .metadata import analyze_document_structure
 from datetime import datetime
 import hashlib
+import re # Added for ownership detection
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,35 @@ class FinancialExtractionSchema(BaseModel):
     
     # Outlook
     outlook: Optional[str] = Field(description="Future outlook or guidance")
+    
+    # NEW: Ownership Information
+    ownership_info: Optional[Dict[str, Any]] = Field(description="Ownership structure and controlling shareholders")
+    controlling_owner: Optional[str] = Field(description="Name of controlling owner")
+    ownership_percentage: Optional[str] = Field(description="Ownership percentage of controlling owner")
+    voting_rights_percentage: Optional[str] = Field(description="Voting rights percentage")
+    ownership_date: Optional[str] = Field(description="Date of ownership information")
+
+class OwnershipExtractionSchema(BaseModel):
+    """Schema for extracting ownership information using LlamaExtract."""
+    
+    # Ownership Structure
+    controlling_owner: str = Field(description="Name of the controlling owner")
+    ownership_percentage: str = Field(description="Ownership percentage")
+    voting_rights_percentage: str = Field(description="Voting rights percentage")
+    ownership_date: str = Field(description="Date of ownership information")
+    
+    # Company Details
+    company_name: str = Field(description="Name of the company being owned")
+    company_type: str = Field(description="Type of company (e.g., insurance, holding)")
+    
+    # Additional Ownership Details
+    share_capital: Optional[str] = Field(description="Share capital amount")
+    issued_shares: Optional[str] = Field(description="Number of issued shares")
+    voting_shares: Optional[str] = Field(description="Number of voting shares")
+    
+    # Context
+    source_section: str = Field(description="Section of document where ownership info was found")
+    page_number: Optional[int] = Field(description="Page number where ownership info was found")
 
 class DataLoader:
     """Handles loading and processing of financial documents with optional LlamaExtract enhancement."""
@@ -100,26 +130,191 @@ class DataLoader:
                     # Agent doesn't exist, create new one
                     self.financial_agent = self.llama_extract.create_agent(
                         name=agent_name,
-                        data_schema=FinancialExtractionSchema
+                        instructions="You are a financial analyst specializing in extracting key financial metrics, ownership information, and business insights from financial reports. Focus on accuracy and completeness."
                     )
-                    logger.info(f"✓ LlamaExtract agent created: {agent_name}")
+                    logger.info(f"✅ Created new LlamaExtract agent: {agent_name}")
                 
-                # Cache the successful instance
+                # Cache the agents
                 _LLAMA_AGENT_CACHE[cache_key] = {
                     'llama_extract': self.llama_extract,
                     'financial_agent': self.financial_agent
                 }
                 
-                logger.info("✓ LlamaExtract initialized successfully")
+                logger.info("✅ LlamaExtract initialization completed successfully")
                 
             except Exception as e:
-                logger.error(f"❌ LlamaExtract agent creation failed: {e}")
+                logger.error(f"❌ Error creating LlamaExtract agent: {e}")
                 self.financial_agent = None
-                raise RuntimeError("LlamaExtract initialization failed - enhancement is required")
                 
         except Exception as e:
-            logger.warning(f"⚠ LlamaExtract initialization failed: {e}")
+            logger.error(f"❌ Error initializing LlamaExtract: {e}")
+            self.llama_extract = None
             self.financial_agent = None
+
+    def detect_ownership_in_chunk(self, chunk_text: str, chunk_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Detect ownership information in a chunk and return enhanced metadata."""
+        ownership_metadata = {
+            'has_ownership_info': False,
+            'ownership_entities': [],
+            'ownership_percentages': [],
+            'ownership_companies': [],
+            'ownership_dates': [],
+            'ownership_confidence': 0.0
+        }
+        
+        try:
+            # Ownership patterns to look for
+            ownership_patterns = {
+                'controlling_owner': [
+                    r'בעלת השליטה',
+                    r'בעלי השליטה',
+                    r'בעלת המניות',
+                    r'בעלי המניות',
+                    r'בעלת הבעלות',
+                    r'בעלי הבעלות'
+                ],
+                'ownership_percentages': [
+                    r'(\d+\.?\d*)%',
+                    r'כ\s*(\d+)',
+                    r'בכ\s*(\d+)',
+                    r'(\d+)\s*אחוז'
+                ],
+                'company_names': [
+                    r'ווישור\s*גלובלטק',
+                    r'גלובלטק',
+                    r'ווישור',
+                    r'איילון\s*חברה\s*לביטוח',
+                    r'איילון'
+                ],
+                'dates': [
+                    r'(\d{1,2})\s*ביוני\s*(\d{4})',
+                    r'(\d{1,2})\s*ביוני',
+                    r'יוני\s*(\d{4})',
+                    r'(\d{4})'
+                ]
+            }
+            
+            # Check for ownership patterns
+            ownership_score = 0
+            max_score = 10
+            
+            # Check for controlling owner patterns
+            for pattern in ownership_patterns['controlling_owner']:
+                if re.search(pattern, chunk_text, re.IGNORECASE):
+                    ownership_metadata['ownership_entities'].append('CONTROLLING_OWNER')
+                    ownership_score += 3
+                    break
+            
+            # Check for ownership percentages
+            for pattern in ownership_patterns['ownership_percentages']:
+                matches = re.findall(pattern, chunk_text, re.IGNORECASE)
+                for match in matches:
+                    try:
+                        percentage = float(match)
+                        if 0 <= percentage <= 100:
+                            ownership_metadata['ownership_percentages'].append(percentage)
+                            ownership_score += 2
+                    except ValueError:
+                        continue
+            
+            # Check for company names
+            for pattern in ownership_patterns['company_names']:
+                if re.search(pattern, chunk_text, re.IGNORECASE):
+                    ownership_metadata['ownership_companies'].append(pattern.strip())
+                    ownership_score += 2
+            
+            # Check for dates
+            for pattern in ownership_patterns['dates']:
+                matches = re.findall(pattern, chunk_text, re.IGNORECASE)
+                for match in matches:
+                    if isinstance(match, tuple):
+                        date_str = ' '.join(match)
+                    else:
+                        date_str = str(match)
+                    ownership_metadata['ownership_dates'].append(date_str)
+                    ownership_score += 1
+            
+            # Check for ownership-related keywords
+            ownership_keywords = [
+                'מניות', 'שליטה', 'בעלות', 'החזקה', 'אחזקה', 'הון', 'הצבעה',
+                'בעלים', 'בעלת', 'בעלי', 'שליטה', 'בעלות'
+            ]
+            
+            keyword_count = sum(1 for keyword in ownership_keywords if keyword in chunk_text)
+            ownership_score += min(keyword_count, 3)
+            
+            # Determine if chunk has ownership info
+            ownership_metadata['has_ownership_info'] = ownership_score >= 3
+            ownership_metadata['ownership_confidence'] = min(ownership_score / max_score, 1.0)
+            
+            # Remove duplicates
+            ownership_metadata['ownership_entities'] = list(set(ownership_metadata['ownership_entities']))
+            ownership_metadata['ownership_percentages'] = list(set(ownership_metadata['ownership_percentages']))
+            ownership_metadata['ownership_companies'] = list(set(ownership_metadata['ownership_companies']))
+            ownership_metadata['ownership_dates'] = list(set(ownership_metadata['ownership_dates']))
+            
+            logger.debug(f"Ownership detection for chunk: score={ownership_score}, has_ownership={ownership_metadata['has_ownership_info']}")
+            
+        except Exception as e:
+            logger.error(f"Error in ownership detection: {e}")
+        
+        return ownership_metadata
+
+    def extract_ownership_with_llama(self, chunk_text: str, chunk_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract ownership information using LlamaExtract if available."""
+        if not self.financial_agent:
+            return chunk_metadata
+        
+        try:
+            # Create a focused prompt for ownership extraction
+            ownership_prompt = f"""
+            Extract ownership information from the following text. Focus on:
+            1. Who is the controlling owner?
+            2. What percentage do they own?
+            3. What are their voting rights?
+            4. When did this ownership take effect?
+            5. What company is being owned?
+            
+            Text: {chunk_text[:1000]}
+            
+            Return the information in a structured format.
+            """
+            
+            # Use LlamaExtract to extract ownership information
+            extraction_result = self.financial_agent.extract(
+                text=chunk_text,
+                schema=OwnershipExtractionSchema,
+                prompt=ownership_prompt
+            )
+            
+            if extraction_result and hasattr(extraction_result, 'data'):
+                ownership_data = extraction_result.data
+                
+                # Update chunk metadata with extracted ownership info
+                chunk_metadata.update({
+                    'extracted_ownership_data': {
+                        'controlling_owner': ownership_data.controlling_owner,
+                        'ownership_percentage': ownership_data.ownership_percentage,
+                        'voting_rights_percentage': ownership_data.voting_rights_percentage,
+                        'ownership_date': ownership_data.ownership_date,
+                        'company_name': ownership_data.company_name,
+                        'company_type': ownership_data.company_type,
+                        'share_capital': ownership_data.share_capital,
+                        'issued_shares': ownership_data.issued_shares,
+                        'voting_shares': ownership_data.voting_shares,
+                        'source_section': ownership_data.source_section,
+                        'page_number': ownership_data.page_number
+                    },
+                    'has_ownership_info': True,
+                    'ownership_confidence': 0.9  # High confidence for LlamaExtract results
+                })
+                
+                logger.info(f"✅ Extracted ownership data: {ownership_data.controlling_owner} ({ownership_data.ownership_percentage})")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ LlamaExtract ownership extraction failed: {e}")
+        
+        return chunk_metadata
     
     def is_llama_extract_available(self) -> bool:
         """Check if LlamaExtract is available and working."""

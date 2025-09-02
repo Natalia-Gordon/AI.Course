@@ -39,7 +39,7 @@ class PineconeConfig:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'PineconeConfig':
         return cls(
-            index_name=data.get('index_name', 'hybrid-rag'),
+            index_name=data.get('index_name', 'financial-reports'),
             region=data.get('region'),
             cloud=data.get('cloud'),
             metric=data.get('metric', 'cosine')

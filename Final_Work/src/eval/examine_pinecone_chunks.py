@@ -125,8 +125,8 @@ class PineconeChunksExaminer:
             
             self.logger.info(f"📊 Chunk statistics: {statistics}")
             return statistics
-            
-        except Exception as e:
+        
+    except Exception as e:
             self.logger.error(f"❌ Error calculating chunk statistics: {e}")
             return {}
     
@@ -178,8 +178,8 @@ class PineconeChunksExaminer:
             
             self.logger.info(f"✅ Created {len(candidates)} ground truth candidates")
             return candidates
-            
-        except Exception as e:
+        
+    except Exception as e:
             self.logger.error(f"❌ Error creating ground truth candidates: {e}")
             return []
 

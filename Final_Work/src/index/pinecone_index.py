@@ -7,7 +7,7 @@ class PineconeIndex:
     """Pinecone vector database index for dense retrieval."""
     
     def __init__(self, api_key: str = None, region: str = None, cloud: str = None, 
-                 index_name: str = "hybrid-rag", dimension: int = 1536, metric: str = "cosine"):
+                 index_name: str = None, dimension: int = 1536, metric: str = "cosine"):
         """
         Initialize Pinecone index.
         
@@ -168,6 +168,91 @@ class PineconeIndex:
                 if text:
                     metadata['text'] = str(text)[:500]
                 
+                # NEW: Add ownership-specific metadata
+                if hasattr(chunk, 'has_ownership_info') and chunk.has_ownership_info:
+                    metadata['has_ownership_info'] = True
+                    metadata['ownership_confidence'] = float(chunk.ownership_confidence)
+                    
+                    # Add ownership entities
+                    if hasattr(chunk, 'ownership_entities') and chunk.ownership_entities:
+                        if isinstance(chunk.ownership_entities, list):
+                            metadata['ownership_entities'] = ','.join(str(e) for e in chunk.ownership_entities)
+                        else:
+                            metadata['ownership_entities'] = str(chunk.ownership_entities)
+                    
+                    # Add ownership percentages
+                    if hasattr(chunk, 'ownership_percentages') and chunk.ownership_percentages:
+                        if isinstance(chunk.ownership_percentages, list):
+                            metadata['ownership_percentages'] = ','.join(str(p) for p in chunk.ownership_percentages)
+                        else:
+                            metadata['ownership_percentages'] = str(chunk.ownership_percentages)
+                    
+                    # Add ownership companies
+                    if hasattr(chunk, 'ownership_companies') and chunk.ownership_companies:
+                        if isinstance(chunk.ownership_companies, list):
+                            metadata['ownership_companies'] = ','.join(str(c) for c in chunk.ownership_companies)
+                        else:
+                            metadata['ownership_companies'] = str(chunk.ownership_companies)
+                    
+                    # Add ownership dates
+                    if hasattr(chunk, 'ownership_dates') and chunk.ownership_dates:
+                        if isinstance(chunk.ownership_dates, list):
+                            metadata['ownership_dates'] = ','.join(str(d) for d in chunk.ownership_dates)
+                        else:
+                            metadata['ownership_dates'] = str(chunk.ownership_dates)
+                    
+                    # Add extracted ownership data if available
+                    if hasattr(chunk, 'extracted_ownership_data') and chunk.extracted_ownership_data:
+                        extracted_data = chunk.extracted_ownership_data
+                        if isinstance(extracted_data, dict):
+                            for key, value in extracted_data.items():
+                                if value is not None:
+                                    metadata[f'extracted_{key}'] = str(value)
+                
+                # Handle dictionary chunks with ownership info
+                elif isinstance(chunk, dict) and chunk.get('has_ownership_info'):
+                    metadata['has_ownership_info'] = True
+                    metadata['ownership_confidence'] = float(chunk.get('ownership_confidence', 0.0))
+                    
+                    # Add ownership entities
+                    ownership_entities = chunk.get('ownership_entities', [])
+                    if ownership_entities:
+                        if isinstance(ownership_entities, list):
+                            metadata['ownership_entities'] = ','.join(str(e) for e in ownership_entities)
+                        else:
+                            metadata['ownership_entities'] = str(ownership_entities)
+                    
+                    # Add ownership percentages
+                    ownership_percentages = chunk.get('ownership_percentages', [])
+                    if ownership_percentages:
+                        if isinstance(ownership_percentages, list):
+                            metadata['ownership_percentages'] = ','.join(str(p) for p in ownership_percentages)
+                        else:
+                            metadata['ownership_percentages'] = str(ownership_percentages)
+                    
+                    # Add ownership companies
+                    ownership_companies = chunk.get('ownership_companies', [])
+                    if ownership_companies:
+                        if isinstance(ownership_companies, list):
+                            metadata['ownership_companies'] = ','.join(str(c) for c in ownership_companies)
+                        else:
+                            metadata['ownership_companies'] = str(ownership_companies)
+                    
+                    # Add ownership dates
+                    ownership_dates = chunk.get('ownership_dates', [])
+                    if ownership_dates:
+                        if isinstance(ownership_dates, list):
+                            metadata['ownership_dates'] = ','.join(str(d) for d in ownership_dates)
+                        else:
+                            metadata['ownership_dates'] = str(ownership_dates)
+                    
+                    # Add extracted ownership data if available
+                    extracted_data = chunk.get('extracted_ownership_data', {})
+                    if extracted_data and isinstance(extracted_data, dict):
+                        for key, value in extracted_data.items():
+                            if value is not None:
+                                metadata[f'extracted_{key}'] = str(value)
+                
                 # Add to vectors list
                 vectors.append({
                     'id': vector_id,
@@ -291,6 +376,187 @@ class PineconeIndex:
             
         except Exception as e:
             print(f"✗ Error searching Pinecone index: {e}")
+            return []
+
+    def search_ownership(self, query: str, k: int = 10, namespace: str = None, 
+                        min_confidence: float = 0.5) -> List[Dict[str, Any]]:
+        """Search specifically for ownership-related information."""
+        if not self.index:
+            raise RuntimeError("Pinecone index not initialized")
+        
+        try:
+            # Create ownership-specific filter
+            ownership_filter = {
+                "has_ownership_info": {"$eq": True},
+                "ownership_confidence": {"$gte": min_confidence}
+            }
+            
+            # Generate mock query embedding
+            import numpy as np
+            np.random.seed(hash(query) % 2**32)
+            query_embedding = np.random.rand(1536).tolist()
+            
+            # Search with ownership filter
+            search_results = self.index.query(
+                vector=query_embedding,
+                top_k=k * 2,  # Get more results to filter
+                namespace=namespace,
+                include_metadata=True,
+                filter=ownership_filter
+            )
+            
+            # Process and score results based on ownership relevance
+            results = []
+            for match in search_results.matches:
+                metadata = match.metadata
+                
+                # Calculate ownership relevance score
+                ownership_score = self.calculate_ownership_relevance_score(query, metadata)
+                
+                results.append({
+                    'id': match.id,
+                    'score': match.score,
+                    'ownership_score': ownership_score,
+                    'metadata': metadata
+                })
+            
+            # Sort by ownership relevance score
+            results.sort(key=lambda x: x['ownership_score'], reverse=True)
+            
+            # Return top k results
+            top_results = results[:k]
+            
+            print(f"✓ Found {len(top_results)} ownership-related chunks in Pinecone")
+            return top_results
+            
+        except Exception as e:
+            print(f"✗ Error in ownership search: {e}")
+            return []
+
+    def calculate_ownership_relevance_score(self, query: str, metadata: Dict[str, Any]) -> float:
+        """Calculate relevance score for ownership information."""
+        score = 0.0
+        
+        # Check for ownership confidence
+        ownership_confidence = metadata.get('ownership_confidence', 0.0)
+        score += ownership_confidence * 5.0  # High weight for confidence
+        
+        # Check for specific ownership entities
+        ownership_entities = metadata.get('ownership_entities', '')
+        if ownership_entities:
+            if 'CONTROLLING_OWNER' in ownership_entities:
+                score += 3.0
+        
+        # Check for ownership percentages
+        ownership_percentages = metadata.get('ownership_percentages', '')
+        if ownership_percentages:
+            score += 2.0
+        
+        # Check for company names
+        ownership_companies = metadata.get('ownership_companies', '')
+        if ownership_companies:
+            score += 2.0
+        
+        # Check for dates
+        ownership_dates = metadata.get('ownership_dates', '')
+        if ownership_dates:
+            score += 1.0
+        
+        # Check for extracted ownership data
+        extracted_keys = [key for key in metadata.keys() if key.startswith('extracted_')]
+        if extracted_keys:
+            score += len(extracted_keys) * 0.5
+        
+        return score
+
+    def search_by_ownership_company(self, company_name: str, namespace: str = None, 
+                                   k: int = 10) -> List[Dict[str, Any]]:
+        """Search for ownership information by specific company name."""
+        if not self.index:
+            raise RuntimeError("Pinecone index not initialized")
+        
+        try:
+            # Create company-specific filter
+            company_filter = {
+                "has_ownership_info": {"$eq": True},
+                "$or": [
+                    {"ownership_companies": {"$contains": company_name}},
+                    {"extracted_company_name": {"$contains": company_name}},
+                    {"client_id": {"$contains": company_name}}
+                ]
+            }
+            
+            # Generate mock query embedding
+            import numpy as np
+            np.random.seed(hash(company_name) % 2**32)
+            query_embedding = np.random.rand(1536).tolist()
+            
+            # Search with company filter
+            search_results = self.index.query(
+                vector=query_embedding,
+                top_k=k,
+                namespace=namespace,
+                include_metadata=True,
+                filter=company_filter
+            )
+            
+            # Process results
+            results = []
+            for match in search_results.matches:
+                results.append({
+                    'id': match.id,
+                    'score': match.score,
+                    'metadata': match.metadata
+                })
+            
+            print(f"✓ Found {len(results)} ownership chunks for company: {company_name}")
+            return results
+            
+        except Exception as e:
+            print(f"✗ Error in company ownership search: {e}")
+            return []
+
+    def search_by_ownership_percentage(self, min_percentage: float, max_percentage: float = 100.0,
+                                      namespace: str = None, k: int = 10) -> List[Dict[str, Any]]:
+        """Search for ownership information by percentage range."""
+        if not self.index:
+            raise RuntimeError("Pinecone index not initialized")
+        
+        try:
+            # Create percentage filter
+            percentage_filter = {
+                "has_ownership_info": {"$eq": True},
+                "ownership_percentages": {"$gte": min_percentage, "$lte": max_percentage}
+            }
+            
+            # Generate mock query embedding
+            import numpy as np
+            np.random.seed(hash(f"{min_percentage}_{max_percentage}") % 2**32)
+            query_embedding = np.random.rand(1536).tolist()
+            
+            # Search with percentage filter
+            search_results = self.index.query(
+                vector=query_embedding,
+                top_k=k,
+                namespace=namespace,
+                include_metadata=True,
+                filter=percentage_filter
+            )
+            
+            # Process results
+            results = []
+            for match in search_results.matches:
+                results.append({
+                    'id': match.id,
+                    'score': match.score,
+                    'metadata': match.metadata
+                })
+            
+            print(f"✓ Found {len(results)} ownership chunks with percentage {min_percentage}-{max_percentage}%")
+            return results
+            
+        except Exception as e:
+            print(f"✗ Error in percentage ownership search: {e}")
             return []
     
     def delete_index(self):

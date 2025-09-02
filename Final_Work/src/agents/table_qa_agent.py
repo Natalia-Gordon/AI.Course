@@ -56,8 +56,13 @@ class TableQAAgent:
                     # Import here to avoid circular imports
                     from index.pinecone_index import PineconeIndex
                     
+                    # Get index name from config
+                    from core.config_manager import ConfigManager
+                    config = ConfigManager()
+                    index_name = config.pinecone.index_name if hasattr(config, 'pinecone') else 'financial-reports'
+                    
                     # Search directly for table chunks
-                    pinecone_index = PineconeIndex()
+                    pinecone_index = PineconeIndex(index_name=index_name)
                     table_results = pinecone_index.search("table", k=20, namespace='ayalon_q1_2025')
                     
                     # Filter to actual table chunks

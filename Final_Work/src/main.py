@@ -368,7 +368,9 @@ def main():
             table_processor = TableProcessor()
             
             # Get table chunks from Pinecone to include in search
-            pinecone_index = PineconeIndex()
+            # Use index name from config
+            index_name = cfg.get('pinecone', {}).get('index_name', 'financial-reports')
+            pinecone_index = PineconeIndex(index_name=index_name)
             table_chunks = pinecone_index.search("table", k=100, namespace='ayalon_q1_2025')
             
             if table_chunks:
