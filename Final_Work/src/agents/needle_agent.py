@@ -39,6 +39,12 @@ class NeedleAgent:
                 answer, relevant_chunks = self.run_ownership_search(query, contexts, namespace)
                 return answer, relevant_chunks
             
+            # Check if this is a shareholder query (different from ownership query)
+            if self.is_shareholder_query(query):
+                self.logger.info("👥 Detected shareholder query - using specialized logic")
+                answer, relevant_chunks = self.run_shareholder_search(query, contexts, namespace)
+                return answer, relevant_chunks
+            
             # Check if this is a revenue query and use specialized logic
             if self.is_revenue_query(query):
                 self.logger.info("💰 Detected revenue query - using specialized financial data extraction")
@@ -1107,6 +1113,10 @@ class NeedleAgent:
         # Extract key terms from query
         query_terms = self.extract_query_terms(query)
         
+        # Check if this is a specific information request that might not be available
+        is_specific_request = self._is_specific_information_request(query)
+        self.logger.info(f"🔍 Query analysis: '{query}' -> is_specific_request: {is_specific_request}")
+        
         # Score contexts based on relevance
         scored = []
         for c in contexts:
@@ -1121,7 +1131,18 @@ class NeedleAgent:
         best_matches = sorted(scored, key=lambda x: x["_score"], reverse=True)[:3]
         
         if not best_matches or best_matches[0]["_score"] == 0:
-            return "No relevant information found for your query.", []
+            if is_specific_request:
+                return "❌ **לא נמצא מידע ספציפי לשאלה שלך.**\n\nהמסמך לא מכיל את המידע המבוקש. ייתכן שהמידע נמצא במסמכים אחרים או שאינו זמין במסמך זה.", []
+            else:
+                return "No relevant information found for your query.", []
+        
+        # Check if the matches actually answer the specific question
+        if is_specific_request and not self._matches_answer_question(query, best_matches):
+            self.logger.info(f"❌ Specific request not answered: '{query}'")
+            if is_specific_request:
+                return f"❌ **לא נמצא מידע ספציפי לשאלה: '{query}'**\n\nהמסמך מכיל מידע קשור אך לא את התשובה הספציפית המבוקשת. ייתכן שהמידע נמצא במסמכים אחרים או שאינו זמין במסמך זה.", best_matches
+            else:
+                return "The available information doesn't directly answer your specific question.", best_matches
         
         # Generate answer
         answer_parts = []
@@ -1139,6 +1160,102 @@ class NeedleAgent:
         result = "\n".join(answer_parts)
         self.logger.info(f"✅ Regular needle search completed, found {len(best_matches)} matches")
         return result, best_matches
+    
+    def _is_specific_information_request(self, query: str) -> bool:
+        """Check if the query is asking for specific information that might not be available."""
+        specific_patterns = [
+            r'מי הם',  # Who are
+            r'מה הם',  # What are
+            r'רשימת',  # List of
+            r'כל ה',   # All the
+            r'שמות',   # Names
+            r'פרטים',  # Details
+            r'מידע על', # Information about
+            r'בעלי מניות',  # Shareholders
+            r'shareholders',  # Shareholders (English)
+        ]
+        
+        query_lower = query.lower()
+        return any(re.search(pattern, query_lower) for pattern in specific_patterns)
+    
+    def _matches_answer_question(self, query: str, matches: List[Dict]) -> bool:
+        """Check if the matches actually answer the specific question asked."""
+        query_lower = query.lower()
+        
+        # For shareholder questions, check if we found actual shareholder lists
+        if 'בעלי מניות' in query_lower or 'shareholders' in query_lower:
+            self.logger.info(f"🔍 Checking shareholder question: '{query}'")
+            # Look for actual shareholder information, not just controlling owner
+            for match in matches:
+                text = match.get('text', '').lower()
+                self.logger.info(f"🔍 Match text contains: {text[:100]}...")
+                # Check if this contains a list of shareholders, not just controlling owner
+                if any(term in text for term in ['רשימת בעלי מניות', 'shareholder list', 'בעלי מניות נוספים']):
+                    self.logger.info(f"✅ Found actual shareholder list")
+                    return True
+            # If we only found controlling owner info, it doesn't fully answer the question
+            self.logger.info(f"❌ Only found controlling owner info, not full shareholder list")
+            return False
+        
+        # For other specific questions, check if we have relevant content
+        return len(matches) > 0 and matches[0].get('_score', 0) > 5.0
+    
+    def is_shareholder_query(self, query: str) -> bool:
+        """Check if the query is asking about shareholders (not controlling owner)."""
+        shareholder_patterns = [
+            r'מי הם בעלי המניות',  # Who are the shareholders
+            r'בעלי המניות של',     # Shareholders of
+            r'רשימת בעלי המניות',  # List of shareholders
+            r'shareholders of',     # Shareholders of (English)
+            r'who are the shareholders',  # Who are the shareholders (English)
+        ]
+        
+        query_lower = query.lower()
+        return any(re.search(pattern, query_lower) for pattern in shareholder_patterns)
+    
+    def run_shareholder_search(self, query: str, contexts: List[Dict], namespace: str = None) -> tuple[str, List[Dict]]:
+        """Specialized search for shareholder information."""
+        try:
+            self.logger.info("👥 Running specialized shareholder search...")
+            
+            # Look for actual shareholder lists or comprehensive shareholder information
+            shareholder_matches = []
+            
+            for context in contexts:
+                text = context.get('text', '').lower()
+                
+                # Check for actual shareholder lists
+                if any(term in text for term in ['רשימת בעלי מניות', 'shareholder list', 'בעלי מניות נוספים']):
+                    shareholder_matches.append(context)
+                # Check for comprehensive shareholder information
+                elif any(term in text for term in ['בעלי מניות', 'shareholders']) and len(text) > 200:
+                    # Only include if it seems to be comprehensive, not just controlling owner
+                    if not any(term in text for term in ['בעלת השליטה', 'controlling owner']):
+                        shareholder_matches.append(context)
+            
+            if not shareholder_matches:
+                # No comprehensive shareholder information found
+                return f"❌ **לא נמצא מידע מקיף על בעלי המניות**\n\nהמסמך מכיל מידע על בעלת השליטה (ווישור גלובלטק בע\"מ עם 70.17% בעלות) אך לא רשימה מקיפה של כל בעלי המניות.\n\nלמידע מלא על בעלי המניות, יש לבדוק ברישום בעלי המניות של החברה או במסמכים נוספים.", []
+            
+            # If we found shareholder information, process it
+            answer_parts = []
+            answer_parts.append(f"👥 **מידע על בעלי המניות של חברת איילון חברה לביטוח:**")
+            answer_parts.append("")
+            
+            for i, match in enumerate(shareholder_matches[:3]):
+                ref = self.get_reference(match)
+                text = match.get('text', '')
+                answer_parts.append(f"**מקור {i+1} ({ref}):**")
+                answer_parts.append(f"{text[:300]}...")
+                answer_parts.append("")
+            
+            result = "\n".join(answer_parts)
+            self.logger.info(f"✅ Shareholder search completed, found {len(shareholder_matches)} matches")
+            return result, shareholder_matches
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error in shareholder search: {e}")
+            return f"Error in shareholder search: {str(e)}", []
     
     def extract_relevant_snippet(self, query_terms: List[str], text: str, max_length: int = 400) -> str:
         """Extract the most relevant snippet from the text with Hebrew support."""
