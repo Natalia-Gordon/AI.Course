@@ -27,7 +27,7 @@ class NeedleAgent:
         self.logger.info("🚀 Needle Agent initialized")
     
     @log_needle_agent
-    def run_needle(self, query: str, contexts: List[Dict], namespace: str = None) -> str:
+    def run_needle(self, query: str, contexts: List[Dict], namespace: str = None) -> tuple[str, List[Dict]]:
         """Find specific information or answer precise questions."""
         
         try:
@@ -36,21 +36,24 @@ class NeedleAgent:
             # Check if this is an ownership query and use specialized logic
             if self.is_ownership_query(query):
                 self.logger.info("🎯 Detected ownership query - using specialized search logic")
-                return self.run_ownership_search(query, contexts, namespace)
+                answer, relevant_chunks = self.run_ownership_search(query, contexts, namespace)
+                return answer, relevant_chunks
             
             # Check if this is a revenue query and use specialized logic
             if self.is_revenue_query(query):
                 self.logger.info("💰 Detected revenue query - using specialized financial data extraction")
-                return self.run_revenue_search(query, contexts)
+                answer, relevant_chunks = self.run_revenue_search(query, contexts)
+                return answer, relevant_chunks
             
             # Use regular needle search for non-specialized queries
-            return self.run_regular_needle_search(query, contexts)
+            answer, relevant_chunks = self.run_regular_needle_search(query, contexts)
+            return answer, relevant_chunks
             
         except Exception as e:
             self.logger.error(f"❌ Error in needle query: {e}")
-            return f"Error processing needle query: {str(e)}"
+            return f"Error processing needle query: {str(e)}", []
 
-    def run_ownership_search(self, query: str, contexts: List[Dict], namespace: str = None) -> str:
+    def run_ownership_search(self, query: str, contexts: List[Dict], namespace: str = None) -> tuple[str, List[Dict]]:
         """Specialized search for ownership-related information."""
         try:
             self.logger.info("🔍 Running specialized ownership search...")
@@ -79,17 +82,34 @@ class NeedleAgent:
                 
                 if ownership_results:
                     self.logger.info(f"✅ Found {len(ownership_results)} ownership chunks from Pinecone")
-                    return self.process_ownership_results(query, ownership_results)
+                    answer = self.process_ownership_results(query, ownership_results)
+                    # Convert ownership results to standard chunk format for display
+                    relevant_chunks = []
+                    for result in ownership_results:
+                        chunk = {
+                            'id': result.get('id', ''),
+                            'text': result.get('metadata', {}).get('text', ''),
+                            'file_name': result.get('metadata', {}).get('file_name', ''),
+                            'page_number': result.get('metadata', {}).get('page_number', 0),
+                            'section_type': result.get('metadata', {}).get('section_type', ''),
+                            'chunk_summary': result.get('metadata', {}).get('chunk_summary', ''),
+                            'ownership_confidence': result.get('metadata', {}).get('ownership_confidence', 0),
+                            'ownership_entities': result.get('metadata', {}).get('ownership_entities', ''),
+                            'ownership_percentages': result.get('metadata', {}).get('ownership_percentages', ''),
+                        }
+                        relevant_chunks.append(chunk)
+                    return answer, relevant_chunks
                 
             except Exception as e:
                 self.logger.warning(f"⚠️ Pinecone ownership search failed, falling back to context search: {e}")
             
             # Fallback to context-based ownership search
-            return self.run_context_based_ownership_search(query, contexts)
+            answer, relevant_chunks = self.run_context_based_ownership_search(query, contexts)
+            return answer, relevant_chunks
             
         except Exception as e:
             self.logger.error(f"❌ Error in ownership search: {e}")
-            return f"Error in ownership search: {str(e)}"
+            return f"Error in ownership search: {str(e)}", []
 
     def process_ownership_results(self, query: str, ownership_results: List[Dict]) -> str:
         """Process ownership results from Pinecone."""
@@ -98,25 +118,92 @@ class NeedleAgent:
             answer_parts.append(f"🎯 Found ownership information for: '{query}'")
             answer_parts.append("")
             
+            # Process each match with detailed information
+            all_ownership_data = []
+            
             for i, result in enumerate(ownership_results[:5]):
                 metadata = result.get('metadata', {})
                 ownership_score = result.get('ownership_score', 0.0)
                 ref = self.get_reference_from_metadata(metadata)
+                chunk_id = result.get('id', 'Unknown')
                 
-                answer_parts.append(f"Ownership Match {i+1} (Score: {ownership_score:.1f}, {ref}):")
+                # Detailed match information
+                answer_parts.append(f"📋 **Match {i+1} Details:**")
+                answer_parts.append(f"   • Chunk ID: {chunk_id}")
+                answer_parts.append(f"   • Relevance Score: {ownership_score:.1f}/10.0")
+                answer_parts.append(f"   • Reference: {ref}")
+                answer_parts.append(f"   • Ownership Confidence: {metadata.get('ownership_confidence', 'N/A')}")
                 
                 # Extract ownership-relevant information
                 ownership_info = self.extract_ownership_info_from_metadata(metadata)
                 if ownership_info:
-                    answer_parts.append(ownership_info)
+                    answer_parts.append(f"   • Ownership Data: {ownership_info}")
+                    # Collect for final summary
+                    all_ownership_data.append({
+                        'chunk_id': chunk_id,
+                        'score': ownership_score,
+                        'ref': ref,
+                        'confidence': metadata.get('ownership_confidence', 0),
+                        'info': ownership_info
+                    })
                 else:
                     # Fallback to text snippet
                     text = metadata.get('text', '')
                     if text:
                         snippet = self.extract_ownership_snippet_from_text(query, text)
-                        answer_parts.append(snippet)
+                        answer_parts.append(f"   • Text Snippet: {snippet}")
                 
                 answer_parts.append("")
+            
+            # Add final clear answer
+            if all_ownership_data:
+                answer_parts.append("=" * 60)
+                answer_parts.append("📊 **FINAL ANSWER:**")
+                answer_parts.append("")
+                
+                # Extract the most confident ownership information
+                best_match = max(all_ownership_data, key=lambda x: x['confidence'])
+                
+                # Parse ownership information for final answer
+                ownership_info = best_match['info']
+                
+                # Extract ownership details from the info string
+                import re
+                
+                # Extract company name
+                company_match = re.search(r'Companies:\s*([^|]+)', ownership_info)
+                company_name = company_match.group(1).strip() if company_match else "לא זוהה"
+                
+                # Extract ownership percentage
+                percentage_match = re.search(r'Percentages:\s*([^|]+)', ownership_info)
+                ownership_percentage = percentage_match.group(1).strip() if percentage_match else "לא זוהה"
+                
+                # Extract voting rights percentage
+                voting_match = re.search(r'Voting Rights:\s*([^|]+)', ownership_info)
+                voting_percentage = voting_match.group(1).strip() if voting_match else "לא זוהה"
+                
+                # Extract ownership date
+                date_match = re.search(r'Dates:\s*([^|]+)', ownership_info)
+                ownership_date = date_match.group(1).strip() if date_match else "לא זוהה"
+                
+                # Build generic final answer
+                answer_parts.append("**בעלת השליטה בחברה הינה:**")
+                answer_parts.append("")
+                answer_parts.append(f"🏢 **{company_name}**")
+                answer_parts.append("")
+                answer_parts.append("📈 **פרטי הבעלות:**")
+                answer_parts.append(f"• אחוז הבעלות: **{ownership_percentage}%** מהון המניות המונפק והנפרע")
+                if voting_percentage != "לא זוהה":
+                    answer_parts.append(f"• זכויות הצבעה: **{voting_percentage}%** (בדילול מלא)")
+                if ownership_date != "לא זוהה":
+                    answer_parts.append(f"• תאריך הבעלות: **{ownership_date}**")
+                answer_parts.append("")
+                answer_parts.append("📚 **מקורות המידע:**")
+                for data in all_ownership_data[:3]:  # Show top 3 sources
+                    answer_parts.append(f"• {data['ref']} (Chunk: {data['chunk_id']}, Confidence: {data['confidence']})")
+                
+                answer_parts.append("")
+                answer_parts.append("=" * 60)
             
             result = "\n".join(answer_parts)
             self.logger.info(f"✅ Processed {len(ownership_results)} ownership results")
@@ -196,8 +283,9 @@ class NeedleAgent:
         best_score = 0
         
         ownership_terms = [
-            "בעלת השליטה", "בעלי מניות", "ווישור", "גלובלטק", 
-            "70.17%", "67.19%", "הון המניות", "זכויות הצבעה"
+            "בעלת השליטה", "בעלי מניות", "שליטה", "בעלות",
+            "הון המניות", "זכויות הצבעה", "מחזיק בשליטה",
+            "controlling owner", "shareholder", "ownership"
         ]
         
         for sentence in sentences:
@@ -256,31 +344,153 @@ class NeedleAgent:
                 self.logger.info("🔍 No ownership matches found, trying direct ownership search...")
                 return self.direct_ownership_search(query, contexts)
             
-            # Generate ownership-specific answer
-            answer_parts = []
-            answer_parts.append(f"🔍 Found ownership information for: '{query}'")
-            answer_parts.append("")
+            # Extract clear ownership information and provide structured answer
+            ownership_info = self.extract_clear_ownership_info(best_matches)
             
-            for i, match in enumerate(best_matches):
-                if match["_score"] > 0:
-                    ref = self.get_reference(match)
-                    score = match["_score"]
-                    cleaned_text = match.get("cleaned_text", "")
-                    
-                    answer_parts.append(f"Match {i+1} (Score: {score:.1f}, {ref}):")
-                    
-                    # Extract ownership-relevant snippet
-                    snippet = self.extract_ownership_snippet(ownership_terms, cleaned_text)
-                    answer_parts.append(f"{snippet}")
-                    answer_parts.append("")
-            
-            result = "\n".join(answer_parts)
-            self.logger.info(f"✅ Context-based ownership search completed, found {len(best_matches)} matches")
-            return result
+            if ownership_info:
+                # Provide clear, direct answer
+                answer = f"""📋 **תשובה לשאלה: {query}**
+
+{ownership_info}
+
+📊 **מקורות:**
+"""
+                
+                # Add source references
+                for i, match in enumerate(best_matches[:3]):
+                    if match["_score"] > 0:
+                        ref = self.get_reference(match)
+                        answer += f"• מקור {i+1}: {ref}\n"
+                
+                self.logger.info(f"✅ Context-based ownership search completed, found {len(best_matches)} matches")
+                return answer
+            else:
+                # Fallback to original format if no clear ownership info found
+                answer_parts = []
+                answer_parts.append(f"🔍 Found ownership information for: '{query}'")
+                answer_parts.append("")
+                
+                for i, match in enumerate(best_matches):
+                    if match["_score"] > 0:
+                        ref = self.get_reference(match)
+                        score = match["_score"]
+                        cleaned_text = match.get("cleaned_text", "")
+                        
+                        answer_parts.append(f"Match {i+1} (Score: {score:.1f}, {ref}):")
+                        
+                        # Extract ownership-relevant snippet
+                        snippet = self.extract_ownership_snippet(ownership_terms, cleaned_text)
+                        answer_parts.append(f"{snippet}")
+                        answer_parts.append("")
+                
+                result = "\n".join(answer_parts)
+                self.logger.info(f"✅ Context-based ownership search completed, found {len(best_matches)} matches")
+                return result
             
         except Exception as e:
             self.logger.error(f"❌ Error in context-based ownership search: {e}")
             return f"Error in context-based ownership search: {str(e)}"
+    
+    def extract_clear_ownership_info(self, matches: List[Dict]) -> str:
+        """Extract and format clear ownership information from matches."""
+        try:
+            # Look for the best match with ownership information
+            best_match = None
+            for match in matches:
+                score = match.get("_score", 0)
+                text = match.get("cleaned_text", "")
+                # Check if this match has ownership details
+                has_ownership_details = self.contains_ownership_details(text)
+                
+                if score > 5 and has_ownership_details:  # High confidence match
+                    best_match = match
+                    self.logger.info(f"✅ Found best match with score {score}")
+                    break
+            
+            if not best_match:
+                return None
+            
+            text = best_match.get("cleaned_text", "")
+            
+            # Extract ownership information using regex patterns
+            import re
+            
+            # Look for controlling owner using generic patterns
+            owner_patterns = [
+                r'([א-ת]+(?:\s+[א-ת]+)*\s+(?:בע"מ|בע"מ|חברה|עמותה))',
+                r'(?:חברת|עמותת)\s+([א-ת]+(?:\s+[א-ת]+)*)',
+                r'([A-Za-z]+(?:\s+[A-Za-z]+)*\s+(?:Ltd|Inc|Corp|Company))',
+                r'([^,\.\(]*מ"עב[^,\.\(]*)',     # בע"מ reversed
+            ]
+            
+            controlling_owner = None
+            for pattern in owner_patterns:
+                match = re.search(pattern, text)
+                if match:
+                    controlling_owner = match.group(1).strip()
+                    break
+            
+            # Look for ownership percentage using generic patterns
+            ownership_percentage = None
+            percentage_patterns = [
+                r'(\d+\.?\d*)%-כב',  # Reversed Hebrew pattern
+                r'(\d+\.?\d*)%\s*(?:מהון\s*המניות|מהמניות|מהון)',
+                r'(\d+\.?\d*)%\s*(?:ownership|shareholding)',
+            ]
+            
+            for pattern in percentage_patterns:
+                percentage_match = re.search(pattern, text)
+                if percentage_match:
+                    ownership_percentage = percentage_match.group(1)
+                    break
+            
+            # Look for voting rights percentage using generic patterns
+            voting_percentage = None
+            voting_patterns = [
+                r'(\d+\.?\d*)%.*?לולידב',  # Reversed Hebrew pattern
+                r'(\d+\.?\d*)%.*?(?:בדילול\s*מלא|voting\s*rights)',
+            ]
+            
+            for pattern in voting_patterns:
+                voting_match = re.search(pattern, text)
+                if voting_match:
+                    voting_percentage = voting_match.group(1)
+                    break
+            
+            # Look for ownership date using generic patterns
+            ownership_date = None
+            date_patterns = [
+                r'(\d{4}\s+[א-ת]+\s+\d{1,2})',  # Hebrew date
+                r'(\d{1,2}\s+[א-ת]+\s+\d{4})',  # Hebrew date
+                r'(\d{1,2}/\d{1,2}/\d{4})',     # DD/MM/YYYY
+                r'(\d{4}-\d{1,2}-\d{1,2})',     # YYYY-MM-DD
+            ]
+            
+            for pattern in date_patterns:
+                date_match = re.search(pattern, text)
+                if date_match:
+                    ownership_date = date_match.group(1)
+                    break
+            
+            # Build clear answer
+            if controlling_owner and ownership_percentage:
+                answer = f"**בעלת השליטה בחברה הינה {controlling_owner}**\n\n"
+                answer += f"📊 **פרטי הבעלות:**\n"
+                answer += f"• אחוז הבעלות: {ownership_percentage}% מהון המניות המונפק והנפרע\n"
+                
+                if voting_percentage:
+                    answer += f"• זכויות הצבעה: {voting_percentage}% (בדילול מלא)\n"
+                
+                if ownership_date:
+                    answer += f"• תאריך הבעלות: {ownership_date}\n"
+                
+                return answer
+            
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error extracting clear ownership info: {e}")
+            return None
 
     def direct_ownership_search(self, query: str, contexts: List[Dict]) -> str:
         """Direct search for ownership information using specific patterns."""
@@ -289,12 +499,12 @@ class NeedleAgent:
             
             # Look for specific ownership patterns in all contexts
             ownership_patterns = [
-                r'בעלת השליטה.*הינה.*ווישור.*גלובלטק',
-                r'ווישור.*גלובלטק.*מחזיקה.*\d+%',
-                r'בעלת השליטה.*החל.*30.*ביוני.*2022',
-                r'מחזיקה.*70\.17%',
-                r'הון המניות.*70\.17%',
-                r'זכויות הצבעה.*67\.19%'
+                r'בעלת\s*השליטה.*הינה.*[א-ת]+',
+                r'[א-ת]+.*מחזיקה.*\d+%',
+                r'בעלת\s*השליטה.*החל.*\d+.*ביוני.*\d{4}',
+                r'מחזיקה.*\d+\.?\d*%',
+                r'הון\s*המניות.*\d+\.?\d*%',
+                r'זכויות\s*הצבעה.*\d+\.?\d*%'
             ]
             
             found_ownership = []
@@ -355,8 +565,9 @@ class NeedleAgent:
             
             # Look for any ownership-related content
             ownership_keywords = [
-                "בעלת השליטה", "בעלי מניות", "ווישור", "גלובלטק", 
-                "70.17%", "67.19%", "הון המניות", "זכויות הצבעה"
+                "בעלת השליטה", "בעלי מניות", "שליטה", "בעלות",
+                "הון המניות", "זכויות הצבעה", "מחזיק בשליטה",
+                "controlling owner", "shareholder", "ownership"
             ]
             
             relevant_contexts = []
@@ -475,13 +686,19 @@ class NeedleAgent:
     def contains_ownership_details(self, text: str) -> bool:
         """Check if text contains actual ownership details."""
         ownership_indicators = [
-            r'בעלת השליטה.*הינה',  # controlling owner is
+            # Original Hebrew patterns
+            r'בעלת\s*השליטה.*הינה',  # controlling owner is
             r'מחזיקה.*\d+%',       # holds X%
-            r'הון המניות.*\d+',    # share capital X
-            r'זכויות הצבעה.*\d+',  # voting rights X
+            r'הון\s*המניות.*\d+',    # share capital X
+            r'זכויות\s*הצבעה.*\d+',  # voting rights X
             r'אחוזי.*\d+',         # percentages X
-            r'ווישור.*גלובלטק',    # Wishor Globaltech
-            r'החל מיום.*\d+',      # since date X
+            r'החל\s*מיום.*\d+',      # since date X
+            # Reversed Hebrew patterns (actual text format)
+            r'הטילשה',             # שליטה (control) reversed
+            r'\d+\.?\d*%-כב',      # X%-כב (percentage pattern)
+            r'\d+\.?\d*%.*?לולידב', # X% בדילול מלא (voting rights)
+            # Generic date patterns
+            r'\d{4}.*[א-ת]+.*\d+',    # Hebrew date pattern
         ]
         
         for pattern in ownership_indicators:
@@ -674,16 +891,15 @@ class NeedleAgent:
             if phrase in text:
                 score += 5.0  # High boost for ownership terms
         
-        # Boost for specific company names mentioned in the query
-        company_names = [
-            "ווישור",
-            "גלובלטק", 
-            "איילון",
-            "חברה לביטוח"
+        # Boost for company names mentioned in the query (generic patterns)
+        company_patterns = [
+            r'[א-ת]+(?:\s+[א-ת]+)*\s+(?:בע"מ|בע"מ|חברה|עמותה)',
+            r'(?:חברת|עמותת)\s+[א-ת]+(?:\s+[א-ת]+)*',
+            r'[A-Za-z]+(?:\s+[A-Za-z]+)*\s+(?:Ltd|Inc|Corp|Company)',
         ]
         
-        for company in company_names:
-            if company in text:
+        for pattern in company_patterns:
+            if re.search(pattern, text):
                 score += 3.0
         
         # Boost for ownership percentages
@@ -1041,7 +1257,7 @@ class NeedleAgent:
 
 
 # Legacy function for backward compatibility
-def run_needle(query: str, contexts: List[Dict], namespace: str = None) -> str:
+def run_needle(query: str, contexts: List[Dict], namespace: str = None) -> tuple[str, List[Dict]]:
     """Legacy function for backward compatibility."""
     agent = NeedleAgent()
     return agent.run_needle(query, contexts, namespace)

@@ -214,8 +214,7 @@ class TableEnhancer:
             text=table_text,
             keywords=table_analysis['financial_indicators'],
             critical_entities=[],
-            incident_type=None,
-            incident_date=None,
+
             amount_range=None,
             language=Language.HEBREW if table_analysis['has_hebrew_content'] else Language.ENGLISH,
             created_at=datetime.now(),
@@ -324,8 +323,7 @@ class TableEnhancer:
                         'text': chunk.text,
                         'keywords': chunk.keywords,
                         'critical_entities': chunk.critical_entities,
-                        'incident_type': chunk.incident_type,
-                        'incident_date': chunk.incident_date,
+
                         'amount_range': chunk.amount_range,
                         'language': chunk.language.value if hasattr(chunk.language, 'value') else chunk.language,
                         'topic': chunk.topic,

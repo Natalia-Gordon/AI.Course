@@ -52,7 +52,6 @@ def chunk_document(file_name: str, blocks: List[Dict], budget_ratio: float = 0.0
                 
             # Extract entities and metadata
             entities = entity_extractor.extract_entities(section)
-            incident_type, incident_date = entity_extractor.extract_incident_info(section)
             amount_range = entity_extractor.extract_amount_range(section)
             language = entity_extractor.detect_language(section)
             
@@ -78,8 +77,6 @@ def chunk_document(file_name: str, blocks: List[Dict], budget_ratio: float = 0.0
                 text=section,
                 keywords=entities.get('keywords', [])[:8],
                 critical_entities=_map_entities_to_critical(entities),
-                incident_type=incident_type,
-                incident_date=incident_date,
                 amount_range=amount_range,
                 language=Language(language) if language in ["he", "en"] else Language.HEBREW,
                 created_at=datetime.now(),
@@ -92,6 +89,8 @@ def chunk_document(file_name: str, blocks: List[Dict], budget_ratio: float = 0.0
                 freshness=1.0,
                 priority=0.5
             )
+            
+            # Ownership information will be extracted by LlamaExtract
             
             chunks.append(chunk)
             chunk_id += 1

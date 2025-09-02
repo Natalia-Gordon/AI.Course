@@ -157,6 +157,43 @@ class PineconeIndex:
                 if language is not None:
                     metadata['language'] = str(language)
                 
+                # Add ownership metadata fields
+                if hasattr(chunk, 'has_ownership_info'):
+                    metadata['has_ownership_info'] = bool(chunk.has_ownership_info)
+                elif isinstance(chunk, dict) and 'has_ownership_info' in chunk:
+                    metadata['has_ownership_info'] = bool(chunk['has_ownership_info'])
+                
+                if hasattr(chunk, 'ownership_confidence'):
+                    metadata['ownership_confidence'] = float(chunk.ownership_confidence)
+                elif isinstance(chunk, dict) and 'ownership_confidence' in chunk:
+                    metadata['ownership_confidence'] = float(chunk['ownership_confidence'])
+                
+                # Add ownership entities as comma-separated string
+                if hasattr(chunk, 'ownership_entities') and chunk.ownership_entities:
+                    metadata['ownership_entities'] = ','.join(str(e) for e in chunk.ownership_entities)
+                elif isinstance(chunk, dict) and chunk.get('ownership_entities'):
+                    metadata['ownership_entities'] = ','.join(str(e) for e in chunk['ownership_entities'])
+                
+                # Add ownership percentages as comma-separated string
+                if hasattr(chunk, 'ownership_percentages') and chunk.ownership_percentages:
+                    metadata['ownership_percentages'] = ','.join(str(p) for p in chunk.ownership_percentages)
+                elif isinstance(chunk, dict) and chunk.get('ownership_percentages'):
+                    metadata['ownership_percentages'] = ','.join(str(p) for p in chunk['ownership_percentages'])
+                
+                # Add ownership companies as comma-separated string
+                if hasattr(chunk, 'ownership_companies') and chunk.ownership_companies:
+                    metadata['ownership_companies'] = ','.join(str(c) for c in chunk.ownership_companies)
+                elif isinstance(chunk, dict) and chunk.get('ownership_companies'):
+                    metadata['ownership_companies'] = ','.join(str(c) for c in chunk['ownership_companies'])
+                
+                # Add ownership dates as comma-separated string
+                if hasattr(chunk, 'ownership_dates') and chunk.ownership_dates:
+                    metadata['ownership_dates'] = ','.join(str(d) for d in chunk.ownership_dates)
+                elif isinstance(chunk, dict) and chunk.get('ownership_dates'):
+                    metadata['ownership_dates'] = ','.join(str(d) for d in chunk['ownership_dates'])
+                
+
+                
                 # Handle topics (ensure it's a string)
                 if topic:
                     if isinstance(topic, list):
@@ -385,9 +422,8 @@ class PineconeIndex:
             raise RuntimeError("Pinecone index not initialized")
         
         try:
-            # Create ownership-specific filter
+            # Create ownership-specific filter - try without boolean filter first
             ownership_filter = {
-                "has_ownership_info": {"$eq": True},
                 "ownership_confidence": {"$gte": min_confidence}
             }
             

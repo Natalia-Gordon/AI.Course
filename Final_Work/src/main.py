@@ -221,35 +221,48 @@ def process_query(query: str, chunks: List[Any], config: Dict[str, Any], use_lan
             # Process with LangChain
             answer = langchain_agents.process_with_langchain(query, intent, hits)
             logger.info("✓ Query processed with LangChain enhancement")
+            # For LangChain, use original hits since it doesn't return relevant chunks
+            relevant_chunks = hits
             
         except Exception as e:
             logger.warning(f"LangChain processing failed: {e}, falling back to standard agents")
-            answer = _fallback_to_standard_agents(query, intent, hits, namespace)
+            result = _fallback_to_standard_agents(query, intent, hits, namespace)
+            if isinstance(result, tuple):
+                answer, relevant_chunks = result
+            else:
+                answer, relevant_chunks = result, hits
     else:
         # Use standard agents (your current implementation)
-        answer = _fallback_to_standard_agents(query, intent, hits, namespace)
+        result = _fallback_to_standard_agents(query, intent, hits, namespace)
+        if isinstance(result, tuple):
+            answer, relevant_chunks = result
+        else:
+            answer, relevant_chunks = result, hits
     
     return {
         'query': query,
         'intent': intent,
-        'hits': hits,
+        'hits': relevant_chunks,  # Use relevant chunks from agent instead of original hits
         'answer': answer,
         'processing_method': 'langchain' if (use_langchain and LANGCHAIN_AVAILABLE) else 'standard'
     }
 
-def _fallback_to_standard_agents(query: str, intent: str, hits: List[Dict], namespace: str = None) -> str:
+def _fallback_to_standard_agents(query: str, intent: str, hits: List[Dict], namespace: str = None) -> tuple[str, List[Dict]]:
     """Fallback to standard agent functions."""
     logger.info(f"Using standard agent processing for intent: {intent}")
     
     if intent == 'summary':
         from agents.summary_agent import run_summary
-        return run_summary(query, hits)
+        answer = run_summary(query, hits)
+        return answer, hits  # Return original hits for summary
     elif intent == 'needle':
         from agents.needle_agent import run_needle
-        return run_needle(query, hits, namespace)
+        answer, relevant_chunks = run_needle(query, hits, namespace)
+        return answer, relevant_chunks
     else:  # table
         from agents.table_qa_agent import run_table_qa
-        return run_table_qa(query, hits)
+        answer = run_table_qa(query, hits)
+        return answer, hits  # Return original hits for table
 
 def display_results(results: Dict[str, Any]) -> None:
     """Display query results in a formatted way."""

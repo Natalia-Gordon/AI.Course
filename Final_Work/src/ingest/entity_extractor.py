@@ -1,7 +1,10 @@
 import re
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime
+import logging
+from typing import List, Dict, Any, Optional
+
 from .metadata import extract_financial_metrics, extract_dates
+
+logger = logging.getLogger(__name__)
 
 class EntityExtractor:
     """Extract critical entities from text for metadata enrichment."""
@@ -132,6 +135,112 @@ class EntityExtractor:
         
         return list(set(kpis))[:10]
     
+    def extract_ownership_info(self, text: str) -> Dict[str, Any]:
+        """Extract ownership information from text using generic patterns."""
+        ownership_info = {
+            'has_ownership_info': False,
+            'ownership_confidence': 0.0,
+            'controlling_owner': None,
+            'ownership_percentage': None,
+            'voting_rights_percentage': None,
+            'ownership_date': None,
+            'ownership_entities': [],
+            'ownership_percentages': [],
+            'ownership_companies': [],
+            'ownership_dates': []
+        }
+        
+        try:
+            # Generic ownership detection patterns
+            ownership_indicators = [
+                # Hebrew ownership terms
+                r'בעלת\s*השליטה', r'בעלי\s*השליטה', r'הטילשה', r'שליטה', r'בעלות',
+                r'מחזיק\s*בשליטה', r'שליטה\s*בחברה', r'בעלי\s*מניות',
+                # English ownership terms
+                r'controlling\s*owner', r'shareholder', r'ownership', r'control',
+                r'majority\s*shareholder', r'controlling\s*interest'
+            ]
+            
+            # Count ownership indicators
+            indicator_count = 0
+            for pattern in ownership_indicators:
+                if re.search(pattern, text, re.IGNORECASE):
+                    indicator_count += 1
+            
+            if indicator_count >= 2:
+                ownership_info['has_ownership_info'] = True
+                ownership_info['ownership_confidence'] = 0.7
+                
+                # Extract company names using generic patterns
+                company_patterns = [
+                    r'([א-ת]+(?:\s+[א-ת]+)*\s+(?:בע"מ|בע"מ|חברה|עמותה))',
+                    r'(?:חברת|עמותת)\s+([א-ת]+(?:\s+[א-ת]+)*)',
+                    r'([A-Za-z]+(?:\s+[A-Za-z]+)*\s+(?:Ltd|Inc|Corp|Company))',
+                ]
+                
+                companies = []
+                for pattern in company_patterns:
+                    matches = re.findall(pattern, text, re.IGNORECASE)
+                    companies.extend(matches)
+                
+                if companies:
+                    ownership_info['controlling_owner'] = companies[0]
+                    ownership_info['ownership_companies'] = companies[:3]
+                
+                # Extract ownership percentages using generic patterns
+                percentage_patterns = [
+                    r'(\d+\.?\d*)%\s*(?:מהון\s*המניות|מהמניות|מהון)',
+                    r'(\d+\.?\d*)%\s*(?:מזכויות\s*הצבעה|זכויות\s*הצבעה)',
+                    r'(\d+\.?\d*)%\s*(?:ownership|shareholding)',
+                    r'(\d+\.?\d*)%-כב',  # Reversed Hebrew pattern
+                ]
+                
+                percentages = []
+                for pattern in percentage_patterns:
+                    matches = re.findall(pattern, text, re.IGNORECASE)
+                    percentages.extend(matches)
+                
+                if percentages:
+                    ownership_info['ownership_percentage'] = percentages[0]
+                    ownership_info['ownership_percentages'] = percentages[:3]
+                
+                # Extract voting rights percentages
+                voting_patterns = [
+                    r'(\d+\.?\d*)%.*?(?:בדילול\s*מלא|voting\s*rights)',
+                    r'(\d+\.?\d*)%.*?לולידב',  # Reversed Hebrew
+                ]
+                
+                for pattern in voting_patterns:
+                    match = re.search(pattern, text, re.IGNORECASE)
+                    if match:
+                        ownership_info['voting_rights_percentage'] = match.group(1)
+                        break
+                
+                # Extract ownership dates using generic patterns
+                date_patterns = [
+                    r'(\d{4}\s+[א-ת]+\s+\d{1,2})',  # Hebrew date
+                    r'(\d{1,2}\s+[א-ת]+\s+\d{4})',  # Hebrew date
+                    r'(\d{1,2}/\d{1,2}/\d{4})',     # DD/MM/YYYY
+                    r'(\d{4}-\d{1,2}-\d{1,2})',     # YYYY-MM-DD
+                ]
+                
+                dates = []
+                for pattern in date_patterns:
+                    matches = re.findall(pattern, text)
+                    dates.extend(matches)
+                
+                if dates:
+                    ownership_info['ownership_date'] = dates[0]
+                    ownership_info['ownership_dates'] = dates[:3]
+                
+                # Extract ownership entities (organizations mentioned in ownership context)
+                ownership_info['ownership_entities'] = self.extract_organizations(text)
+            
+        except Exception as e:
+            logger.error(f"Error in ownership extraction: {e}")
+        
+        return ownership_info
+
     def extract_amount_range(self, text: str) -> Optional[List[float]]:
         """Extract amount range [min, max] if present."""
         # Look for range patterns
@@ -165,34 +274,4 @@ class EntityExtractor:
         else:
             return "mixed"
     
-    def extract_incident_info(self, text: str) -> Tuple[Optional[str], Optional[datetime]]:
-        """Extract incident type and date if present."""
-        # Incident type patterns
-        incident_patterns = [
-            r'(?:תקרית|אירוע|בעיה|תקלה|כשל|שגיאה)',
-            r'(?:הפרה|עבירה|תביעה|תלונה)',
-            r'(?:תאונה|נזק|אובדן|גניבה)',
-        ]
-        
-        incident_type = None
-        for pattern in incident_patterns:
-            if re.search(pattern, text, re.IGNORECASE):
-                incident_type = "security_incident"  # Default type
-                break
-        
-        # Try to extract incident date
-        dates = self.extract_dates(text)
-        incident_date = None
-        
-        if dates:
-            # Try to parse the first date found
-            try:
-                # Simple date parsing - you might want to use a more robust parser
-                for date_str in dates:
-                    if re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
-                        incident_date = datetime.strptime(date_str, '%d/%m/%Y')
-                        break
-            except ValueError:
-                pass
-        
-        return incident_type, incident_date
+

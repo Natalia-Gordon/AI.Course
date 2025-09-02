@@ -52,12 +52,13 @@ class FinancialExtractionSchema(BaseModel):
     # Outlook
     outlook: Optional[str] = Field(description="Future outlook or guidance")
     
-    # NEW: Ownership Information
-    ownership_info: Optional[Dict[str, Any]] = Field(description="Ownership structure and controlling shareholders")
-    controlling_owner: Optional[str] = Field(description="Name of controlling owner")
-    ownership_percentage: Optional[str] = Field(description="Ownership percentage of controlling owner")
-    voting_rights_percentage: Optional[str] = Field(description="Voting rights percentage")
-    ownership_date: Optional[str] = Field(description="Date of ownership information")
+    # OWNERSHIP INFORMATION - PRIORITY FIELDS
+    controlling_owner: Optional[str] = Field(description="Name of the controlling owner or controlling shareholder")
+    ownership_percentage: Optional[str] = Field(description="Ownership percentage of the controlling owner")
+    voting_rights_percentage: Optional[str] = Field(description="Voting rights percentage of the controlling owner")
+    ownership_date: Optional[str] = Field(description="Date when the ownership information is valid")
+    ownership_structure: Optional[str] = Field(description="Description of the ownership structure")
+    major_shareholders: List[str] = Field(description="List of major shareholders and their ownership percentages")
 
 class OwnershipExtractionSchema(BaseModel):
     """Schema for extracting ownership information using LlamaExtract."""
@@ -130,7 +131,16 @@ class DataLoader:
                     # Agent doesn't exist, create new one
                     self.financial_agent = self.llama_extract.create_agent(
                         name=agent_name,
-                        instructions="You are a financial analyst specializing in extracting key financial metrics, ownership information, and business insights from financial reports. Focus on accuracy and completeness."
+                        instructions="""You are a financial analyst specializing in extracting key financial metrics, ownership information, and business insights from financial reports. 
+
+PRIORITY FOCUS: OWNERSHIP INFORMATION
+- Pay special attention to ownership structure, controlling shareholders, and ownership percentages
+- Look for phrases like "בעלת השליטה", "בעלי השליטה", "הטילשה", "שליטה", "בעלות"
+- Extract exact ownership percentages and voting rights percentages
+- Identify the controlling owner company name and ownership date
+- Look for information about major shareholders and their holdings
+
+Extract all information with high accuracy and completeness, with particular emphasis on ownership details."""
                     )
                     logger.info(f"✅ Created new LlamaExtract agent: {agent_name}")
                 
@@ -180,11 +190,9 @@ class DataLoader:
                     r'(\d+)\s*אחוז'
                 ],
                 'company_names': [
-                    r'ווישור\s*גלובלטק',
-                    r'גלובלטק',
-                    r'ווישור',
-                    r'איילון\s*חברה\s*לביטוח',
-                    r'איילון'
+                    r'[א-ת]+(?:\s+[א-ת]+)*\s+(?:בע"מ|בע"מ|חברה|עמותה)',
+                    r'(?:חברת|עמותת)\s+[א-ת]+(?:\s+[א-ת]+)*',
+                    r'[A-Za-z]+(?:\s+[A-Za-z]+)*\s+(?:Ltd|Inc|Corp|Company)',
                 ],
                 'dates': [
                     r'(\d{1,2})\s*ביוני\s*(\d{4})',
@@ -447,8 +455,31 @@ class DataLoader:
                 'liabilities': financial_data.get('liabilities'),
                 'kpis': financial_data.get('kpis', []),
                 'risk_factors': financial_data.get('risk_factors', []),
-                'outlook': financial_data.get('outlook')
+                'outlook': financial_data.get('outlook'),
+                # OWNERSHIP INFORMATION
+                'controlling_owner': financial_data.get('controlling_owner'),
+                'ownership_percentage': financial_data.get('ownership_percentage'),
+                'voting_rights_percentage': financial_data.get('voting_rights_percentage'),
+                'ownership_date': financial_data.get('ownership_date'),
+                'ownership_structure': financial_data.get('ownership_structure'),
+                'major_shareholders': financial_data.get('major_shareholders', [])
             }
+            
+            # 6. Add ownership information to chunk metadata if found
+            if financial_data.get('controlling_owner'):
+                enhanced_chunk['has_ownership_info'] = True
+                enhanced_chunk['ownership_confidence'] = 0.9  # High confidence for LlamaExtract
+                
+                # Add ownership entities to critical entities
+                if financial_data.get('controlling_owner'):
+                    enhanced_chunk['critical_entities'].append(f"OWNER:{financial_data['controlling_owner']}")
+                if financial_data.get('ownership_percentage'):
+                    enhanced_chunk['critical_entities'].append(f"OWNERSHIP:{financial_data['ownership_percentage']}%")
+                if financial_data.get('voting_rights_percentage'):
+                    enhanced_chunk['critical_entities'].append(f"VOTING:{financial_data['voting_rights_percentage']}%")
+            else:
+                enhanced_chunk['has_ownership_info'] = False
+                enhanced_chunk['ownership_confidence'] = 0.0
             
             # 6. Enhance section_type if executive summary is found
             if financial_data.get('executive_summary') and enhanced_chunk.get('section_type') == 'Analysis':

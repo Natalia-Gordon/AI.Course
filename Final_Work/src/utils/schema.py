@@ -91,9 +91,6 @@ class DocumentChunk(BaseModel):
     has_ownership_info: bool = Field(default=False, description="Whether chunk contains ownership information")
     ownership_confidence: float = Field(default=0.0, description="Confidence score for ownership information (0.0-1.0)")
     
-    # Incident-specific fields
-    incident_type: Optional[str] = Field(None, description="Type of incident if applicable")
-    incident_date: Optional[datetime] = Field(None, description="Incident date in ISO8601 format")
     amount_range: Optional[List[float]] = Field(None, description="Amount range [min, max] if applicable")
     
     # Document properties
