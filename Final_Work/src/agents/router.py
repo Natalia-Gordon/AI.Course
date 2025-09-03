@@ -142,22 +142,27 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
     if any(section in q for section in specific_sections):
         return "needle"
     
-    # PRIORITY 3: Summary queries - look for summary-related keywords
+    # PRIORITY 3: Table queries - look for quantitative analysis (check before summary)
+    table_keywords = [
+        # English keywords
+        "table", "average", "avg", "sum", "total", "median", "percent", 
+        "percentage", "chart", "graph", "calculate", "compute", "statistics",
+        "compare", "trend", "growth", "decline", "data", "numbers", "figures",
+        # Hebrew keywords
+        "טבלה", "נתונים", "מספרים", "סטטיסטיקה", "חישוב", "ממוצע", 
+        "סכום", "סה״כ", "אחוז", "השוואה", "מגמה", "צמיחה", "ירידה",
+        "הצג לי", "מה הנתונים", "נתוני", "מספרי", "סטטיסטיקות"
+    ]
+    if any(keyword in q for keyword in table_keywords):
+        return "table"
+    
+    # PRIORITY 4: Summary queries - look for summary-related keywords
     summary_keywords = [
         "summarize", "overview", "highlight", "brief", "general", 
         "describe", "key points", "main points", "tell me about"
     ]
     if any(keyword in q for keyword in summary_keywords):
         return "summary"
-    
-    # PRIORITY 4: Table queries - look for quantitative analysis
-    table_keywords = [
-        "table", "average", "avg", "sum", "total", "median", "percent", 
-        "percentage", "chart", "graph", "calculate", "compute", "statistics",
-        "compare", "trend", "growth", "decline"
-    ]
-    if any(keyword in q for keyword in table_keywords):
-        return "table"
     
     # PRIORITY 5: Needle queries - look for specific information requests
     needle_keywords = [
