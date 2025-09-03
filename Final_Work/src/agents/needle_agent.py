@@ -1118,14 +1118,14 @@ class NeedleAgent:
         self.logger.info(f"🔍 Query analysis: '{query}' -> is_specific_request: {is_specific_request}")
         
         # Score contexts based on relevance
-    scored = []
-    for c in contexts:
-        text = (c.get("text") or "").lower()
+        scored = []
+        for c in contexts:
+            text = (c.get("text") or "").lower()
             score = self.calculate_relevance_score(query_terms, text, c)
             
-        cpy = dict(c)
-        cpy["_score"] = score
-        scored.append(cpy)
+            cpy = dict(c)
+            cpy["_score"] = score
+            scored.append(cpy)
         
         # Sort by relevance score
         best_matches = sorted(scored, key=lambda x: x["_score"], reverse=True)[:3]

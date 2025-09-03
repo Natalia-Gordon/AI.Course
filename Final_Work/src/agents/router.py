@@ -129,7 +129,7 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
     # PRIORITY 1: Location-specific queries (NEEDLE) - check these FIRST
     location_patterns = [
         "page number for", "location of", "where to find", "reference to",
-        "find the page", "show me the", "where can i find", "in which section"
+        "find the page", "where can i find", "in which section"
     ]
     if any(pattern in q for pattern in location_patterns):
         return "needle"
@@ -148,6 +148,8 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
         "table", "average", "avg", "sum", "total", "median", "percent", 
         "percentage", "chart", "graph", "calculate", "compute", "statistics",
         "compare", "trend", "growth", "decline", "data", "numbers", "figures",
+        "show me", "display", "present", "revenue data", "financial data",
+        "revenue", "profit", "income", "financial", "metrics", "values",
         # Hebrew keywords
         "טבלה", "נתונים", "מספרים", "סטטיסטיקה", "חישוב", "ממוצע", 
         "סכום", "סה״כ", "אחוז", "השוואה", "מגמה", "צמיחה", "ירידה",
@@ -168,7 +170,7 @@ def route_intent_keywords(query: str) -> Literal["summary", "table", "needle"]:
     needle_keywords = [
         "page ", "tableid", "figure", "anchor", "paragraph", "section",
         "find", "locate", "where is", "specific", "exact", "precise",
-        "what was", "how much", "what is", "show me", "find information",
+        "what was", "how much", "what is", "find information",
         "page number", "which page", "on what page", "in which section"
     ]
     if any(keyword in q for keyword in needle_keywords):
