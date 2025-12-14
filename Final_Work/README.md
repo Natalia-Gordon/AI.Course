@@ -12,7 +12,7 @@ This project implements a **Hybrid RAG (Retrieval-Augmented Generation) System**
 - **Hybrid Retrieval**: Combines dense and sparse retrieval methods
 - **Multi-Agent Architecture**: Router, Summary, Needle, and Table QA agents
 - **LlamaCloud Integration**: Structured data extraction for metadata enhancement
-- **Comprehensive Evaluation**: RAGAS metrics with detailed performance analysis
+- **Comprehensive Evaluation**: RAGAS metrics with detailed performance analysis 
 - **Production-Ready Logging**: Unified logging system with component-specific tracking
 - **Financial Document Focus**: Optimized for Q1 2025 financial reports and tables
 - **Hebrew Language Support**: Full Hebrew text processing and query understanding
