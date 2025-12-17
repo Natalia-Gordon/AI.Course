@@ -97,10 +97,24 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(X_test_processed[:100])  # Use subset for speed
         
+        # Determine number of features from SHAP values shape
+        # For XGBoost binary classification, shap_values is array with shape (n_samples, n_features)
+        # If it's a list (multi-class), shap_values[0] has shape (n_samples, n_features)
+        if isinstance(shap_values, list):
+            # Multi-class case - use first class to determine feature count
+            n_features = shap_values[0].shape[1]
+        else:
+            # Binary classification - shap_values is array with shape (n_samples, n_features)
+            n_features = shap_values.shape[1]
+        
+        # Use all feature names (no slicing needed - feature_names should match n_features)
+        # Only use the number of features that exist in SHAP values
+        feature_names_to_use = feature_names[:n_features]
+        
         # Plot summary
         plt.figure(figsize=(10, 8))
         shap.summary_plot(shap_values, X_test_processed[:100], 
-                         feature_names=feature_names[:len(shap_values[0])],
+                         feature_names=feature_names_to_use,
                          max_display=max_display, show=False)
         plt.tight_layout()
         plt.show()
@@ -108,7 +122,7 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
         # Plot bar plot
         plt.figure(figsize=(10, 6))
         shap.summary_plot(shap_values, X_test_processed[:100], 
-                         feature_names=feature_names[:len(shap_values[0])],
+                         feature_names=feature_names_to_use,
                          plot_type="bar", max_display=max_display, show=False)
         plt.tight_layout()
         plt.show()

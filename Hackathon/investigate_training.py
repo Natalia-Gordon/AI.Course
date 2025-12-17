@@ -25,6 +25,24 @@ df.dropna(axis=0, inplace=True)
 
 # Check target variable
 target = "Feeling anxious"
+
+# Verify target column exists
+if target not in df.columns:
+    # Check for case-insensitive matches
+    anxious_cols = [c for c in df.columns if 'anxious' in c.lower()]
+    if anxious_cols:
+        raise ValueError(
+            f"Target column '{target}' not found in CSV. "
+            f"Found similar column(s): {anxious_cols}. "
+            f"Please update the target variable name in the code."
+        )
+    else:
+        raise ValueError(
+            f"Target column '{target}' not found in CSV. "
+            f"Available columns: {list(df.columns)}. "
+            f"Please verify the CSV file and update the target variable name."
+        )
+
 print(f"\n2. Target variable '{target}' distribution:")
 print(df[target].value_counts())
 print(f"\nTarget variable proportions:")
@@ -77,7 +95,7 @@ if MODEL_AVAILABLE:
         {
             "name": "Example 1 (High risk - 7 Yes)",
             "data": {
-                "Age": 28,
+                "Age": "25-30",  # Changed from numeric 28 to categorical age range string
                 "Feeling sad or Tearful": "Yes",
                 "Irritable towards baby & partner": "Yes",
                 "Trouble sleeping at night": "Yes",
@@ -91,7 +109,7 @@ if MODEL_AVAILABLE:
         {
             "name": "Example 2 (Low risk - all No)",
             "data": {
-                "Age": 32,
+                "Age": "30-35",  # Changed from numeric 32 to categorical age range string
                 "Feeling sad or Tearful": "No",
                 "Irritable towards baby & partner": "No",
                 "Trouble sleeping at night": "No",
@@ -108,18 +126,14 @@ if MODEL_AVAILABLE:
         print(f"\n{example['name']}:")
         row = pd.DataFrame([example['data']], columns=X_train.columns)
         
-        # Ensure dtypes match
+        # Ensure dtypes match - all columns are object type (categorical strings)
         for col in row.columns:
             if col in X_train.dtypes:
                 target_dtype = X_train.dtypes[col]
+                # All feature columns are categorical (object type) in this dataset
+                # Age is also categorical (e.g., "25-30", "30-35"), not numeric
                 if target_dtype == 'object':
                     row[col] = row[col].astype(str)
-                elif col == "Age":
-                    row[col] = pd.to_numeric(row[col], errors='coerce').fillna(0.0)
-                    if 'int' in str(target_dtype):
-                        row[col] = row[col].astype(int)
-                    else:
-                        row[col] = row[col].astype(float)
         
         proba_result = pipeline.predict_proba(row)
         pred_class = pipeline.predict(row)[0]

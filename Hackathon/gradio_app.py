@@ -41,9 +41,12 @@ def predict_depression(
     Returns:
         tuple: (risk_score, feature_importance)
     """
+    # Filter out target column if present (should not be in feature_columns)
+    feature_columns_filtered = [col for col in feature_columns if col != "Feeling anxious"]
+    
     # Create input row matching the exact structure used during training
     row_dict = {}
-    for col in feature_columns:
+    for col in feature_columns_filtered:
         if col == "Age":
             # Age is a categorical age group in the CSV (object dtype)
             row_dict[col] = "" if age is None else str(age).strip()
@@ -61,9 +64,6 @@ def predict_depression(
             )
         elif col == "Overeating or loss of appetite":
             row_dict[col] = "" if appetite is None else str(appetite).strip()
-        elif col == "Feeling anxious":
-            # Target column in training; should not normally be in feature_columns
-            continue
         elif col == "Feeling of guilt":
             row_dict[col] = "" if guilt is None else str(guilt).strip()
         elif col == "Problems of bonding with baby":
@@ -76,8 +76,25 @@ def predict_depression(
             # Default for any extra/unexpected feature columns
             row_dict[col] = ""
 
+    # Validate that all required columns are present in row_dict
+    missing_cols = set(feature_columns_filtered) - set(row_dict.keys())
+    if missing_cols:
+        raise ValueError(
+            f"Missing required feature columns: {missing_cols}. "
+            "This indicates a bug in the feature mapping logic."
+        )
+
     # Create DataFrame ensuring exact column order and dtypes match training data
-    row = pd.DataFrame([row_dict], columns=feature_columns)
+    # Use feature_columns_filtered to avoid including target column
+    row = pd.DataFrame([row_dict], columns=feature_columns_filtered)
+
+    # Validate for NaN values before type conversion
+    if row.isna().any().any():
+        nan_cols = row.columns[row.isna().any()].tolist()
+        raise ValueError(
+            f"Found NaN values in feature columns: {nan_cols}. "
+            "All feature values must be provided."
+        )
 
     # Convert dtypes to match training data exactly (critical for OneHotEncoder)
     for col in row.columns:
@@ -85,7 +102,11 @@ def predict_depression(
             target_dtype = feature_dtypes[col]
             if target_dtype == "object":
                 # Ensure categorical columns are object dtype (string)
-                row[col] = row[col].astype(str)
+                # Note: Empty strings are acceptable for categorical features
+                # Fill any NaN values with empty string before conversion (defensive check)
+                row[col] = row[col].fillna("").astype(str)
+                # Replace any "nan" strings that might have been created from NaN conversion
+                row[col] = row[col].replace("nan", "", regex=False)
 
     # Debug: Print the row to verify values
     import sys
@@ -154,8 +175,8 @@ def predict_depression(
     # and vice versa, meaning the model's "positive" class probability is aligned with
     # "low risk" rather than "high risk". To present an intuitive risk score to users
     # (more symptoms -> higher displayed risk), we display the COMPLEMENT of proba.
-    displayed_risk = 1.0 - proba
-    risk_score = f"PPD Risk Score: {displayed_risk:.2%}"
+    #displayed_risk = 1.0 - proba
+    risk_score = f"PPD Risk Score: {proba:.2%}"
 
     # Debug: Also check the actual prediction
     pred_class = pipeline.predict(row)[0]
