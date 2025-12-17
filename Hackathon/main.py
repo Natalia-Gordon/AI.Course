@@ -28,14 +28,39 @@ for column in df.columns:
 # Drop the rows with missing values
 df.dropna(axis=0, inplace=True)
 
-# 🧩 Identify categorical features
-cat_cols = [c for c in df.columns if df[c].dtype == "object" and c != "Feeling anxious"]
-target = "Feeling anxious"
+# 🧩 Create composite target based on multiple symptoms (better for PPD diagnosis)
+# Define all symptom columns
+symptom_cols = [
+    "Feeling sad or Tearful",
+    "Irritable towards baby & partner",
+    "Trouble sleeping at night",
+    "Problems concentrating or making decision",
+    "Overeating or loss of appetite",
+    "Feeling anxious",
+    "Feeling of guilt",
+    "Problems of bonding with baby",
+    "Suicide attempt"
+]
 
-# 🧠 Encode Yes/No targets as 1/0
-df[target] = df[target].map({"Yes":1, "No":0})
+# Calculate symptom count (how many symptoms answered "Yes")
+df['symptom_count'] = df[symptom_cols].apply(
+    lambda x: (x == "Yes").sum(), axis=1
+)
 
-# 🧪 Handle missing values
+# Create composite target: PPD = 1 if 3+ symptoms present (clinically appropriate)
+threshold = 3
+target = "PPD_Composite"
+df[target] = (df['symptom_count'] >= threshold).astype(int)
+
+print(f"\n📊 Composite Target Distribution (PPD = 1 if {threshold}+ symptoms):")
+print(df[target].value_counts())
+print(f"Proportions: {df[target].value_counts(normalize=True).to_dict()}")
+
+# 🧩 Identify categorical features (all symptom columns + Age, excluding target columns)
+cat_cols = [c for c in df.columns if df[c].dtype == "object" and c not in [target, 'symptom_count']]
+
+# 🧪 Handle missing values (drop symptom_count column as it's just for target creation)
+df.drop(columns=['symptom_count'], axis=1, inplace=True, errors='ignore')
 df = df.dropna()
 
 X = df.drop(columns=[target])

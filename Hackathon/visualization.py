@@ -81,11 +81,11 @@ def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve"):
 
 
 def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
-    """Plot SHAP summary for feature importance."""
+    """Plot SHAP summary for feature importance for both classes."""
     try:
         # Get the preprocessed features
         preprocessor = pipeline.named_steps['preprocess']
-        X_test_processed = preprocessor.transform(X_test)
+        X_test_processed = preprocessor.transform(X_test[:100])  # Use subset for speed
         
         # Get feature names after one-hot encoding
         feature_names = preprocessor.get_feature_names_out()
@@ -95,40 +95,82 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
         
         # Create SHAP explainer
         explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_test_processed[:100])  # Use subset for speed
         
-        # Determine number of features from SHAP values shape
-        # For XGBoost binary classification, shap_values is array with shape (n_samples, n_features)
-        # If it's a list (multi-class), shap_values[0] has shape (n_samples, n_features)
-        if isinstance(shap_values, list):
-            # Multi-class case - use first class to determine feature count
-            n_features = shap_values[0].shape[1]
+        # Calculate SHAP values for both classes
+        # For binary classification with XGBoost, shap_values() can return:
+        # 1. A list with 2 arrays [class_0_shap, class_1_shap]
+        # 2. A single array (typically for the positive class/class 1)
+        shap_values_output = explainer.shap_values(X_test_processed)
+        
+        # Handle different return types
+        if isinstance(shap_values_output, list) and len(shap_values_output) == 2:
+            # List format with both classes: [shap_values_class_0, shap_values_class_1]
+            shap_values_class_0 = shap_values_output[0]
+            shap_values_class_1 = shap_values_output[1]
+        elif isinstance(shap_values_output, list) and len(shap_values_output) == 1:
+            # Single element list - use it as class 1, calculate class 0
+            shap_values_class_1 = shap_values_output[0]
+            # For binary classification: SHAP values for class 0 = -SHAP values for class 1
+            # (since probabilities sum to 1, their SHAP values are negated)
+            shap_values_class_0 = -shap_values_class_1
         else:
-            # Binary classification - shap_values is array with shape (n_samples, n_features)
-            n_features = shap_values.shape[1]
+            # Single array format: typically for positive class (class 1)
+            # For binary classification, class 0 SHAP = -class 1 SHAP
+            shap_values_class_1 = shap_values_output
+            shap_values_class_0 = -shap_values_class_1
         
-        # Use all feature names (no slicing needed - feature_names should match n_features)
-        # Only use the number of features that exist in SHAP values
+        # Determine number of features
+        n_features = shap_values_class_1.shape[1]
         feature_names_to_use = feature_names[:n_features]
         
-        # Plot summary
+        print(f"\n   Plotting SHAP values for Class 0 (No depression)...")
+        # Plot summary for Class 0 (No depression)
         plt.figure(figsize=(10, 8))
-        shap.summary_plot(shap_values, X_test_processed[:100], 
+        shap.summary_plot(shap_values_class_0, X_test_processed, 
                          feature_names=feature_names_to_use,
-                         max_display=max_display, show=False)
+                         max_display=max_display, 
+                         show=False)
+        plt.title("SHAP Summary Plot - Class 0 (No Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
         plt.show()
         
-        # Plot bar plot
+        # Plot bar plot for Class 0
         plt.figure(figsize=(10, 6))
-        shap.summary_plot(shap_values, X_test_processed[:100], 
+        shap.summary_plot(shap_values_class_0, X_test_processed, 
                          feature_names=feature_names_to_use,
-                         plot_type="bar", max_display=max_display, show=False)
+                         plot_type="bar", 
+                         max_display=max_display,
+                         show=False)
+        plt.title("SHAP Feature Importance - Class 0 (No Depression)", fontsize=14, fontweight='bold', pad=20)
+        plt.tight_layout()
+        plt.show()
+        
+        print(f"   Plotting SHAP values for Class 1 (Yes depression)...")
+        # Plot summary for Class 1 (Yes depression)
+        plt.figure(figsize=(10, 8))
+        shap.summary_plot(shap_values_class_1, X_test_processed, 
+                         feature_names=feature_names_to_use,
+                         max_display=max_display,
+                         show=False)
+        plt.title("SHAP Summary Plot - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
+        plt.tight_layout()
+        plt.show()
+        
+        # Plot bar plot for Class 1
+        plt.figure(figsize=(10, 6))
+        shap.summary_plot(shap_values_class_1, X_test_processed, 
+                         feature_names=feature_names_to_use,
+                         plot_type="bar", 
+                         max_display=max_display,
+                         show=False)
+        plt.title("SHAP Feature Importance - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
         plt.show()
         
     except Exception as e:
         print(f"SHAP visualization error: {e}")
+        import traceback
+        traceback.print_exc()
         print("Skipping SHAP plots...")
 
 

@@ -41,8 +41,8 @@ def predict_depression(
     Returns:
         tuple: (risk_score, feature_importance)
     """
-    # Filter out target column if present (should not be in feature_columns)
-    feature_columns_filtered = [col for col in feature_columns if col != "Feeling anxious"]
+    # Filter out composite target column if present (should not be in feature_columns)
+    feature_columns_filtered = [col for col in feature_columns if col != "PPD_Composite"]
     
     # Create input row matching the exact structure used during training
     row_dict = {}
@@ -64,6 +64,10 @@ def predict_depression(
             )
         elif col == "Overeating or loss of appetite":
             row_dict[col] = "" if appetite is None else str(appetite).strip()
+        elif col == "Feeling anxious":
+            # Feeling anxious is now a feature (not target) - use default "No" if not provided
+            # Note: This could be added as a gradio input field in the future
+            row_dict[col] = "No"  # Default to "No" for anxiety
         elif col == "Feeling of guilt":
             row_dict[col] = "" if guilt is None else str(guilt).strip()
         elif col == "Problems of bonding with baby":
