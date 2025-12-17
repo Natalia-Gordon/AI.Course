@@ -28,27 +28,38 @@ def predict_depression(pipeline, explainer, feature_columns, feature_dtypes, age
     """
     # Create input row matching the exact structure used during training
     # Map inputs to column values, ensuring proper types
+    # Normalize inputs to ensure exact "Yes"/"No" matching (case-insensitive, strip whitespace)
+    def normalize_yes_no(value):
+        """Normalize input to exactly 'Yes' or 'No'"""
+        if value is None:
+            return "No"
+        value_str = str(value).strip()
+        if value_str.upper() in ['YES', 'Y', '1', 'TRUE']:
+            return "Yes"
+        else:
+            return "No"
+    
     row_dict = {}
     for col in feature_columns:
         if col == "Age":
             # Age should be numeric
             row_dict[col] = float(age) if age is not None and not pd.isna(age) else 0.0
         elif col == "Feeling sad or Tearful":
-            row_dict[col] = str(feeling_sad) if feeling_sad and str(feeling_sad) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(feeling_sad)
         elif col == "Irritable towards baby & partner":
-            row_dict[col] = str(irritable) if irritable and str(irritable) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(irritable)
         elif col == "Trouble sleeping at night":
-            row_dict[col] = str(trouble_sleeping) if trouble_sleeping and str(trouble_sleeping) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(trouble_sleeping)
         elif col == "Problems concentrating or making decision":
-            row_dict[col] = str(concentration) if concentration and str(concentration) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(concentration)
         elif col == "Overeating or loss of appetite":
-            row_dict[col] = str(appetite) if appetite and str(appetite) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(appetite)
         elif col == "Feeling of guilt":
-            row_dict[col] = str(guilt) if guilt and str(guilt) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(guilt)
         elif col == "Problems of bonding with baby":
-            row_dict[col] = str(bonding) if bonding and str(bonding) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(bonding)
         elif col == "Suicide attempt":
-            row_dict[col] = str(suicide_attempt) if suicide_attempt and str(suicide_attempt) not in ['', 'None', 'nan'] else "No"
+            row_dict[col] = normalize_yes_no(suicide_attempt)
         else:
             row_dict[col] = "No"  # Default for any unexpected columns
     
@@ -70,9 +81,58 @@ def predict_depression(pipeline, explainer, feature_columns, feature_dtypes, age
                 else:
                     row[col] = row[col].astype(float)
     
+    # Debug: Print the row to verify values (temporary debugging)
+    import sys
+    print("DEBUG - Input row values:", file=sys.stderr)
+    for col in row.columns:
+        print(f"  {col}: {row[col].values[0]}", file=sys.stderr)
+    print(f"DEBUG - Row shape: {row.shape}, Columns: {list(row.columns)}", file=sys.stderr)
+    
     # Get prediction probability
-    proba = pipeline.predict_proba(row)[0, 1]
+    # Note: predict_proba returns [prob_class_0, prob_class_1]
+    # Target encoding: "Yes"=1, "No"=0 (from main.py line 36)
+    # So class 1 = "Feeling anxious" = "Yes" = has depression/anxiety
+    proba_result = pipeline.predict_proba(row)
+    
+    # Verify the model classes and debug
+    model = pipeline.named_steps['model']
+    if hasattr(model, 'classes_'):
+        print(f"DEBUG - Model classes: {model.classes_}", file=sys.stderr)
+        prob_class_0 = proba_result[0, 0]  # Probability of class 0
+        prob_class_1 = proba_result[0, 1]  # Probability of class 1
+        print(f"DEBUG - Prob class 0 (index 0): {prob_class_0:.4f}, Prob class 1 (index 1): {prob_class_1:.4f}", file=sys.stderr)
+        
+        # Ensure we're using the correct index
+        # classes_[0] should be 0 (No), classes_[1] should be 1 (Yes)
+        if len(model.classes_) == 2:
+            # Check which class corresponds to which label
+            # If classes_[0] == 0, then proba_result[0, 0] is P(No depression)
+            # If classes_[1] == 1, then proba_result[0, 1] is P(Yes depression)
+            if model.classes_[0] == 0 and model.classes_[1] == 1:
+                # Standard case: class 0 = No depression, class 1 = Yes depression
+                # Use prob_class_1 = P(Yes depression) as the depression risk score
+                # This matches the evaluation code in MLmodel.py line 63: y_proba = pipeline.predict_proba(X_test)[:, 1]
+                proba = prob_class_1
+                print(f"DEBUG - Using prob_class_1 ({proba:.4f}) as depression risk [P(Yes depression)]", file=sys.stderr)
+            elif model.classes_[0] == 1 and model.classes_[1] == 0:
+                # Reversed case: class 0 = Yes, class 1 = No
+                proba = prob_class_0  # Use probability of class 0 (Yes depression)
+                print(f"DEBUG - Classes reversed! Using prob_class_0 (Yes depression): {proba:.4f}", file=sys.stderr)
+            else:
+                # Unexpected class order, default to index 1
+                proba = prob_class_1
+                print(f"DEBUG - Unexpected class order, using prob_class_1: {proba:.4f}", file=sys.stderr)
+        else:
+            proba = proba_result[0, 1]
+    else:
+        proba = proba_result[0, 1]
+        print(f"DEBUG - No classes_ attribute, using proba_result[0, 1]: {proba:.4f}", file=sys.stderr)
+    
     risk_score = f"PPD Risk Score: {proba:.2%}"
+    
+    # Debug: Also check the actual prediction
+    pred_class = pipeline.predict(row)[0]
+    print(f"DEBUG - Predicted class: {pred_class} (0=No depression, 1=Yes depression)", file=sys.stderr)
     
     # SHAP explanation
     try:
