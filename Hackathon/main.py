@@ -103,7 +103,11 @@ print("Launching Gradio Web Interface...")
 print("="*50)
 
 # Create Gradio interface (examples are already included in the interface)
-interface = create_gradio_interface(pipeline, X_train, cat_cols)
+interface = create_gradio_interface(
+    pipeline, X_train, cat_cols,
+    df=df, X_test=X_test, y_test=y_test, y_pred=y_pred,
+    y_proba=y_proba, roc_auc=roc_auc, target=target
+)
 
 print("\n✅ Gradio interface is ready!")
 print("📱 The web interface will open in your browser.")

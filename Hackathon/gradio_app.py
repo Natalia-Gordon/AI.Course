@@ -2,6 +2,8 @@ import gradio as gr
 import numpy as np
 import pandas as pd
 import shap
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend to avoid tkinter issues
 import matplotlib.pyplot as plt
 import io
 import base64
@@ -369,7 +371,8 @@ def create_shap_summary_plot(top_features, shap_values_single, feature_names):
         return f"<p>Unable to generate plot: {str(e)}</p>"
 
 
-def create_gradio_interface(pipeline, X_train_sample, cat_cols):
+def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=None, 
+                           y_test=None, y_pred=None, y_proba=None, roc_auc=None, target=None):
     """
     Create a Gradio interface for postpartum depression prediction.
 
@@ -377,6 +380,13 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
         pipeline: Trained sklearn pipeline
         X_train_sample: Sample of training data for SHAP explainer (DataFrame with feature columns)
         cat_cols: List of categorical column names
+        df: Full dataset (for visualizations)
+        X_test: Test features (for visualizations)
+        y_test: Test labels (for visualizations)
+        y_pred: Predicted labels (for visualizations)
+        y_proba: Predicted probabilities (for visualizations)
+        roc_auc: ROC AUC score (for visualizations)
+        target: Target variable name (for visualizations)
 
     Returns:
         Gradio Interface object
@@ -513,6 +523,88 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                 lines=8,
             )
             shap_plot = gr.HTML(label="SHAP Summary Plot")
+
+        # Add visualization tabs
+        if df is not None and X_test is not None and y_test is not None:
+            with gr.Tabs() as viz_tabs:
+                with gr.Tab("1. Target Distribution"):
+                    target_dist_plot = gr.HTML(label="Target Distribution")
+                
+                with gr.Tab("2. Feature Distributions"):
+                    feature_dist_plot = gr.HTML(label="Feature Distributions by Target")
+                
+                with gr.Tab("3. Confusion Matrix"):
+                    confusion_matrix_plot = gr.HTML(label="Confusion Matrix")
+                
+                with gr.Tab("4. ROC Curve"):
+                    roc_curve_plot = gr.HTML(label="ROC Curve")
+                
+                with gr.Tab("5. Prediction Distribution"):
+                    prediction_dist_plot = gr.HTML(label="Prediction Probability Distribution")
+                
+                with gr.Tab("6. Correlation Heatmap"):
+                    correlation_heatmap_plot = gr.HTML(label="Correlation Heatmap")
+            
+            # Load visualizations when interface loads
+            def load_visualizations():
+                from visualization import (
+                    plot_target_distribution, plot_feature_distributions,
+                    plot_confusion_matrix, plot_roc_curve,
+                    plot_prediction_distribution, plot_correlation_heatmap
+                )
+                
+                plots = {}
+                try:
+                    plots['target'] = plot_target_distribution(df[target], return_image=True)
+                except Exception as e:
+                    plots['target'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['features'] = plot_feature_distributions(df, cat_cols, target, return_image=True)
+                except Exception as e:
+                    plots['features'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['confusion'] = plot_confusion_matrix(y_test, y_pred, return_image=True)
+                except Exception as e:
+                    plots['confusion'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['roc'] = plot_roc_curve(y_test, y_proba, roc_auc, return_image=True)
+                except Exception as e:
+                    plots['roc'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['prediction'] = plot_prediction_distribution(y_proba, return_image=True)
+                except Exception as e:
+                    plots['prediction'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['correlation'] = plot_correlation_heatmap(df, target, return_image=True)
+                except Exception as e:
+                    plots['correlation'] = f"<p>Error: {str(e)}</p>"
+                
+                return (
+                    plots['target'],
+                    plots['features'],
+                    plots['confusion'],
+                    plots['roc'],
+                    plots['prediction'],
+                    plots['correlation']
+                )
+            
+            # Load visualizations on interface load
+            interface.load(
+                fn=load_visualizations,
+                outputs=[
+                    target_dist_plot,
+                    feature_dist_plot,
+                    confusion_matrix_plot,
+                    roc_curve_plot,
+                    prediction_dist_plot,
+                    correlation_heatmap_plot
+                ]
+            )
 
         predict_btn.click(
             fn=predict_wrapper,

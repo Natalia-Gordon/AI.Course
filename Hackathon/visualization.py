@@ -1,13 +1,17 @@
 # 📌 Visualization
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend to avoid tkinter issues
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 import shap
+import io
+import base64
 
 
-def plot_target_distribution(y, title="Target Distribution"):
+def plot_target_distribution(y, title="Target Distribution", return_image=False):
     """Plot the distribution of the target variable."""
     plt.figure(figsize=(8, 6))
     # Sort by class index (0, 1) to ensure correct label assignment
@@ -31,10 +35,13 @@ def plot_target_distribution(y, title="Target Distribution"):
     plt.pie(counts.values, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
     plt.title(title, fontsize=14, fontweight='bold')
     plt.tight_layout()
+    
+    if return_image:
+        return _fig_to_base64()
     plt.show()
 
 
-def plot_feature_distributions(df, cat_cols, target, n_cols=3):
+def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=False):
     """Plot distributions of categorical features by target."""
     n_features = len(cat_cols)
     n_rows = (n_features + n_cols - 1) // n_cols
@@ -57,10 +64,13 @@ def plot_feature_distributions(df, cat_cols, target, n_cols=3):
         axes[idx].axis('off')
     
     plt.tight_layout()
+    
+    if return_image:
+        return _fig_to_base64()
     plt.show()
 
 
-def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix"):
+def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix", return_image=False):
     """Plot confusion matrix."""
     cm = confusion_matrix(y_test, y_pred)
     
@@ -72,10 +82,13 @@ def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix"):
     plt.ylabel('True Label', fontsize=12)
     plt.xlabel('Predicted Label', fontsize=12)
     plt.tight_layout()
+    
+    if return_image:
+        return _fig_to_base64()
     plt.show()
 
 
-def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve"):
+def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve", return_image=False):
     """Plot ROC curve."""
     fpr, tpr, _ = roc_curve(y_test, y_proba)
     
@@ -92,6 +105,10 @@ def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve"):
     plt.legend(loc="lower right", fontsize=11)
     plt.grid(alpha=0.3)
     plt.tight_layout()
+    
+    if return_image:
+        return _fig_to_base64()
+    plt.show()
     plt.show()
 
 
@@ -189,7 +206,7 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
         print("Skipping SHAP plots...")
 
 
-def plot_correlation_heatmap(df, target):
+def plot_correlation_heatmap(df, target, return_image=False):
     """Plot correlation heatmap for numerical features."""
     # Select only numerical columns
     numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -201,10 +218,16 @@ def plot_correlation_heatmap(df, target):
                    center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8})
         plt.title('Correlation Heatmap', fontsize=14, fontweight='bold')
         plt.tight_layout()
+        
+        if return_image:
+            return _fig_to_base64()
         plt.show()
+    else:
+        if return_image:
+            return None
 
 
-def plot_prediction_distribution(y_proba, title="Prediction Probability Distribution"):
+def plot_prediction_distribution(y_proba, title="Prediction Probability Distribution", return_image=False):
     """Plot distribution of prediction probabilities."""
     plt.figure(figsize=(10, 6))
     plt.hist(y_proba, bins=30, color='#3498db', alpha=0.7, edgecolor='black')
@@ -215,6 +238,9 @@ def plot_prediction_distribution(y_proba, title="Prediction Probability Distribu
     plt.legend()
     plt.grid(alpha=0.3)
     plt.tight_layout()
+    
+    if return_image:
+        return _fig_to_base64()
     plt.show()
 
 
@@ -255,3 +281,13 @@ def create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc,
     plot_shap_summary(pipeline, X_test, cat_cols)
     
     print("\n✅ All visualizations completed!")
+
+
+def _fig_to_base64():
+    """Convert current matplotlib figure to base64 encoded image."""
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+    return f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%; height:auto;">'
