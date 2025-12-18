@@ -1,7 +1,10 @@
 # 📌 Visualization
+import warnings
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend to avoid tkinter issues
 import matplotlib.pyplot as plt
+# Suppress warnings about non-interactive backend
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 import seaborn as sns
 import numpy as np
 import pandas as pd
@@ -38,7 +41,11 @@ def plot_target_distribution(y, title="Target Distribution", return_image=False)
     
     if return_image:
         return _fig_to_base64()
-    plt.show()
+    # Only show if not using Agg backend (suppress warning)
+    try:
+        plt.show()
+    except Exception:
+        pass  # Ignore errors when using non-interactive backend
 
 
 def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=False):
@@ -67,7 +74,11 @@ def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=Fals
     
     if return_image:
         return _fig_to_base64()
-    plt.show()
+    # Only show if not using Agg backend (suppress warning)
+    try:
+        plt.show()
+    except Exception:
+        pass  # Ignore errors when using non-interactive backend
 
 
 def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix", return_image=False):
@@ -85,7 +96,11 @@ def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix", return_image
     
     if return_image:
         return _fig_to_base64()
-    plt.show()
+    # Only show if not using Agg backend (suppress warning)
+    try:
+        plt.show()
+    except Exception:
+        pass  # Ignore errors when using non-interactive backend
 
 
 def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve", return_image=False):
@@ -108,8 +123,11 @@ def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve", return_image=Fal
     
     if return_image:
         return _fig_to_base64()
-    plt.show()
-    plt.show()
+    # Only show if not using Agg backend (suppress warning)
+    try:
+        plt.show()
+    except Exception:
+        pass  # Ignore errors when using non-interactive backend
 
 
 def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
@@ -164,7 +182,10 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Summary Plot - Class 0 (No Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        plt.show()
+        try:
+            plt.show()
+        except Exception:
+            pass  # Ignore errors when using non-interactive backend
         
         # Plot bar plot for Class 0
         plt.figure(figsize=(10, 6))
@@ -175,7 +196,10 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Feature Importance - Class 0 (No Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        plt.show()
+        try:
+            plt.show()
+        except Exception:
+            pass  # Ignore errors when using non-interactive backend
         
         print(f"   Plotting SHAP values for Class 1 (Yes depression)...")
         # Plot summary for Class 1 (Yes depression)
@@ -186,7 +210,10 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Summary Plot - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        plt.show()
+        try:
+            plt.show()
+        except Exception:
+            pass  # Ignore errors when using non-interactive backend
         
         # Plot bar plot for Class 1
         plt.figure(figsize=(10, 6))
@@ -197,7 +224,10 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Feature Importance - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        plt.show()
+        try:
+            plt.show()
+        except Exception:
+            pass  # Ignore errors when using non-interactive backend
         
     except Exception as e:
         print(f"SHAP visualization error: {e}")
@@ -207,24 +237,74 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
 
 
 def plot_correlation_heatmap(df, target, return_image=False):
-    """Plot correlation heatmap for numerical features."""
-    # Select only numerical columns
-    numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    """Plot correlation heatmap for features (handles both numerical and categorical)."""
+    # Create a copy of dataframe for encoding
+    df_encoded = df.copy()
+    
+    # Encode categorical columns to numerical for correlation calculation
+    from sklearn.preprocessing import LabelEncoder
+    le = LabelEncoder()
+    
+    # Get all feature columns (exclude target if it exists)
+    feature_cols = [col for col in df_encoded.columns if col != target]
+    
+    # Encode categorical columns
+    for col in feature_cols:
+        if df_encoded[col].dtype == 'object':
+            try:
+                df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))
+            except Exception:
+                # If encoding fails, try to convert to numeric directly
+                try:
+                    df_encoded[col] = pd.to_numeric(df_encoded[col], errors='coerce')
+                except Exception:
+                    pass
+    
+    # Select columns that are now numerical (after encoding)
+    numerical_cols = df_encoded.select_dtypes(include=[np.number]).columns.tolist()
+    
+    # Remove target from numerical_cols if it's there
+    if target in numerical_cols:
+        numerical_cols.remove(target)
     
     if len(numerical_cols) > 1:
         plt.figure(figsize=(12, 10))
-        corr_matrix = df[numerical_cols].corr()
+        corr_matrix = df_encoded[numerical_cols].corr()
+        
+        # Create heatmap
         sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
-                   center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8})
+                   center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8},
+                   xticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols],
+                   yticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols])
+        plt.title('Correlation Heatmap (Categorical Features Encoded)', fontsize=14, fontweight='bold')
+        plt.xticks(rotation=45, ha='right')
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        
+        if return_image:
+            return _fig_to_base64()
+        # Only show if not using Agg backend (suppress warning)
+        try:
+            plt.show()
+        except Exception:
+            pass  # Ignore errors when using non-interactive backend
+    else:
+        # If no numerical columns, create a message plot
+        plt.figure(figsize=(8, 6))
+        plt.text(0.5, 0.5, 'No numerical features available\nfor correlation analysis', 
+                ha='center', va='center', fontsize=14, 
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        plt.axis('off')
         plt.title('Correlation Heatmap', fontsize=14, fontweight='bold')
         plt.tight_layout()
         
         if return_image:
             return _fig_to_base64()
-        plt.show()
-    else:
-        if return_image:
-            return None
+        # Only show if not using Agg backend (suppress warning)
+        try:
+            plt.show()
+        except Exception:
+            pass  # Ignore errors when using non-interactive backend
 
 
 def plot_prediction_distribution(y_proba, title="Prediction Probability Distribution", return_image=False):
@@ -241,7 +321,11 @@ def plot_prediction_distribution(y_proba, title="Prediction Probability Distribu
     
     if return_image:
         return _fig_to_base64()
-    plt.show()
+    # Only show if not using Agg backend (suppress warning)
+    try:
+        plt.show()
+    except Exception:
+        pass  # Ignore errors when using non-interactive backend
 
 
 def create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc, 
