@@ -16,6 +16,7 @@ def predict_depression(
     trouble_sleeping,
     concentration,
     appetite,
+    feeling_anxious,
     guilt,
     bonding,
     suicide_attempt,
@@ -34,6 +35,7 @@ def predict_depression(
         trouble_sleeping: 'Two or more days a week', 'Yes', or 'No'
         concentration: 'Yes', 'No', or 'Often'
         appetite: 'Yes', 'No', or 'Not at all'
+        feeling_anxious: 'Yes' or 'No'
         guilt: 'Yes', 'No', or 'Maybe'
         bonding: 'Yes', 'No', or 'Sometimes'
         suicide_attempt: 'Yes', 'No', or 'Not interested to say'
@@ -65,9 +67,7 @@ def predict_depression(
         elif col == "Overeating or loss of appetite":
             row_dict[col] = "" if appetite is None else str(appetite).strip()
         elif col == "Feeling anxious":
-            # Feeling anxious is now a feature (not target) - use default "No" if not provided
-            # Note: This could be added as a gradio input field in the future
-            row_dict[col] = "No"  # Default to "No" for anxiety
+            row_dict[col] = "" if feeling_anxious is None else str(feeling_anxious).strip()
         elif col == "Feeling of guilt":
             row_dict[col] = "" if guilt is None else str(guilt).strip()
         elif col == "Problems of bonding with baby":
@@ -261,6 +261,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
         trouble_sleeping,
         concentration,
         appetite,
+        feeling_anxious,
         guilt,
         bonding,
         suicide_attempt,
@@ -278,6 +279,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
             trouble_sleeping,
             concentration,
             appetite,
+            feeling_anxious,
             guilt,
             bonding,
             suicide_attempt,
@@ -312,16 +314,21 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                     choices=["Two or more days a week", "Yes", "No"],
                     value="No",
                 )
-
-            with gr.Column():
                 concentration = gr.Radio(
                     label="Problems concentrating or making decision",
                     choices=["Yes", "No", "Often"],
                     value="No",
                 )
+
+            with gr.Column():
                 appetite = gr.Radio(
                     label="Overeating or loss of appetite",
                     choices=["Yes", "No", "Not at all"],
+                    value="No",
+                )
+                feeling_anxious = gr.Radio(
+                    label="Feeling anxious",
+                    choices=["Yes", "No"],
                     value="No",
                 )
                 guilt = gr.Radio(
@@ -359,6 +366,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                 trouble_sleeping,
                 concentration,
                 appetite,
+                feeling_anxious,
                 guilt,
                 bonding,
                 suicide_attempt,
@@ -382,11 +390,13 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                     "Yes",
                     "Yes",
                     "Yes",
+                    "Yes",
                     "No",
                 ],
                 # Low risk case: mostly no symptoms
                 [
                     "35-40",
+                    "No",
                     "No",
                     "No",
                     "No",
@@ -404,6 +414,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                     "Yes",
                     "No",
                     "Yes",
+                    "Yes",
                     "No",
                     "Sometimes",
                     "No",
@@ -415,6 +426,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                     "Yes",
                     "Two or more days a week",
                     "Often",
+                    "Yes",
                     "Yes",
                     "Yes",
                     "Yes",
@@ -431,6 +443,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                     "No",
                     "No",
                     "No",
+                    "No",
                 ],
             ],
             inputs=[
@@ -440,6 +453,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                 trouble_sleeping,
                 concentration,
                 appetite,
+                feeling_anxious,
                 guilt,
                 bonding,
                 suicide_attempt,
