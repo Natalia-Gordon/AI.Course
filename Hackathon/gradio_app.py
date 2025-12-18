@@ -2,6 +2,9 @@ import gradio as gr
 import numpy as np
 import pandas as pd
 import shap
+import matplotlib.pyplot as plt
+import io
+import base64
 
 
 # Predict postpartum depression risk based on input features
@@ -216,13 +219,154 @@ def predict_depression(
             list(zip(feature_names, shap_values_single)), key=lambda x: -abs(x[1])
         )[:5]
 
-        # Format feature importance
-        feat_imp_str = "\n".join([f"{feat}: {val:.4f}" for feat, val in feat_imp])
+        # Format feature importance in user-friendly way
+        feat_imp_lines = []
+        for i, (feat, val) in enumerate(feat_imp, 1):
+            # Clean up feature name (remove one-hot encoding prefixes)
+            clean_feat = feat.split('__')[-1] if '__' in feat else feat
+            direction = "increases" if val > 0 else "decreases"
+            impact = "high" if abs(val) > 0.1 else "moderate" if abs(val) > 0.05 else "low"
+            feat_imp_lines.append(
+                f"{i}. {clean_feat}\n   Impact: {impact} ({direction} risk by {abs(val):.3f})"
+            )
+        feat_imp_str = "\n\n".join(feat_imp_lines)
+
+        # Generate personalized explanation
+        personalized_explanation = generate_personalized_explanation(
+            proba, pred_class, feat_imp, row, feature_names, shap_values_single
+        )
+
+        # Create user-friendly SHAP summary plot
+        plot_html = create_shap_summary_plot(feat_imp, shap_values_single, feature_names)
 
     except Exception as e:
         feat_imp_str = f"SHAP explanation unavailable: {str(e)}"
+        personalized_explanation = "Unable to generate personalized explanation."
+        plot_html = ""
 
-    return risk_score, feat_imp_str
+    return risk_score, feat_imp_str, personalized_explanation, plot_html
+
+
+def generate_personalized_explanation(proba, pred_class, top_features, row, feature_names, shap_values_single):
+    """
+    Generate a personalized, user-friendly explanation based on SHAP values and predictions.
+    """
+    # Determine risk level
+    if proba >= 0.7:
+        risk_level = "high"
+        risk_phrase = "identifies a high risk"
+    elif proba >= 0.4:
+        risk_level = "moderate"
+        risk_phrase = "identifies a moderate risk"
+    else:
+        risk_level = "low"
+        risk_phrase = "identifies a low risk"
+    
+    # Get top contributing features (positive SHAP = increases risk)
+    risk_increasing = [(feat, val) for feat, val in top_features if val > 0]
+    
+    # Clean feature names and map to user-friendly descriptions
+    feature_descriptions = {
+        'Feeling sad or Tearful': 'feeling sad or tearful',
+        'Irritable towards baby & partner': 'irritability towards baby and partner',
+        'Trouble sleeping at night': 'trouble sleeping',
+        'Problems concentrating or making decision': 'concentration problems',
+        'Overeating or loss of appetite': 'appetite changes',
+        'Feeling anxious': 'anxiety',
+        'Feeling of guilt': 'feelings of guilt',
+        'Problems of bonding with baby': 'bonding difficulties with baby',
+        'Suicide attempt': 'suicidal thoughts or attempts',
+        'Age': 'age'
+    }
+    
+    # Build explanation
+    explanation_parts = [f"The model {risk_phrase} in you"]
+    
+    if risk_increasing:
+        # Get the actual input values for these features
+        contributing_factors = []
+        for feat, shap_val in risk_increasing[:3]:  # Top 3 risk-increasing factors
+            clean_feat = feat.split('__')[-1] if '__' in feat else feat
+            # Check if this is a one-hot encoded feature
+            if '__' in feat:
+                # Extract the original feature name and value
+                parts = feat.split('__')
+                if len(parts) >= 2:
+                    orig_feat = parts[0]
+                    feat_value = parts[-1]
+                    # Get the actual input value
+                    if orig_feat in row.columns:
+                        input_val = str(row[orig_feat].values[0])
+                        if input_val == feat_value or (feat_value in input_val):
+                            desc = feature_descriptions.get(orig_feat, orig_feat.lower())
+                            contributing_factors.append(desc)
+            else:
+                desc = feature_descriptions.get(clean_feat, clean_feat.lower())
+                contributing_factors.append(desc)
+        
+        if contributing_factors:
+            if len(contributing_factors) == 1:
+                explanation_parts.append(f"mainly due to {contributing_factors[0]}")
+            elif len(contributing_factors) == 2:
+                explanation_parts.append(f"mainly due to the combination of {contributing_factors[0]} and {contributing_factors[1]}")
+            else:
+                explanation_parts.append(
+                    f"mainly due to the combination of {', '.join(contributing_factors[:-1])}, and {contributing_factors[-1]}"
+                )
+    
+    explanation = ". ".join(explanation_parts) + "."
+    
+    # Add risk score context
+    if risk_level == "high":
+        explanation += " Please consider consulting with a healthcare professional."
+    elif risk_level == "moderate":
+        explanation += " It may be helpful to monitor your symptoms and seek support if needed."
+    
+    return explanation
+
+
+def create_shap_summary_plot(top_features, shap_values_single, feature_names):
+    """
+    Create a user-friendly SHAP summary plot as HTML.
+    """
+    try:
+        # Extract feature names and values
+        feat_names = [feat.split('__')[-1] if '__' in feat else feat for feat, _ in top_features]
+        shap_vals = [val for _, val in top_features]
+        
+        # Create horizontal bar plot
+        fig, ax = plt.subplots(figsize=(10, 6))
+        colors = ['#e74c3c' if val > 0 else '#2ecc71' for val in shap_vals]
+        y_pos = np.arange(len(feat_names))
+        
+        bars = ax.barh(y_pos, shap_vals, color=colors, alpha=0.7)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(feat_names, fontsize=10)
+        ax.set_xlabel('SHAP Value (Impact on Risk)', fontsize=12, fontweight='bold')
+        ax.set_title('Top 5 Feature Contributions to PPD Risk', fontsize=14, fontweight='bold', pad=20)
+        ax.axvline(x=0, color='black', linestyle='--', linewidth=0.8)
+        ax.grid(axis='x', alpha=0.3)
+        
+        # Add value labels on bars
+        for i, (bar, val) in enumerate(zip(bars, shap_vals)):
+            width = bar.get_width()
+            label_x = width + (0.01 if width > 0 else -0.01)
+            ax.text(label_x, bar.get_y() + bar.get_height()/2, 
+                   f'{val:.3f}', ha='left' if width > 0 else 'right', 
+                   va='center', fontsize=9, fontweight='bold')
+        
+        plt.tight_layout()
+        
+        # Convert to base64 HTML
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        plt.close()
+        
+        return f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%; height:auto;">'
+    except Exception as e:
+        return f"<p>Unable to generate plot: {str(e)}</p>"
 
 
 def create_gradio_interface(pipeline, X_train_sample, cat_cols):
@@ -267,7 +411,12 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
         suicide_attempt,
     ):
         if explainer is None:
-            return "SHAP explainer not available", "Please train the model first"
+            return (
+                "SHAP explainer not available",
+                "Please train the model first",
+                "Unable to generate explanation.",
+                ""
+            )
         return predict_depression(
             pipeline,
             explainer,
@@ -351,11 +500,19 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
 
         with gr.Row():
             risk_output = gr.Textbox(label="Risk Assessment", interactive=False)
+            personalized_explanation = gr.Textbox(
+                label="Personalized Explanation",
+                interactive=False,
+                lines=4,
+            )
+
+        with gr.Row():
             feature_importance = gr.Textbox(
                 label="Top 5 Feature Contributions (SHAP)",
                 interactive=False,
-                lines=6,
+                lines=8,
             )
+            shap_plot = gr.HTML(label="SHAP Summary Plot")
 
         predict_btn.click(
             fn=predict_wrapper,
@@ -371,7 +528,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols):
                 bonding,
                 suicide_attempt,
             ],
-            outputs=[risk_output, feature_importance],
+            outputs=[risk_output, feature_importance, personalized_explanation, shap_plot],
         )
 
         # Add examples
