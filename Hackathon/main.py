@@ -1,9 +1,6 @@
 # 📌 Standard libraries
 import pandas as pd
-import numpy as np
-import shap
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 from MLmodel import create_pipeline, train_and_evaluate
 from visualization import create_all_visualizations
 from gradio_app import create_gradio_interface
