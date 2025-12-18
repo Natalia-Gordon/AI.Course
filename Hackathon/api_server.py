@@ -9,14 +9,51 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from contextlib import asynccontextmanager
 import uvicorn
+import os
 from ppd_agent import PPDAgent
 
-# Initialize FastAPI app
+# Global agent instance (will be initialized on startup)
+agent: Optional[PPDAgent] = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI (replaces deprecated on_event).
+    Handles startup and shutdown events.
+    """
+    # Startup
+    global agent
+    if agent is None:
+        # Try to load from saved file
+        agent_file = "ppd_agent.pkl"
+        if os.path.exists(agent_file):
+            try:
+                print(f"📦 Loading agent from {agent_file}...")
+                agent = PPDAgent.load(agent_file)
+                print("✅ Agent loaded successfully!")
+            except Exception as e:
+                print(f"⚠️  Could not load agent from {agent_file}: {e}")
+                print("⚠️  Please initialize the agent using initialize_agent() or train a new model.")
+        else:
+            print("⚠️  Agent not initialized and no saved agent file found.")
+            print("⚠️  Please initialize the agent using initialize_agent() or train a new model.")
+            print("⚠️  The API will start but prediction endpoints will return errors.")
+    
+    yield
+    
+    # Shutdown (if needed)
+    # Cleanup code can go here
+
+
+# Initialize FastAPI app with lifespan
 app = FastAPI(
     title="PPD Prediction API",
     description="API for Postpartum Depression Risk Prediction",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Enable CORS
@@ -27,10 +64,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Global agent instance (will be initialized on startup)
-agent: Optional[PPDAgent] = None
-
 
 # Request/Response models
 class PredictionRequest(BaseModel):
@@ -68,14 +101,6 @@ class BatchPredictionResponse(BaseModel):
     results: List[PredictionResponse] = Field(..., description="List of prediction results")
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the agent on server startup."""
-    global agent
-    if agent is None:
-        raise RuntimeError(
-            "Agent not initialized. Please call initialize_agent() before starting the server."
-        )
 
 
 def initialize_agent(ppd_agent: PPDAgent):
@@ -201,8 +226,13 @@ async def get_schema():
 
 if __name__ == "__main__":
     # This will be called when running the server directly
-    # Note: You need to initialize the agent first by importing and setting it up
-    print("⚠️  Note: Initialize the agent before starting the server.")
-    print("   Example: from main import setup_agent; setup_agent()")
+    # The agent will be automatically loaded from ppd_agent.pkl if it exists
+    # Otherwise, you can initialize it programmatically:
+    #   from api_server import initialize_agent
+    #   from ppd_agent import PPDAgent
+    #   agent = PPDAgent.load("ppd_agent.pkl")
+    #   initialize_agent(agent)
+    print("🚀 Starting PPD Prediction API Server...")
+    print("📝 The agent will be automatically loaded from ppd_agent.pkl if available.")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
