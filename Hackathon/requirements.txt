@@ -5,3 +5,8 @@ shap
 gradio 
 matplotlib 
 seaborn
+fastapi
+uvicorn
+pydantic
+langchain
+openai

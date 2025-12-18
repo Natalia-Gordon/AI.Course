@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from MLmodel import create_pipeline, train_and_evaluate
 from visualization import create_all_visualizations
 from gradio_app import create_gradio_interface
+from ppd_agent import create_agent_from_training
 
 print("Welcome to the Postpartum Depression Prediction System")
 
@@ -119,6 +120,23 @@ print("   - Moderate risk case (some symptoms)")
 print("   - Very high risk case (all symptoms)")
 print("   - Low-moderate risk (sleep issues only)")
 print("\n" + "="*50)
+
+# 🤖 Create PPD Agent (for programmatic use)
+print("\n" + "="*50)
+print("Creating PPD Agent Tool...")
+print("="*50)
+
+ppd_agent = create_agent_from_training(pipeline, X_train, cat_cols, list(X_train.columns))
+print("✅ PPD Agent created and ready for use!")
+print("\n💡 You can now use the agent programmatically:")
+print("   - Standalone: from ppd_agent import PPDAgent")
+print("   - API: python api_server.py (then initialize agent)")
+print("   - LangChain: from langchain_tool import create_langchain_tool")
+print("   - Examples: python agent_examples.py")
+
+# Save agent for later use
+ppd_agent.save("ppd_agent.pkl")
+print("✅ Agent saved to ppd_agent.pkl")
 
 # Launch the interface
 interface.launch(share=False, server_name="127.0.0.1", server_port=7860)
