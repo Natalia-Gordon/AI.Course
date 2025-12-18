@@ -47,20 +47,32 @@ df['symptom_count'] = df[symptom_cols].apply(
     lambda x: (x == "Yes").sum(), axis=1
 )
 
-# Create composite target: PPD = 1 if 3+ symptoms present (clinically appropriate)
-threshold = 3
-target = "PPD_Composite"
-df[target] = (df['symptom_count'] >= threshold).astype(int)
+# Calculate "No" answer count (how many symptoms answered "No")
+df['no_count'] = df[symptom_cols].apply(
+    lambda x: (x == "No").sum(), axis=1
+)
 
-print(f"\n📊 Composite Target Distribution (PPD = 1 if {threshold}+ symptoms):")
+# Create composite target: PPD = 1 if:
+# - 4+ symptoms present, OR
+# - less than 4 "No" answers, OR
+# - "Suicide attempt" is not "No" (very high risk indicator)
+# If someone has very few "No" answers, they're experiencing many symptoms, indicating higher risk
+threshold = 4
+no_threshold = 4
+target = "PPD_Composite"
+df[target] = ((df['symptom_count'] >= threshold) | 
+              (df['no_count'] < no_threshold) | 
+              (df['Suicide attempt'] != "No")).astype(int)
+
+print(f"\n📊 Composite Target Distribution (PPD = 1 if {threshold}+ 'Yes' symptoms OR <{no_threshold} 'No' answers OR Suicide attempt != 'No'):")
 print(df[target].value_counts())
 print(f"Proportions: {df[target].value_counts(normalize=True).to_dict()}")
 
 # 🧩 Identify categorical features (all symptom columns + Age, excluding target columns)
-cat_cols = [c for c in df.columns if df[c].dtype == "object" and c not in [target, 'symptom_count']]
+cat_cols = [c for c in df.columns if df[c].dtype == "object" and c not in [target, 'symptom_count', 'no_count']]
 
-# 🧪 Handle missing values (drop symptom_count column as it's just for target creation)
-df.drop(columns=['symptom_count'], axis=1, inplace=True, errors='ignore')
+# 🧪 Handle missing values (drop symptom_count and no_count columns as they're just for target creation)
+df.drop(columns=['symptom_count', 'no_count'], axis=1, inplace=True, errors='ignore')
 df = df.dropna()
 
 X = df.drop(columns=[target])
