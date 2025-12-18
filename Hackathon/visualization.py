@@ -10,9 +10,24 @@ import shap
 def plot_target_distribution(y, title="Target Distribution"):
     """Plot the distribution of the target variable."""
     plt.figure(figsize=(8, 6))
-    counts = y.value_counts()
-    labels = ['No Depression', 'Depression'] if 0 in counts.index else ['Depression', 'No Depression']
-    colors = ['#2ecc71', '#e74c3c']
+    # Sort by class index (0, 1) to ensure correct label assignment
+    # Class 0 = "No" (No Depression), Class 1 = "Yes" (Depression)
+    counts = y.value_counts().sort_index()
+    
+    # Assign labels and colors based on class value, not count order
+    labels = []
+    colors = []
+    for class_val in counts.index:
+        if class_val == 0:
+            labels.append('No Depression (No)')
+            colors.append('#2ecc71')  # Green for no depression
+        elif class_val == 1:
+            labels.append('Depression (Yes)')
+            colors.append('#e74c3c')  # Red for depression
+        else:
+            labels.append(f'Class {class_val}')
+            colors.append('#95a5a6')
+    
     plt.pie(counts.values, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
     plt.title(title, fontsize=14, fontweight='bold')
     plt.tight_layout()
