@@ -46,7 +46,7 @@ class PPDAgent:
         # Initialize SHAP explainer
         print("Initializing SHAP explainer...")
         self.explainer = shap.TreeExplainer(self.pipeline.named_steps["model"])
-        print("✅ SHAP explainer ready!")
+        print("SHAP explainer ready!")
     
     def predict(self, 
                 age: str,
@@ -329,7 +329,7 @@ class PPDAgent:
         }
         with open(filepath, 'wb') as f:
             pickle.dump(agent_data, f)
-        print(f"✅ Agent saved to {filepath}")
+        print(f"Agent saved to {filepath}")
     
     @classmethod
     def load(cls, filepath: str):
@@ -343,7 +343,7 @@ class PPDAgent:
             cat_cols=agent_data["cat_cols"],
             feature_columns=agent_data.get("feature_columns")
         )
-        print(f"✅ Agent loaded from {filepath}")
+        print(f"Agent loaded from {filepath}")
         return agent
 
 

@@ -3,15 +3,19 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import roc_auc_score, classification_report
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import uniform, randint
 from xgboost import XGBClassifier
+import numpy as np
 
 
-def create_pipeline(cat_cols):
+def create_pipeline(cat_cols, **xgb_params):
     """
     Create a preprocessing and modeling pipeline for XGBoost classifier.
     
     Args:
         cat_cols: List of categorical column names
+        **xgb_params: Optional XGBoost hyperparameters to override defaults
         
     Returns:
         sklearn Pipeline object
@@ -23,17 +27,22 @@ def create_pipeline(cat_cols):
         transformers=[("cat", categorical_transformer, cat_cols)]
     )
     
+    # 📌 Default XGBoost parameters
+    default_params = {
+        "n_estimators": 200,
+        "learning_rate": 0.1,
+        "max_depth": 5,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "eval_metric": "logloss"
+    }
+    
+    # Update with any provided parameters
+    default_params.update(xgb_params)
+    
     # 📌 XGBoost classifier
-    xgb_model = XGBClassifier(
-        n_estimators=200,
-        learning_rate=0.1,
-        max_depth=5,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        random_state=42,
-        use_label_encoder=False,
-        eval_metric="logloss"
-    )
+    xgb_model = XGBClassifier(**default_params)
     
     # 📌 Pipeline
     pipeline = Pipeline(steps=[("preprocess", preprocess),
@@ -69,3 +78,84 @@ def train_and_evaluate(pipeline, X_train, y_train, X_test, y_test):
     print("\nClassification Report:\n", classification_report(y_test, y_pred))
     
     return y_proba, y_pred, roc_auc
+
+
+def optimize_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5, 
+                             scoring='roc_auc', random_state=42, n_jobs=-1):
+    """
+    Optimize XGBoost hyperparameters using RandomizedSearchCV.
+    
+    Args:
+        X_train: Training features
+        y_train: Training labels
+        cat_cols: List of categorical column names
+        n_iter: Number of parameter settings sampled (default: 50)
+        cv: Number of cross-validation folds (default: 5)
+        scoring: Scoring metric (default: 'roc_auc')
+        random_state: Random seed for reproducibility
+        n_jobs: Number of parallel jobs (-1 uses all processors)
+        
+    Returns:
+        tuple: (best_pipeline, best_params, cv_results)
+    """
+    print("\n" + "="*60)
+    print("🔍 Starting RandomizedSearchCV Hyperparameter Optimization")
+    print("="*60)
+    print(f"📊 Parameters: n_iter={n_iter}, cv={cv}, scoring={scoring}")
+    print(f"⏱ This may take a few minutes...\n")
+    
+    # 📌 Create base pipeline
+    base_pipeline = create_pipeline(cat_cols)
+    
+    # 📌 Define hyperparameter search space
+    # Using distributions for continuous parameters and lists for discrete ones
+    param_distributions = {
+        'model__n_estimators': randint(100, 500),  # 100 to 500 trees
+        'model__learning_rate': uniform(0.01, 0.29),  # 0.01 to 0.3
+        'model__max_depth': randint(3, 10),  # 3 to 9
+        'model__subsample': uniform(0.6, 0.4),  # 0.6 to 1.0
+        'model__colsample_bytree': uniform(0.6, 0.4),  # 0.6 to 1.0
+        'model__min_child_weight': randint(1, 7),  # 1 to 6
+        'model__gamma': uniform(0, 0.5),  # 0 to 0.5
+        'model__reg_alpha': uniform(0, 1),  # L1 regularization: 0 to 1
+        'model__reg_lambda': uniform(0, 2),  # L2 regularization: 0 to 2
+    }
+    
+    # 📌 Create RandomizedSearchCV
+    random_search = RandomizedSearchCV(
+        estimator=base_pipeline,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        cv=cv,
+        scoring=scoring,
+        n_jobs=n_jobs,
+        random_state=random_state,
+        verbose=1,
+        return_train_score=True
+    )
+    
+    # 🔍 Perform search
+    random_search.fit(X_train, y_train)
+    
+    # 📊 Display results
+    print("\n" + "="*60)
+    print("✅ Optimization Complete!")
+    print("="*60)
+    print(f"\n🏆 Best {scoring} Score (CV): {random_search.best_score_:.4f}")
+    print(f"\n📋 Best Hyperparameters:")
+    for param, value in random_search.best_params_.items():
+        # Format parameter names nicely (remove 'model__' prefix)
+        param_name = param.replace('model__', '')
+        print(f"   {param_name}: {value}")
+    
+    print(f"\n📈 Best Parameters Details:")
+    best_params = random_search.best_params_.copy()
+    for key, value in best_params.items():
+        if isinstance(value, (int, np.integer)):
+            print(f"   {key}: {int(value)}")
+        elif isinstance(value, (float, np.floating)):
+            print(f"   {key}: {value:.4f}")
+        else:
+            print(f"   {key}: {value}")
+    
+    return random_search.best_estimator_, random_search.best_params_, random_search.cv_results_

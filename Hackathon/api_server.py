@@ -31,16 +31,16 @@ async def lifespan(app: FastAPI):
         agent_file = "ppd_agent.pkl"
         if os.path.exists(agent_file):
             try:
-                print(f"📦 Loading agent from {agent_file}...")
+                print(f"Loading agent from {agent_file}...")
                 agent = PPDAgent.load(agent_file)
-                print("✅ Agent loaded successfully!")
+                print("Agent loaded successfully!")
             except Exception as e:
-                print(f"⚠️  Could not load agent from {agent_file}: {e}")
-                print("⚠️  Please initialize the agent using initialize_agent() or train a new model.")
+                print(f"WARNING: Could not load agent from {agent_file}: {e}")
+                print("WARNING: Please initialize the agent using initialize_agent() or train a new model.")
         else:
-            print("⚠️  Agent not initialized and no saved agent file found.")
-            print("⚠️  Please initialize the agent using initialize_agent() or train a new model.")
-            print("⚠️  The API will start but prediction endpoints will return errors.")
+            print("WARNING: Agent not initialized and no saved agent file found.")
+            print("WARNING: Please initialize the agent using initialize_agent() or train a new model.")
+            print("WARNING: The API will start but prediction endpoints will return errors.")
     
     yield
     
@@ -112,7 +112,7 @@ def initialize_agent(ppd_agent: PPDAgent):
     """
     global agent
     agent = ppd_agent
-    print("✅ PPD Agent initialized for API server")
+    print("PPD Agent initialized for API server")
 
 
 @app.get("/")
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     #   from ppd_agent import PPDAgent
     #   agent = PPDAgent.load("ppd_agent.pkl")
     #   initialize_agent(agent)
-    print("🚀 Starting PPD Prediction API Server...")
-    print("📝 The agent will be automatically loaded from ppd_agent.pkl if available.")
+    print("Starting PPD Prediction API Server...")
+    print("The agent will be automatically loaded from ppd_agent.pkl if available.")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 

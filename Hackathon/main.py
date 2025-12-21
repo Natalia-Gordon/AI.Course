@@ -1,7 +1,7 @@
 # 📌 Standard libraries
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from MLmodel import create_pipeline, train_and_evaluate
+from MLmodel import create_pipeline, train_and_evaluate, optimize_hyperparameters
 from visualization import create_all_visualizations
 from gradio_app import create_gradio_interface
 from ppd_agent import create_agent_from_training
@@ -86,12 +86,27 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,
 
 print(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
 
-# 🧠 Create and train the model using MLmodel.py
+# 🧠 Optimize and train the model using RandomizedSearchCV
 print("\n" + "="*50)
-print("Training XGBoost Model...")
+print("Optimizing XGBoost Model with RandomizedSearchCV...")
 print("="*50)
 
-pipeline = create_pipeline(cat_cols)
+# 🔍 Optimize hyperparameters using RandomizedSearchCV
+best_pipeline, best_params, cv_results = optimize_hyperparameters(
+    X_train, y_train, cat_cols,
+    n_iter=50,      # Number of random combinations to try
+    cv=5,           # 5-fold cross-validation
+    scoring='roc_auc',
+    random_state=42,
+    n_jobs=-1       # Use all available CPU cores
+)
+
+# 📊 Evaluate the optimized model on test set
+print("\n" + "="*50)
+print("Evaluating Optimized Model on Test Set")
+print("="*50)
+
+pipeline = best_pipeline  # Use the optimized pipeline
 y_proba, y_pred, roc_auc = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
 
 # 📊 Create visualizations
