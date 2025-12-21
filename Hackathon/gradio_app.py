@@ -371,6 +371,84 @@ def create_shap_summary_plot(top_features, shap_values_single, feature_names):
         return f"<p>Unable to generate plot: {str(e)}</p>"
 
 
+def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True):
+    """
+    Create a SHAP summary plot for class 1 (Yes Depression) using test data.
+    
+    Args:
+        pipeline: Trained sklearn pipeline
+        X_test: Test features (DataFrame)
+        max_display: Maximum number of features to display
+        return_image: If True, return base64 HTML image, else show plot
+        
+    Returns:
+        HTML string with embedded image or None
+    """
+    try:
+        # Get the preprocessed features
+        preprocessor = pipeline.named_steps['preprocess']
+        # Use a sample of test data for SHAP calculation (faster)
+        X_test_sample = X_test.sample(min(100, len(X_test)), random_state=42) if len(X_test) > 100 else X_test
+        X_test_processed = preprocessor.transform(X_test_sample)
+        
+        # Get feature names after one-hot encoding
+        feature_names = preprocessor.get_feature_names_out()
+        
+        # Get the model
+        model = pipeline.named_steps['model']
+        
+        # Create SHAP explainer
+        explainer = shap.TreeExplainer(model)
+        
+        # Calculate SHAP values
+        shap_values_output = explainer.shap_values(X_test_processed)
+        
+        # Handle different return types
+        if isinstance(shap_values_output, list) and len(shap_values_output) == 2:
+            # List format with both classes: [shap_values_class_0, shap_values_class_1]
+            shap_values_class_1 = shap_values_output[1]
+        elif isinstance(shap_values_output, list) and len(shap_values_output) == 1:
+            # Single element list - use it as class 1
+            shap_values_class_1 = shap_values_output[0]
+        else:
+            # Single array format: typically for positive class (class 1)
+            shap_values_class_1 = shap_values_output
+        
+        # Determine number of features
+        n_features = shap_values_class_1.shape[1]
+        feature_names_to_use = feature_names[:n_features]
+        
+        # Create SHAP summary plot for Class 1 (Yes Depression)
+        plt.figure(figsize=(12, 8))
+        shap.summary_plot(shap_values_class_1, X_test_processed, 
+                         feature_names=feature_names_to_use,
+                         max_display=max_display,
+                         show=False)
+        plt.title("SHAP Summary Plot - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
+        plt.tight_layout()
+        
+        if return_image:
+            # Convert to base64 HTML
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+            buf.seek(0)
+            img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+            plt.close()
+            return f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%; height:auto;">'
+        else:
+            try:
+                plt.show()
+            except Exception:
+                pass
+            plt.close()
+            return None
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return f"<p>Error generating SHAP summary plot: {str(e)}</p>"
+
+
 def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=None, 
                            y_test=None, y_pred=None, y_proba=None, roc_auc=None, target=None):
     """
@@ -544,6 +622,9 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
                 
                 with gr.Tab("6. Correlation Heatmap"):
                     correlation_heatmap_plot = gr.HTML(label="Correlation Heatmap")
+                
+                with gr.Tab("7. SHAP Summary (Class 1 - Yes Depression)"):
+                    shap_summary_class1_plot = gr.HTML(label="SHAP Summary Plot - Class 1 (Yes Depression)")
             
             # Load visualizations when interface loads
             def load_visualizations():
@@ -584,13 +665,19 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
                 except Exception as e:
                     plots['correlation'] = f"<p>Error: {str(e)}</p>"
                 
+                try:
+                    plots['shap_class1'] = create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True)
+                except Exception as e:
+                    plots['shap_class1'] = f"<p>Error: {str(e)}</p>"
+                
                 return (
                     plots['target'],
                     plots['features'],
                     plots['confusion'],
                     plots['roc'],
                     plots['prediction'],
-                    plots['correlation']
+                    plots['correlation'],
+                    plots['shap_class1']
                 )
             
             # Load visualizations on interface load
@@ -602,7 +689,8 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
                     confusion_matrix_plot,
                     roc_curve_plot,
                     prediction_dist_plot,
-                    correlation_heatmap_plot
+                    correlation_heatmap_plot,
+                    shap_summary_class1_plot
                 ]
             )
 
