@@ -12,6 +12,9 @@ from typing import Dict, List, Optional, Tuple, Any
 import json
 import pickle
 import os
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score, classification_report
+from MLmodel import create_rf_pipeline, train_and_evaluate
 
 
 class PPDAgent:
@@ -251,10 +254,10 @@ class PPDAgent:
     
     def get_tool_schema(self) -> Dict[str, Any]:
         """
-        Get OpenAI Function Calling schema for this agent.
+        Get OpenAI Function Calling schema for prediction tool.
         
         Returns:
-            Dictionary with function schema
+            Dictionary with function schema for predict_ppd_risk
         """
         return {
             "name": "predict_ppd_risk",
@@ -318,6 +321,74 @@ class PPDAgent:
             }
         }
     
+    def get_training_tool_schema(self) -> Dict[str, Any]:
+        """
+        Get OpenAI Function Calling schema for Random Forest training tool.
+        
+        Returns:
+            Dictionary with function schema for train_random_forest
+        """
+        return {
+            "name": "train_random_forest",
+            "description": "Trains a Random Forest model for postpartum depression prediction. Requires training data (X_train, y_train) and optional test data. Updates the agent's pipeline with the trained model.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "n_estimators": {
+                        "type": "integer",
+                        "description": "Number of trees in the forest (default: 100)",
+                        "default": 100
+                    },
+                    "max_depth": {
+                        "type": "integer",
+                        "description": "Maximum depth of trees (default: 10)",
+                        "default": 10
+                    },
+                    "min_samples_split": {
+                        "type": "integer",
+                        "description": "Minimum samples required to split a node (default: 2)",
+                        "default": 2
+                    },
+                    "min_samples_leaf": {
+                        "type": "integer",
+                        "description": "Minimum samples required in a leaf node (default: 1)",
+                        "default": 1
+                    },
+                    "max_features": {
+                        "type": "string",
+                        "enum": ["sqrt", "log2", "auto", "None"],
+                        "description": "Number of features to consider for best split (default: 'sqrt')",
+                        "default": "sqrt"
+                    },
+                    "test_size": {
+                        "type": "number",
+                        "description": "Proportion of dataset to include in test split (default: 0.2)",
+                        "default": 0.2,
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                    },
+                    "random_state": {
+                        "type": "integer",
+                        "description": "Random seed for reproducibility (default: 42)",
+                        "default": 42
+                    }
+                },
+                "required": []
+            }
+        }
+    
+    def get_all_tool_schemas(self) -> List[Dict[str, Any]]:
+        """
+        Get all tool schemas (both prediction and training).
+        
+        Returns:
+            List of tool schema dictionaries
+        """
+        return [
+            self.get_tool_schema(),
+            self.get_training_tool_schema()
+        ]
+    
     def save(self, filepath: str):
         """Save the agent to a file."""
         agent_data = {
@@ -330,6 +401,118 @@ class PPDAgent:
         with open(filepath, 'wb') as f:
             pickle.dump(agent_data, f)
         print(f"Agent saved to {filepath}")
+    
+    def train_random_forest(self, 
+                           X_train: pd.DataFrame = None,
+                           y_train: pd.Series = None,
+                           X_test: pd.DataFrame = None,
+                           y_test: pd.Series = None,
+                           test_size: float = 0.2,
+                           random_state: int = 42,
+                           n_estimators: int = 100,
+                           max_depth: int = 10,
+                           min_samples_split: int = 2,
+                           min_samples_leaf: int = 1,
+                           max_features: str = "sqrt",
+                           n_jobs: int = -1) -> Dict[str, Any]:
+        """
+        Train a Random Forest model and update the agent's pipeline.
+        
+        Args:
+            X_train: Training features (if None, uses agent's X_train)
+            y_train: Training labels (required if X_train provided)
+            X_test: Test features (optional, will split if not provided)
+            y_test: Test labels (optional, will split if not provided)
+            test_size: Test set size if splitting (default: 0.2)
+            random_state: Random seed for reproducibility (default: 42)
+            n_estimators: Number of trees in the forest (default: 100)
+            max_depth: Maximum depth of trees (default: 10)
+            min_samples_split: Minimum samples to split a node (default: 2)
+            min_samples_leaf: Minimum samples in a leaf (default: 1)
+            max_features: Number of features to consider for best split (default: "sqrt")
+            n_jobs: Number of parallel jobs (default: -1)
+        
+        Returns:
+            Dictionary with training results including:
+            - success: Whether training was successful
+            - roc_auc: ROC AUC score on test set
+            - classification_report: Classification report text
+            - message: Status message
+        """
+        try:
+            # Use agent's training data if not provided
+            if X_train is None:
+                # Need to get y_train from somewhere - this is a limitation
+                # For now, we'll require both X_train and y_train
+                raise ValueError("X_train and y_train must be provided for training")
+            
+            if y_train is None:
+                raise ValueError("y_train must be provided for training")
+            
+            # Split data if test set not provided
+            if X_test is None or y_test is None:
+                X_train_split, X_test_split, y_train_split, y_test_split = train_test_split(
+                    X_train, y_train, test_size=test_size, 
+                    stratify=y_train, random_state=random_state
+                )
+            else:
+                X_train_split = X_train
+                X_test_split = X_test
+                y_train_split = y_train
+                y_test_split = y_test
+            
+            # Create Random Forest pipeline
+            print("Creating Random Forest pipeline...")
+            # Handle max_features: convert "None" string to None, "auto" to "sqrt"
+            max_features_param = None if max_features == "None" else ("sqrt" if max_features == "auto" else max_features)
+            
+            rf_pipeline = create_rf_pipeline(
+                cat_cols=self.cat_cols,
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                min_samples_split=min_samples_split,
+                min_samples_leaf=min_samples_leaf,
+                max_features=max_features_param,
+                n_jobs=n_jobs,
+                random_state=random_state
+            )
+            
+            # Train and evaluate
+            print("Training Random Forest model...")
+            y_proba, y_pred, roc_auc = train_and_evaluate(
+                rf_pipeline, X_train_split, y_train_split, X_test_split, y_test_split
+            )
+            
+            # Update agent's pipeline and training data
+            self.pipeline = rf_pipeline
+            self.X_train = X_train_split
+            
+            # Reinitialize SHAP explainer with new model
+            print("Reinitializing SHAP explainer with Random Forest model...")
+            self.explainer = shap.TreeExplainer(self.pipeline.named_steps["model"])
+            print("SHAP explainer ready!")
+            
+            return {
+                "success": True,
+                "roc_auc": float(roc_auc),
+                "message": f"Random Forest model trained successfully! ROC AUC: {roc_auc:.4f}",
+                "model_type": "RandomForest",
+                "parameters": {
+                    "n_estimators": n_estimators,
+                    "max_depth": max_depth,
+                    "min_samples_split": min_samples_split,
+                    "min_samples_leaf": min_samples_leaf,
+                    "max_features": max_features
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "roc_auc": None,
+                "message": f"Training failed: {str(e)}",
+                "error": str(e)
+            }
     
     @classmethod
     def load(cls, filepath: str):

@@ -1,7 +1,7 @@
 # 📌 Standard libraries
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from MLmodel import create_pipeline, train_and_evaluate, optimize_hyperparameters
+from MLmodel import create_XGBoost_pipeline, train_and_evaluate
 from visualization import create_all_visualizations
 from gradio_app import create_gradio_interface
 from ppd_agent import create_agent_from_training
@@ -86,27 +86,14 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,
 
 print(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
 
-# 🧠 Optimize and train the model using RandomizedSearchCV
+# 🧠 Train the model with default parameters
 print("\n" + "="*50)
-print("Optimizing XGBoost Model with RandomizedSearchCV...")
+print("Training XGBoost Model with Default Parameters")
 print("="*50)
+print("💡 Note: Use the Gradio interface to enable RandomizedSearchCV optimization if desired.")
 
-# 🔍 Optimize hyperparameters using RandomizedSearchCV
-best_pipeline, best_params, cv_results = optimize_hyperparameters(
-    X_train, y_train, cat_cols,
-    n_iter=50,      # Number of random combinations to try
-    cv=5,           # 5-fold cross-validation
-    scoring='roc_auc',
-    random_state=42,
-    n_jobs=-1       # Use all available CPU cores
-)
-
-# 📊 Evaluate the optimized model on test set
-print("\n" + "="*50)
-print("Evaluating Optimized Model on Test Set")
-print("="*50)
-
-pipeline = best_pipeline  # Use the optimized pipeline
+# Create and train pipeline with default parameters
+pipeline = create_XGBoost_pipeline(cat_cols)
 y_proba, y_pred, roc_auc = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
 
 # 📊 Create visualizations
@@ -122,7 +109,8 @@ print("="*50)
 interface = create_gradio_interface(
     pipeline, X_train, cat_cols,
     df=df, X_test=X_test, y_test=y_test, y_pred=y_pred,
-    y_proba=y_proba, roc_auc=roc_auc, target=target
+    y_proba=y_proba, roc_auc=roc_auc, target=target,
+    X_train=X_train, y_train=y_train
 )
 
 print("\n✅ Gradio interface is ready!")

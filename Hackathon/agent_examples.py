@@ -18,7 +18,7 @@ from ppd_agent import PPDAgent, create_agent_from_training
 from langchain_tool import create_langchain_tool
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from MLmodel import create_pipeline, train_and_evaluate
+from MLmodel import create_XGBoost_pipeline, train_and_evaluate
 
 
 def setup_agent():
@@ -68,7 +68,7 @@ def setup_agent():
     )
     
     # Train model
-    pipeline = create_pipeline(cat_cols)
+    pipeline = create_XGBoost_pipeline(cat_cols)
     y_proba, y_pred, roc_auc = train_and_evaluate(
         pipeline, X_train, y_train, X_test, y_test
     )

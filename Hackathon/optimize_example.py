@@ -4,7 +4,7 @@ for XGBoost hyperparameter optimization.
 """
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from MLmodel import optimize_hyperparameters, train_and_evaluate
+from MLmodel import optimize_XGBoost_hyperparameters, train_and_evaluate
 
 print("="*60)
 print("XGBoost Hyperparameter Optimization Example")
@@ -63,7 +63,7 @@ print(f"📊 Train: {X_train.shape[0]}, Test: {X_test.shape[0]}")
 # - n_iter: Number of random combinations to try (default: 50, increase for better results but slower)
 # - cv: Cross-validation folds (default: 5)
 # - scoring: Metric to optimize (default: 'roc_auc')
-best_pipeline, best_params, cv_results = optimize_hyperparameters(
+best_pipeline, best_params, cv_results = optimize_XGBoost_hyperparameters(
     X_train, y_train, cat_cols,
     n_iter=50,  # Try 50 random combinations (increase to 100+ for better results)
     cv=5,       # 5-fold cross-validation

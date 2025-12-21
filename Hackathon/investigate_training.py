@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 
 # Try to import model, but continue without it if not available
 try:
-    from MLmodel import create_pipeline, train_and_evaluate
+    from MLmodel import create_XGBoost_pipeline, train_and_evaluate
     MODEL_AVAILABLE = True
 except ImportError:
     print("Warning: Cannot import MLmodel (xgboost not installed). Will analyze data only.")
@@ -78,7 +78,7 @@ print(f"   Class 1 (Yes): {sum(y_test == 1)} ({sum(y_test == 1)/len(y_test)*100:
 # Train model (if available)
 if MODEL_AVAILABLE:
     print("\n7. Training model...")
-    pipeline = create_pipeline(cat_cols)
+    pipeline = create_XGBoost_pipeline(cat_cols)
     y_proba, y_pred, roc_auc = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
     
     # Check model classes

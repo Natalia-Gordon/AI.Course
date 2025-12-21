@@ -4,12 +4,13 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import roc_auc_score, classification_report
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier
 from scipy.stats import uniform, randint
 from xgboost import XGBClassifier
 import numpy as np
 
 
-def create_pipeline(cat_cols, **xgb_params):
+def create_XGBoost_pipeline(cat_cols, **xgb_params):
     """
     Create a preprocessing and modeling pipeline for XGBoost classifier.
     
@@ -80,7 +81,7 @@ def train_and_evaluate(pipeline, X_train, y_train, X_test, y_test):
     return y_proba, y_pred, roc_auc
 
 
-def optimize_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5, 
+def optimize_XGBoost_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5, 
                              scoring='roc_auc', random_state=42, n_jobs=-1):
     """
     Optimize XGBoost hyperparameters using RandomizedSearchCV.
@@ -99,13 +100,13 @@ def optimize_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5,
         tuple: (best_pipeline, best_params, cv_results)
     """
     print("\n" + "="*60)
-    print("🔍 Starting RandomizedSearchCV Hyperparameter Optimization")
+    print("🔍 Starting RandomizedSearchCV Hyperparameter Optimization for XGBoost")
     print("="*60)
     print(f"📊 Parameters: n_iter={n_iter}, cv={cv}, scoring={scoring}")
     print(f"⏱ This may take a few minutes...\n")
     
     # 📌 Create base pipeline
-    base_pipeline = create_pipeline(cat_cols)
+    base_pipeline = create_XGBoost_pipeline(cat_cols)
     
     # 📌 Define hyperparameter search space
     # Using distributions for continuous parameters and lists for discrete ones
@@ -139,7 +140,7 @@ def optimize_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5,
     
     # 📊 Display results
     print("\n" + "="*60)
-    print("✅ Optimization Complete!")
+    print("✅ XGBoost Optimization Complete!")
     print("="*60)
     print(f"\n🏆 Best {scoring} Score (CV): {random_search.best_score_:.4f}")
     print(f"\n📋 Best Hyperparameters:")
@@ -155,6 +156,129 @@ def optimize_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5,
             print(f"   {key}: {int(value)}")
         elif isinstance(value, (float, np.floating)):
             print(f"   {key}: {value:.4f}")
+        else:
+            print(f"   {key}: {value}")
+    
+    return random_search.best_estimator_, random_search.best_params_, random_search.cv_results_
+
+
+def create_rf_pipeline(cat_cols, **rf_params):
+    """
+    Create a preprocessing and modeling pipeline for Random Forest classifier.
+    
+    Args:
+        cat_cols: List of categorical column names
+        **rf_params: Optional Random Forest hyperparameters to override defaults
+        
+    Returns:
+        sklearn Pipeline object
+    """
+    # 📌 OneHotEncode categorical columns
+    categorical_transformer = OneHotEncoder(handle_unknown="ignore")
+    
+    preprocess = ColumnTransformer(
+        transformers=[("cat", categorical_transformer, cat_cols)]
+    )
+    
+    # 📌 Default Random Forest parameters
+    default_params = {
+        "n_estimators": 100,
+        "max_depth": 10,
+        "min_samples_split": 2,
+        "min_samples_leaf": 1,
+        "max_features": "sqrt",
+        "random_state": 42,
+        "n_jobs": -1
+    }
+    
+    # Update with any provided parameters
+    default_params.update(rf_params)
+    
+    # 📌 Random Forest classifier
+    rf_model = RandomForestClassifier(**default_params)
+    
+    # 📌 Pipeline
+    pipeline = Pipeline(steps=[("preprocess", preprocess),
+                               ("model", rf_model)])
+    
+    return pipeline
+
+
+def optimize_rf_hyperparameters(X_train, y_train, cat_cols, n_iter=50, cv=5, 
+                                scoring='roc_auc', random_state=42, n_jobs=-1):
+    """
+    Optimize Random Forest hyperparameters using RandomizedSearchCV.
+    
+    Args:
+        X_train: Training features
+        y_train: Training labels
+        cat_cols: List of categorical column names
+        n_iter: Number of parameter settings sampled (default: 50)
+        cv: Number of cross-validation folds (default: 5)
+        scoring: Scoring metric (default: 'roc_auc')
+        random_state: Random seed for reproducibility
+        n_jobs: Number of parallel jobs (-1 uses all processors)
+        
+    Returns:
+        tuple: (best_pipeline, best_params, cv_results)
+    """
+    print("\n" + "="*60)
+    print("🔍 Starting RandomizedSearchCV Hyperparameter Optimization for Random Forest")
+    print("="*60)
+    print(f"📊 Parameters: n_iter={n_iter}, cv={cv}, scoring={scoring}")
+    print(f"⏱ This may take a few minutes...\n")
+    
+    # 📌 Create base pipeline
+    base_pipeline = create_rf_pipeline(cat_cols)
+    
+    # 📌 Define hyperparameter search space for Random Forest
+    # Using distributions for continuous parameters and lists for discrete ones
+    param_distributions = {
+        'model__n_estimators': randint(50, 300),  # 50 to 300 trees
+        'model__max_depth': [None] + list(range(5, 25)),  # None or 5 to 24
+        'model__min_samples_split': randint(2, 20),  # 2 to 19
+        'model__min_samples_leaf': randint(1, 10),  # 1 to 9
+        'model__max_features': ['sqrt', 'log2', None],  # Feature selection methods
+        'model__bootstrap': [True, False],  # Whether to use bootstrap samples
+        'model__class_weight': [None, 'balanced', 'balanced_subsample'],  # Class weight handling
+    }
+    
+    # 📌 Create RandomizedSearchCV
+    random_search = RandomizedSearchCV(
+        estimator=base_pipeline,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        cv=cv,
+        scoring=scoring,
+        n_jobs=n_jobs,
+        random_state=random_state,
+        verbose=1,
+        return_train_score=True
+    )
+    
+    # 🔍 Perform search
+    random_search.fit(X_train, y_train)
+    
+    # 📊 Display results
+    print("\n" + "="*60)
+    print("✅ Random Forest Optimization Complete!")
+    print("="*60)
+    print(f"\n🏆 Best {scoring} Score (CV): {random_search.best_score_:.4f}")
+    print(f"\n📋 Best Hyperparameters:")
+    for param, value in random_search.best_params_.items():
+        # Format parameter names nicely (remove 'model__' prefix)
+        param_name = param.replace('model__', '')
+        print(f"   {param_name}: {value}")
+    
+    print(f"\n📈 Best Parameters Details:")
+    best_params = random_search.best_params_.copy()
+    for key, value in best_params.items():
+        if isinstance(value, (int, np.integer)):
+            print(f"   {key}: {int(value)}")
+        elif isinstance(value, (float, np.floating)):
+            print(f"   {key}: {value:.4f}")
+        elif value is None:
+            print(f"   {key}: None")
         else:
             print(f"   {key}: {value}")
     

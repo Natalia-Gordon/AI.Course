@@ -7,6 +7,8 @@ matplotlib.use('Agg')  # Use non-interactive backend to avoid tkinter issues
 import matplotlib.pyplot as plt
 import io
 import base64
+from MLmodel import create_XGBoost_pipeline, create_rf_pipeline, train_and_evaluate, optimize_XGBoost_hyperparameters, optimize_rf_hyperparameters
+from sklearn.model_selection import train_test_split
 
 
 # Predict postpartum depression risk based on input features
@@ -179,12 +181,6 @@ def predict_depression(
             file=sys.stderr,
         )
 
-    # NOTE:
-    # From empirical testing, higher symptom severity was yielding LOWER proba values
-    # and vice versa, meaning the model's "positive" class probability is aligned with
-    # "low risk" rather than "high risk". To present an intuitive risk score to users
-    # (more symptoms -> higher displayed risk), we display the COMPLEMENT of proba.
-    #displayed_risk = 1.0 - proba
     risk_score = f"PPD Risk Score: {proba:.2%}"
 
     # Debug: Also check the actual prediction
@@ -194,8 +190,11 @@ def predict_depression(
         file=sys.stderr,
     )
 
-    # SHAP explanation
+    # SHAP explanation (works for both XGBoost and Random Forest)
     try:
+        if explainer is None:
+            raise ValueError("SHAP explainer not initialized. Please train the model first.")
+        
         # Get preprocessed features
         preprocessor = pipeline.named_steps["preprocess"]
         row_processed = preprocessor.transform(
@@ -206,15 +205,31 @@ def predict_depression(
         feature_names = preprocessor.get_feature_names_out()
 
         # Calculate SHAP values - pass 2D array (row_processed is already 2D with shape [1, n_features])
+        # TreeExplainer works for both XGBoost and Random Forest
         shap_values = explainer.shap_values(row_processed)
 
         # Handle SHAP values (could be list for multi-class or array for binary)
+        # For binary classification, Random Forest may return a list with [class_0_values, class_1_values]
+        # or a single array for the positive class
         if isinstance(shap_values, list):
-            # Multi-class case - get values for positive class (index 1)
-            shap_values = shap_values[1] if len(shap_values) > 1 else shap_values[0]
+            # Multi-class or binary with list format - get values for positive class (index 1)
+            if len(shap_values) > 1:
+                shap_values = shap_values[1]  # Use positive class (depression = 1)
+            else:
+                shap_values = shap_values[0]
 
+        # Convert to numpy array if not already
+        shap_values = np.array(shap_values)
+        
         # Extract values for the single prediction (first row)
-        shap_values_single = shap_values[0]
+        # Handle different array shapes: [1, n_features] or [n_features]
+        if len(shap_values.shape) > 1:
+            shap_values_single = shap_values[0]  # First row if 2D
+        else:
+            shap_values_single = shap_values  # Already 1D
+        
+        # Ensure it's a 1D array and convert to list for easier handling
+        shap_values_single = np.array(shap_values_single).flatten()
 
         # Get top 5 most important features
         feat_imp = sorted(
@@ -242,8 +257,11 @@ def predict_depression(
         plot_html = create_shap_summary_plot(feat_imp, shap_values_single, feature_names)
 
     except Exception as e:
-        feat_imp_str = f"SHAP explanation unavailable: {str(e)}"
-        personalized_explanation = "Unable to generate personalized explanation."
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"SHAP Error: {error_details}", file=sys.stderr)
+        feat_imp_str = f"SHAP explanation unavailable: {str(e)}\n\nPlease ensure the model is trained and the SHAP explainer is initialized."
+        personalized_explanation = f"Unable to generate personalized explanation. Error: {str(e)}"
         plot_html = ""
 
     return risk_score, feat_imp_str, personalized_explanation, plot_html
@@ -371,7 +389,7 @@ def create_shap_summary_plot(top_features, shap_values_single, feature_names):
         return f"<p>Unable to generate plot: {str(e)}</p>"
 
 
-def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True):
+def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True, title=None):
     """
     Create a SHAP summary plot for class 1 (Yes Depression) using test data.
     
@@ -380,6 +398,7 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
         X_test: Test features (DataFrame)
         max_display: Maximum number of features to display
         return_image: If True, return base64 HTML image, else show plot
+        title: Optional custom title for the plot
         
     Returns:
         HTML string with embedded image or None
@@ -391,6 +410,11 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
         X_test_sample = X_test.sample(min(100, len(X_test)), random_state=42) if len(X_test) > 100 else X_test
         X_test_processed = preprocessor.transform(X_test_sample)
         
+        # Convert to numpy array if it's a sparse matrix (from OneHotEncoder)
+        if hasattr(X_test_processed, 'toarray'):
+            X_test_processed = X_test_processed.toarray()
+        X_test_processed = np.array(X_test_processed)
+        
         # Get feature names after one-hot encoding
         feature_names = preprocessor.get_feature_names_out()
         
@@ -401,30 +425,102 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
         explainer = shap.TreeExplainer(model)
         
         # Calculate SHAP values
+        # For Random Forest, ensure data is in the right format
         shap_values_output = explainer.shap_values(X_test_processed)
         
-        # Handle different return types
-        if isinstance(shap_values_output, list) and len(shap_values_output) == 2:
-            # List format with both classes: [shap_values_class_0, shap_values_class_1]
-            shap_values_class_1 = shap_values_output[1]
-        elif isinstance(shap_values_output, list) and len(shap_values_output) == 1:
-            # Single element list - use it as class 1
-            shap_values_class_1 = shap_values_output[0]
+        # Debug: Print information about the model and SHAP output
+        model_type = type(model).__name__
+        print(f"DEBUG SHAP: Model type: {model_type}")
+        print(f"DEBUG SHAP: SHAP output type: {type(shap_values_output)}")
+        if isinstance(shap_values_output, list):
+            print(f"DEBUG SHAP: SHAP output list length: {len(shap_values_output)}")
+            for i, item in enumerate(shap_values_output):
+                if hasattr(item, 'shape'):
+                    print(f"DEBUG SHAP: SHAP output[{i}] shape: {item.shape}")
+        elif hasattr(shap_values_output, 'shape'):
+            print(f"DEBUG SHAP: SHAP output shape: {shap_values_output.shape}")
+        
+        # Handle different return types for both XGBoost and Random Forest
+        # Random Forest often returns a list with [class_0, class_1] for binary classification
+        # XGBoost might return a single array or a list
+        if isinstance(shap_values_output, list):
+            if len(shap_values_output) == 2:
+                # List format with both classes: [shap_values_class_0, shap_values_class_1]
+                # For binary classification, use class 1 (positive class)
+                shap_values_class_1 = np.array(shap_values_output[1])
+            elif len(shap_values_output) == 1:
+                # Single element list - use it as class 1
+                shap_values_class_1 = np.array(shap_values_output[0])
+            else:
+                # Multiple classes - use the last one (typically class 1 for binary)
+                shap_values_class_1 = np.array(shap_values_output[-1])
         else:
             # Single array format: typically for positive class (class 1)
-            shap_values_class_1 = shap_values_output
+            shap_values_class_1 = np.array(shap_values_output)
+        
+        # Ensure shap_values_class_1 is 2D: [n_samples, n_features]
+        if len(shap_values_class_1.shape) == 1:
+            # If 1D, reshape to 2D (assuming it's for a single sample)
+            shap_values_class_1 = shap_values_class_1.reshape(1, -1)
+        elif len(shap_values_class_1.shape) == 3:
+            # If 3D, take the last dimension (for class 1)
+            shap_values_class_1 = shap_values_class_1[:, :, -1] if shap_values_class_1.shape[2] > 1 else shap_values_class_1[:, :, 0]
+        
+        # Ensure X_test_processed and shap_values_class_1 have matching shapes
+        if X_test_processed.shape[0] != shap_values_class_1.shape[0]:
+            # Adjust to match the number of samples
+            min_samples = min(X_test_processed.shape[0], shap_values_class_1.shape[0])
+            X_test_processed = X_test_processed[:min_samples]
+            shap_values_class_1 = shap_values_class_1[:min_samples]
         
         # Determine number of features
         n_features = shap_values_class_1.shape[1]
-        feature_names_to_use = feature_names[:n_features]
+        n_samples = shap_values_class_1.shape[0]
+        
+        # Ensure feature names match the number of features
+        if len(feature_names) > n_features:
+            feature_names_to_use = feature_names[:n_features]
+        elif len(feature_names) < n_features:
+            # If feature names are fewer, create generic names
+            feature_names_to_use = [f"Feature_{i}" for i in range(n_features)]
+        else:
+            feature_names_to_use = feature_names
+        
+        # Ensure X_test_processed has the same number of features
+        if X_test_processed.shape[1] != n_features:
+            # Adjust to match the number of features
+            min_features = min(X_test_processed.shape[1], n_features)
+            X_test_processed = X_test_processed[:, :min_features]
+            shap_values_class_1 = shap_values_class_1[:, :min_features]
+            feature_names_to_use = feature_names_to_use[:min_features]
+        
+        # Debug: Print final shapes
+        print(f"DEBUG SHAP: Final shapes - X_test: {X_test_processed.shape}, SHAP: {shap_values_class_1.shape}")
+        print(f"DEBUG SHAP: Number of features: {len(feature_names_to_use)}")
         
         # Create SHAP summary plot for Class 1 (Yes Depression)
         plt.figure(figsize=(12, 8))
-        shap.summary_plot(shap_values_class_1, X_test_processed, 
-                         feature_names=feature_names_to_use,
-                         max_display=max_display,
-                         show=False)
-        plt.title("SHAP Summary Plot - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
+        try:
+            shap.summary_plot(shap_values_class_1, X_test_processed, 
+                             feature_names=feature_names_to_use,
+                             max_display=max_display,
+                             show=False)
+        except Exception as plot_error:
+            # If summary_plot fails, try without feature names
+            print(f"DEBUG SHAP: Error with feature names, trying without: {plot_error}")
+            try:
+                shap.summary_plot(shap_values_class_1, X_test_processed, 
+                                 max_display=max_display,
+                                 show=False)
+            except Exception as plot_error2:
+                # If that also fails, use a bar plot instead
+                print(f"DEBUG SHAP: Error with summary_plot, using bar plot: {plot_error2}")
+                shap.summary_plot(shap_values_class_1, X_test_processed, 
+                                 plot_type="bar",
+                                 max_display=max_display,
+                                 show=False)
+        plot_title = title if title is not None else "SHAP Summary Plot - Class 1 (Yes Depression)"
+        plt.title(plot_title, fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
         
         if return_image:
@@ -450,7 +546,8 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
 
 
 def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=None, 
-                           y_test=None, y_pred=None, y_proba=None, roc_auc=None, target=None):
+                           y_test=None, y_pred=None, y_proba=None, roc_auc=None, target=None,
+                           X_train=None, y_train=None):
     """
     Create a Gradio interface for postpartum depression prediction.
 
@@ -465,6 +562,8 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
         y_proba: Predicted probabilities (for visualizations)
         roc_auc: ROC AUC score (for visualizations)
         target: Target variable name (for visualizations)
+        X_train: Full training features (for model training, optional)
+        y_train: Full training labels (for model training, optional)
 
     Returns:
         Gradio Interface object
@@ -475,15 +574,210 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
     # Get feature dtypes to ensure exact match
     feature_dtypes = X_train_sample.dtypes.to_dict()
 
+    # Use mutable containers to store current pipeline and explainer
+    current_pipeline = [pipeline]  # Use list to allow mutation
+    current_explainer = [None]
+    current_X_train = [X_train_sample]
+    
+    # Store current predictions for visualizations (will be updated when model is trained)
+    current_y_pred = [y_pred if y_pred is not None else None]
+    current_y_proba = [y_proba if y_proba is not None else None]
+    current_roc_auc = [roc_auc if roc_auc is not None else None]
+
     # Create SHAP explainer
     try:
         preprocessor = pipeline.named_steps["preprocess"]
         _ = preprocessor.transform(X_train_sample[:100])  # Use subset for speed
         model = pipeline.named_steps["model"]
         explainer = shap.TreeExplainer(model)
+        current_explainer[0] = explainer
     except Exception as e:
         print(f"Warning: Could not create SHAP explainer: {e}")
-        explainer = None
+        current_explainer[0] = None
+
+    # Training function
+    def train_model_wrapper(model_algorithm, use_optimization):
+        """Train model based on selected algorithm."""
+        if X_train is None or y_train is None:
+            return "❌ Training data not available. Please provide X_train and y_train when creating the interface."
+        
+        try:
+            # Split data if needed
+            # Always use a consistent split for fair comparison between models
+            if X_test is None or y_test is None:
+                X_train_split, X_test_split, y_train_split, y_test_split = train_test_split(
+                    X_train, y_train, test_size=0.2, stratify=y_train, random_state=42
+                )
+            else:
+                # Use provided test data, but still split training data for consistency
+                # This ensures we're always evaluating on the same test set
+                X_train_split = X_train
+                X_test_split = X_test
+                y_train_split = y_train
+                y_test_split = y_test
+            
+            # Initialize optimization_info and algorithm_name
+            optimization_info = ""
+            algorithm_name = "XGBoost" if model_algorithm == "Training XGBoost Model" else "Random Forest"
+            
+            # Create and train pipeline based on selection
+            if model_algorithm == "Training XGBoost Model":
+                if use_optimization:
+                    print("Optimizing XGBoost hyperparameters with RandomizedSearchCV...")
+                    print("⏱ This may take several minutes...")
+                    new_pipeline, best_params, cv_results = optimize_XGBoost_hyperparameters(
+                        X_train_split, y_train_split, cat_cols,
+                        n_iter=30,  # Reduced for faster training in UI
+                        cv=3,       # Reduced for faster training in UI
+                        scoring='roc_auc',
+                        random_state=42,
+                        n_jobs=-1
+                    )
+                    optimization_info = f"\n\n🔍 Hyperparameter Optimization Applied:\n"
+                    for param, value in best_params.items():
+                        param_name = param.replace('model__', '')
+                        optimization_info += f"   • {param_name}: {value}\n"
+                else:
+                    print("Training XGBoost model with default parameters...")
+                    new_pipeline = create_XGBoost_pipeline(cat_cols)
+                    optimization_info = "\n\nℹ️ Using default hyperparameters. Enable optimization for better performance."
+            elif model_algorithm == "Training Random Forest Model":
+                if use_optimization:
+                    print("Optimizing Random Forest hyperparameters with RandomizedSearchCV...")
+                    print("⏱ This may take several minutes...")
+                    new_pipeline, best_params, cv_results = optimize_rf_hyperparameters(
+                        X_train_split, y_train_split, cat_cols,
+                        n_iter=30,  # Reduced for faster training in UI
+                        cv=3,       # Reduced for faster training in UI
+                        scoring='roc_auc',
+                        random_state=42,
+                        n_jobs=-1
+                    )
+                    optimization_info = f"\n\n🔍 Hyperparameter Optimization Applied:\n"
+                    for param, value in best_params.items():
+                        param_name = param.replace('model__', '')
+                        optimization_info += f"   • {param_name}: {value}\n"
+                else:
+                    print("Training Random Forest model with default parameters...")
+                    new_pipeline = create_rf_pipeline(cat_cols)
+                    optimization_info = "\n\nℹ️ Using default hyperparameters. Enable optimization for better performance."
+            else:
+                return f"❌ Unknown algorithm: {model_algorithm}"
+            
+            # Train and evaluate
+            y_proba_new, y_pred_new, roc_auc_new = train_and_evaluate(
+                new_pipeline, X_train_split, y_train_split, X_test_split, y_test_split
+            )
+            
+            # Debug: Print prediction statistics
+            print(f"DEBUG: {algorithm_name} predictions - Unique values: {np.unique(y_pred_new, return_counts=True)}")
+            print(f"DEBUG: {algorithm_name} predictions - Sum: {np.sum(y_pred_new)}, Total: {len(y_pred_new)}")
+            
+            # Update current pipeline and predictions
+            current_pipeline[0] = new_pipeline
+            current_X_train[0] = X_train_split
+            current_y_pred[0] = y_pred_new
+            current_y_proba[0] = y_proba_new
+            current_roc_auc[0] = roc_auc_new
+            
+            # Reinitialize SHAP explainer
+            try:
+                model = new_pipeline.named_steps["model"]
+                # For Random Forest, TreeExplainer works well
+                # For better accuracy, we could pass background data, but TreeExplainer works without it
+                current_explainer[0] = shap.TreeExplainer(model)
+                explainer_status = "✅ SHAP explainer initialized (supports Top 5 Feature Contributions and Personalized Explanation)"
+            except Exception as e:
+                current_explainer[0] = None
+                explainer_status = f"⚠️ SHAP explainer failed: {str(e)}"
+            
+            # Update visualizations if test data is available
+            confusion_html = ""
+            roc_html = ""
+            prediction_html = ""
+            
+            # Initialize visualization HTML variables
+            confusion_html = ""
+            roc_html = ""
+            prediction_html = ""
+            shap_html = ""
+            
+            # Update visualizations using the test data and new predictions
+            # Always use y_test_split and y_pred_new to ensure we're showing the current model's performance
+            if y_test_split is not None and y_pred_new is not None:
+                try:
+                    from visualization import (
+                        plot_confusion_matrix, plot_roc_curve,
+                        plot_prediction_distribution
+                    )
+                    # Use the test data and predictions from the newly trained model
+                    # Debug: Print to verify we're using new predictions
+                    print(f"DEBUG: Creating confusion matrix - Model: {algorithm_name}")
+                    print(f"DEBUG: y_test_split shape: {len(y_test_split)}, y_pred_new shape: {len(y_pred_new)}")
+                    print(f"DEBUG: y_pred_new unique values: {np.unique(y_pred_new)}")
+                    print(f"DEBUG: y_test_split unique values: {np.unique(y_test_split)}")
+                    print(f"DEBUG: Confusion matrix will show predictions from {algorithm_name} model")
+                    
+                    # Create confusion matrix with model name in title
+                    # Calculate confusion matrix values for debugging
+                    from sklearn.metrics import confusion_matrix as cm_func
+                    cm_values = cm_func(y_test_split, y_pred_new)
+                    print(f"DEBUG: {algorithm_name} Confusion Matrix values:\n{cm_values}")
+                    print(f"DEBUG: True Positives: {cm_values[1,1]}, True Negatives: {cm_values[0,0]}")
+                    print(f"DEBUG: False Positives: {cm_values[0,1]}, False Negatives: {cm_values[1,0]}")
+                    
+                    confusion_html = plot_confusion_matrix(
+                        y_test_split, y_pred_new, 
+                        title=f"Confusion Matrix - {algorithm_name}",
+                        return_image=True
+                    )
+                    roc_html = plot_roc_curve(
+                        y_test_split, y_proba_new, roc_auc_new,
+                        title=f"ROC Curve - {algorithm_name}",
+                        return_image=True
+                    )
+                    prediction_html = plot_prediction_distribution(
+                        y_proba_new, 
+                        title=f"Prediction Probability Distribution - {algorithm_name}",
+                        return_image=True
+                    )
+                    # Update SHAP summary plot for Class 1 with the newly trained model
+                    shap_html = create_shap_summary_plot_class1(
+                        new_pipeline, X_test_split, max_display=15, return_image=True,
+                        title=f"SHAP Summary Plot - Class 1 (Yes Depression) - {algorithm_name}"
+                    )
+                except Exception as e:
+                    import traceback
+                    print(f"Warning: Could not update visualizations: {e}")
+                    print(traceback.format_exc())
+                    confusion_html = f"<p>Error updating confusion matrix: {str(e)}</p>"
+                    roc_html = f"<p>Error updating ROC curve: {str(e)}</p>"
+                    prediction_html = f"<p>Error updating prediction distribution: {str(e)}</p>"
+                    shap_html = f"<p>Error updating SHAP summary plot: {str(e)}</p>"
+            
+            status_message = f"""✅ {algorithm_name} model trained successfully!
+
+📊 Model Performance:
+   • ROC AUC Score: {roc_auc_new:.4f}
+   • Test Set Size: {len(X_test_split)} samples
+   • Training Set Size: {len(X_train_split)} samples
+
+{explainer_status}{optimization_info}
+
+The model is now ready for predictions!"""
+            
+            # Return based on whether test data is available for visualizations
+            if df is not None and X_test is not None and y_test is not None:
+                return (status_message, confusion_html, roc_html, prediction_html, shap_html)
+            else:
+                return status_message
+            
+        except Exception as e:
+            error_msg = f"❌ Training failed: {str(e)}"
+            if df is not None and X_test is not None and y_test is not None:
+                return (error_msg, "", "", "", "")
+            else:
+                return error_msg
 
     # Create a wrapper function that includes pipeline and explainer
     def predict_wrapper(
@@ -498,7 +792,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
         bonding,
         suicide_attempt,
     ):
-        if explainer is None:
+        if current_explainer[0] is None:
             return (
                 "SHAP explainer not available",
                 "Please train the model first",
@@ -506,8 +800,8 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
                 ""
             )
         return predict_depression(
-            pipeline,
-            explainer,
+            current_pipeline[0],
+            current_explainer[0],
             feature_columns,
             feature_dtypes,
             age,
@@ -524,9 +818,34 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
 
     # Create Gradio interface
     with gr.Blocks(title="Postpartum Depression Prediction System") as interface:
-        gr.Markdown("# 🏥 Postpartum Depression Risk Assessment")
+        gr.Markdown("# 🏥 Postpartum Depression Risk Assessment Model Training Agent")
+        
+        # Model selection and training section
+        with gr.Row():
+            with gr.Column():
+                gr.Markdown("**Select Model Training Algorithm**")
+                model_algorithm = gr.Dropdown(
+                    label=None,
+                    choices=["Training XGBoost Model", "Training Random Forest Model"],
+                    value="Training XGBoost Model",
+                    info="Choose the algorithm to train the model"
+                )
+                use_optimization = gr.Checkbox(
+                    label="Use RandomizedSearchCV optimization (slower but better performance)",
+                    value=False,
+                    info="Enable hyperparameter optimization for the selected model. This will take longer but may improve model performance."
+                )
+                train_btn = gr.Button("🚀 Train Model", variant="secondary")
+                training_status = gr.Textbox(
+                    label="Training Status",
+                    interactive=False,
+                    lines=8,
+                    value="Ready to train model. Select an algorithm and click 'Train Model'."
+                )
+        
+        gr.Markdown("---")
         gr.Markdown(
-            "Enter the following information to assess the risk of postpartum depression."
+            "**Enter the following information to assess the risk of postpartum depression.**"
         )
 
         with gr.Row():
@@ -694,6 +1013,23 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
                 ]
             )
 
+        # Connect training button
+        # If visualizations are available, update them when training
+        if df is not None and X_test is not None and y_test is not None:
+            train_btn.click(
+                fn=train_model_wrapper,
+                inputs=[model_algorithm, use_optimization],
+                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot],
+            )
+        else:
+            # If no test data, only update training status
+            train_btn.click(
+                fn=train_model_wrapper,
+                inputs=[model_algorithm, use_optimization],
+                outputs=[training_status],
+            )
+        
+        # Connect prediction button
         predict_btn.click(
             fn=predict_wrapper,
             inputs=[
