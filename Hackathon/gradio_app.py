@@ -486,6 +486,12 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
         else:
             feature_names_to_use = feature_names
         
+        # Clean feature names: remove "cat__" prefix and other preprocessing prefixes
+        # Remove "cat__" prefix (can appear at start or after "__")
+        feature_names_to_use = [name.replace('cat__', '').replace('num__', '') if 'cat__' in name or 'num__' in name else name for name in feature_names_to_use]
+        # Also clean up any remaining "__" separators that might be left
+        feature_names_to_use = [name.split('__')[-1] if '__' in name else name for name in feature_names_to_use]
+        
         # Ensure X_test_processed has the same number of features
         if X_test_processed.shape[1] != n_features:
             # Adjust to match the number of features
@@ -817,7 +823,14 @@ The model is now ready for predictions!"""
         )
 
     # Create Gradio interface
-    with gr.Blocks(title="Postpartum Depression Prediction System") as interface:
+    with gr.Blocks(title="Postpartum Depression Prediction System", css="""
+        .tab-nav button,
+        .tab-nav label,
+        div[data-testid="tab"] button,
+        div[data-testid="tab"] label {
+            font-weight: bold !important;
+        }
+    """) as interface:
         gr.Markdown("# 🏥 Postpartum Depression Risk Assessment Model Training Agent")
         
         # Model selection and training section

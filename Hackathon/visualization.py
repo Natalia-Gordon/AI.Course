@@ -60,7 +60,7 @@ def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=Fals
         ax = axes[idx]
         crosstab = pd.crosstab(df[col], df[target])
         crosstab.plot(kind='bar', ax=ax, color=['#2ecc71', '#e74c3c'])
-        ax.set_title(f'{col} by {target}', fontweight='bold')
+        ax.set_title(f'{col}', fontweight='bold')
         ax.set_xlabel(col)
         ax.set_ylabel('Count')
         ax.legend(['No', 'Yes'])
@@ -172,6 +172,12 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
         # Determine number of features
         n_features = shap_values_class_1.shape[1]
         feature_names_to_use = feature_names[:n_features]
+        
+        # Clean feature names: remove "cat__" prefix and other preprocessing prefixes
+        # Remove "cat__" prefix (can appear at start or after "__")
+        feature_names_to_use = [name.replace('cat__', '').replace('num__', '') if 'cat__' in name or 'num__' in name else name for name in feature_names_to_use]
+        # Also clean up any remaining "__" separators that might be left
+        feature_names_to_use = [name.split('__')[-1] if '__' in name else name for name in feature_names_to_use]
         
         print(f"\n   Plotting SHAP values for Class 0 (No depression)...")
         # Plot summary for Class 0 (No depression)
