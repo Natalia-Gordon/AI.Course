@@ -12,9 +12,11 @@ from sklearn.metrics import roc_curve, auc, confusion_matrix
 import shap
 import io
 import base64
+import os
+from datetime import datetime
 
 
-def plot_target_distribution(y, title="Target Distribution", return_image=False):
+def plot_target_distribution(y, title="Target Distribution", return_image=False, save_path=None):
     """Plot the distribution of the target variable."""
     plt.figure(figsize=(8, 6))
     # Sort by class index (0, 1) to ensure correct label assignment
@@ -40,15 +42,18 @@ def plot_target_distribution(y, title="Target Distribution", return_image=False)
     plt.tight_layout()
     
     if return_image:
-        return _fig_to_base64()
-    # Only show if not using Agg backend (suppress warning)
-    try:
-        plt.show()
-    except Exception:
-        pass  # Ignore errors when using non-interactive backend
+        return _fig_to_base64(save_path=save_path, filename="target_distribution.png")
+    # Close figure instead of showing when using non-interactive backend
+    if matplotlib.get_backend().lower() == 'agg':
+        plt.close()
+    else:
+        try:
+            plt.show()
+        except Exception:
+            plt.close()  # Fallback to close if show fails
 
 
-def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=False):
+def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=False, save_path=None):
     """Plot distributions of categorical features by target."""
     n_features = len(cat_cols)
     n_rows = (n_features + n_cols - 1) // n_cols
@@ -73,15 +78,18 @@ def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=Fals
     plt.tight_layout()
     
     if return_image:
-        return _fig_to_base64()
-    # Only show if not using Agg backend (suppress warning)
-    try:
-        plt.show()
-    except Exception:
-        pass  # Ignore errors when using non-interactive backend
+        return _fig_to_base64(save_path=save_path, filename="feature_distributions.png")
+    # Close figure instead of showing when using non-interactive backend
+    if matplotlib.get_backend().lower() == 'agg':
+        plt.close()
+    else:
+        try:
+            plt.show()
+        except Exception:
+            plt.close()  # Fallback to close if show fails
 
 
-def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix", return_image=False):
+def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix", return_image=False, save_path=None):
     """Plot confusion matrix."""
     cm = confusion_matrix(y_test, y_pred)
     
@@ -95,15 +103,18 @@ def plot_confusion_matrix(y_test, y_pred, title="Confusion Matrix", return_image
     plt.tight_layout()
     
     if return_image:
-        return _fig_to_base64()
-    # Only show if not using Agg backend (suppress warning)
-    try:
-        plt.show()
-    except Exception:
-        pass  # Ignore errors when using non-interactive backend
+        return _fig_to_base64(save_path=save_path, filename="confusion_matrix.png")
+    # Close figure instead of showing when using non-interactive backend
+    if matplotlib.get_backend().lower() == 'agg':
+        plt.close()
+    else:
+        try:
+            plt.show()
+        except Exception:
+            plt.close()  # Fallback to close if show fails
 
 
-def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve", return_image=False):
+def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve", return_image=False, save_path=None):
     """Plot ROC curve."""
     fpr, tpr, _ = roc_curve(y_test, y_proba)
     
@@ -122,15 +133,18 @@ def plot_roc_curve(y_test, y_proba, roc_auc, title="ROC Curve", return_image=Fal
     plt.tight_layout()
     
     if return_image:
-        return _fig_to_base64()
-    # Only show if not using Agg backend (suppress warning)
-    try:
-        plt.show()
-    except Exception:
-        pass  # Ignore errors when using non-interactive backend
+        return _fig_to_base64(save_path=save_path, filename="roc_curve.png")
+    # Close figure instead of showing when using non-interactive backend
+    if matplotlib.get_backend().lower() == 'agg':
+        plt.close()
+    else:
+        try:
+            plt.show()
+        except Exception:
+            plt.close()  # Fallback to close if show fails
 
 
-def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
+def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10, save_path=None):
     """Plot SHAP summary for feature importance for both classes."""
     try:
         # Get the preprocessed features
@@ -188,10 +202,15 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Summary Plot - Class 0 (No Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        try:
-            plt.show()
-        except Exception:
-            pass  # Ignore errors when using non-interactive backend
+        if save_path:
+            _fig_to_base64(save_path=save_path, filename="shap_summary_class0.png")
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()
         
         # Plot bar plot for Class 0
         plt.figure(figsize=(10, 6))
@@ -202,10 +221,15 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Feature Importance - Class 0 (No Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        try:
-            plt.show()
-        except Exception:
-            pass  # Ignore errors when using non-interactive backend
+        if save_path:
+            _fig_to_base64(save_path=save_path, filename="shap_bar_class0.png")
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()
         
         print(f"   Plotting SHAP values for Class 1 (Yes depression)...")
         # Plot summary for Class 1 (Yes depression)
@@ -216,10 +240,15 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Summary Plot - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        try:
-            plt.show()
-        except Exception:
-            pass  # Ignore errors when using non-interactive backend
+        if save_path:
+            _fig_to_base64(save_path=save_path, filename="shap_summary_class1.png")
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()
         
         # Plot bar plot for Class 1
         plt.figure(figsize=(10, 6))
@@ -230,10 +259,15 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
                          show=False)
         plt.title("SHAP Feature Importance - Class 1 (Yes Depression)", fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
-        try:
-            plt.show()
-        except Exception:
-            pass  # Ignore errors when using non-interactive backend
+        if save_path:
+            _fig_to_base64(save_path=save_path, filename="shap_bar_class1.png")
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()
         
     except Exception as e:
         print(f"SHAP visualization error: {e}")
@@ -242,7 +276,7 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10):
         print("Skipping SHAP plots...")
 
 
-def plot_correlation_heatmap(df, target, return_image=False):
+def plot_correlation_heatmap(df, target, return_image=False, save_path=None):
     """Plot correlation heatmap for features (handles both numerical and categorical)."""
     # Create a copy of dataframe for encoding
     df_encoded = df.copy()
@@ -288,12 +322,15 @@ def plot_correlation_heatmap(df, target, return_image=False):
         plt.tight_layout()
         
         if return_image:
-            return _fig_to_base64()
-        # Only show if not using Agg backend (suppress warning)
-        try:
-            plt.show()
-        except Exception:
-            pass  # Ignore errors when using non-interactive backend
+            return _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
+        # Close figure instead of showing when using non-interactive backend
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()  # Fallback to close if show fails
     else:
         # If no numerical columns, create a message plot
         plt.figure(figsize=(8, 6))
@@ -305,15 +342,18 @@ def plot_correlation_heatmap(df, target, return_image=False):
         plt.tight_layout()
         
         if return_image:
-            return _fig_to_base64()
-        # Only show if not using Agg backend (suppress warning)
-        try:
-            plt.show()
-        except Exception:
-            pass  # Ignore errors when using non-interactive backend
+            return _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
+        # Close figure instead of showing when using non-interactive backend
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()  # Fallback to close if show fails
 
 
-def plot_prediction_distribution(y_proba, title="Prediction Probability Distribution", return_image=False):
+def plot_prediction_distribution(y_proba, title="Prediction Probability Distribution", return_image=False, save_path=None):
     """Plot distribution of prediction probabilities."""
     plt.figure(figsize=(10, 6))
     plt.hist(y_proba, bins=30, color='#3498db', alpha=0.7, edgecolor='black')
@@ -326,55 +366,102 @@ def plot_prediction_distribution(y_proba, title="Prediction Probability Distribu
     plt.tight_layout()
     
     if return_image:
-        return _fig_to_base64()
-    # Only show if not using Agg backend (suppress warning)
-    try:
-        plt.show()
-    except Exception:
-        pass  # Ignore errors when using non-interactive backend
+        return _fig_to_base64(save_path=save_path, filename="prediction_distribution.png")
+    # Close figure instead of showing when using non-interactive backend
+    if matplotlib.get_backend().lower() == 'agg':
+        plt.close()
+    else:
+        try:
+            plt.show()
+        except Exception:
+            plt.close()  # Fallback to close if show fails
 
 
 def create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc, 
-                            pipeline, cat_cols, target):
-    """Create all visualizations for the model."""
+                            pipeline, cat_cols, target, algorithm_name="XGBoost", save_plots=True):
+    """
+    Create all visualizations for the model.
+    
+    Args:
+        df: DataFrame with data
+        X_test: Test features
+        y_test: Test labels
+        y_pred: Predictions
+        y_proba: Prediction probabilities
+        roc_auc: ROC AUC score
+        pipeline: Trained pipeline
+        cat_cols: Categorical columns
+        target: Target column name
+        algorithm_name: Name of the algorithm (e.g., "XGBoost", "RandomForest") for folder organization
+        save_plots: Whether to save plots to files (default: True)
+    """
     print("\n" + "="*50)
     print("Creating Visualizations...")
     print("="*50)
     
+    # Create save path based on algorithm name
+    save_path = None
+    if save_plots:
+        save_path = os.path.join("output", "plots", algorithm_name)
+        os.makedirs(save_path, exist_ok=True)
+        print(f"\n📁 Saving plots to: {save_path}/")
+    
     # 1. Target distribution
     print("\n1. Plotting target distribution...")
-    plot_target_distribution(df[target])
+    plot_target_distribution(df[target], save_path=save_path)
     
     # 2. Feature distributions
     if len(cat_cols) > 0:
         print("\n2. Plotting feature distributions...")
-        plot_feature_distributions(df, cat_cols, target)
+        plot_feature_distributions(df, cat_cols, target, save_path=save_path)
     
     # 3. Confusion matrix
     print("\n3. Plotting confusion matrix...")
-    plot_confusion_matrix(y_test, y_pred)
+    plot_confusion_matrix(y_test, y_pred, save_path=save_path)
     
     # 4. ROC curve
     print("\n4. Plotting ROC curve...")
-    plot_roc_curve(y_test, y_proba, roc_auc)
+    plot_roc_curve(y_test, y_proba, roc_auc, save_path=save_path)
     
     # 5. Prediction distribution
     print("\n5. Plotting prediction probability distribution...")
-    plot_prediction_distribution(y_proba)
+    plot_prediction_distribution(y_proba, save_path=save_path)
     
     # 6. Correlation heatmap
     print("\n6. Plotting correlation heatmap...")
-    plot_correlation_heatmap(df, target)
+    plot_correlation_heatmap(df, target, save_path=save_path)
     
     # 7. SHAP plots
     print("\n7. Creating SHAP visualizations...")
-    plot_shap_summary(pipeline, X_test, cat_cols)
+    plot_shap_summary(pipeline, X_test, cat_cols, save_path=save_path)
     
     print("\n✅ All visualizations completed!")
+    if save_path:
+        print(f"📁 All plots saved to: {save_path}/")
 
 
-def _fig_to_base64():
-    """Convert current matplotlib figure to base64 encoded image."""
+def _fig_to_base64(save_path=None, filename=None):
+    """
+    Convert current matplotlib figure to base64 encoded image.
+    Optionally save to file if save_path is provided.
+    
+    Args:
+        save_path: Directory path to save the file (optional)
+        filename: Filename to save (optional, will use timestamp if not provided)
+    
+    Returns:
+        Base64 encoded HTML image string
+    """
+    # Save to file if path provided
+    if save_path is not None:
+        os.makedirs(save_path, exist_ok=True)
+        if filename is None:
+            filename = f"plot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        filepath = os.path.join(save_path, filename)
+        plt.savefig(filepath, format='png', dpi=100, bbox_inches='tight')
+        print(f"   💾 Saved: {filepath}")
+    
+    # Convert to base64 for HTML
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
     buf.seek(0)

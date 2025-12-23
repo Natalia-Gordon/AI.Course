@@ -209,7 +209,7 @@ def example_4_api_usage():
     print(f"Risk: {result['risk_percentage']}%")
     """)
 
-
+# שהוא יכול לענות על תשאולים של מכולה על המידע שנלמד דרך אלגוריתם ML
 def example_5_langchain_usage():
     """Example 5: LangChain integration."""
     print("\n" + "="*60)
@@ -303,20 +303,88 @@ def example_7_save_load():
     print(f"\nLoaded agent prediction: {result['risk_percentage']}%")
 
 
-if __name__ == "__main__":
+def display_menu():
+    """Display the example selection menu."""
+    print("\n" + "="*60)
     print("PPD Agent Tool - Example Usage")
     print("="*60)
-    
-    # Run examples
-    example_1_standalone_usage()
-    example_2_dict_usage()
-    example_3_batch_prediction()
-    example_4_api_usage()
-    example_5_langchain_usage()
-    example_6_openai_function_calling()
-    example_7_save_load()
-    
-    print("\n" + "="*60)
-    print("All examples completed!")
+    print("\nAvailable Examples:")
+    print("  1. Standalone Python Usage")
+    print("  2. Dictionary Input Usage")
+    print("  3. Batch Predictions")
+    print("  4. API Usage (instructions)")
+    print("  5. LangChain Integration (instructions)")
+    print("  6. OpenAI Function Calling")
+    print("  7. Save and Load Agent")
+    print("  8. Run All Examples")
+    print("  0. Exit")
     print("="*60)
+
+
+def get_user_choice():
+    """Get user's choice from the menu."""
+    while True:
+        try:
+            choice = input("\nEnter your choice (0-8): ").strip()
+            if choice in ['0', '1', '2', '3', '4', '5', '6', '7', '8']:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 0 and 8.")
+        except KeyboardInterrupt:
+            print("\n\nExiting...")
+            return 0
+        except Exception as e:
+            print(f"Error: {e}. Please try again.")
+
+
+if __name__ == "__main__":
+    examples = {
+        1: ("Standalone Python Usage", example_1_standalone_usage),
+        2: ("Dictionary Input Usage", example_2_dict_usage),
+        3: ("Batch Predictions", example_3_batch_prediction),
+        4: ("API Usage", example_4_api_usage),
+        5: ("LangChain Integration", example_5_langchain_usage),
+        6: ("OpenAI Function Calling", example_6_openai_function_calling),
+        7: ("Save and Load Agent", example_7_save_load),
+    }
+    
+    while True:
+        display_menu()
+        choice = get_user_choice()
+        
+        if choice == 0:
+            print("\nGoodbye!")
+            break
+        elif choice == 8:
+            print("\n" + "="*60)
+            print("Running All Examples")
+            print("="*60)
+            for num, (name, func) in examples.items():
+                print(f"\n>>> Running Example {num}: {name}")
+                try:
+                    func()
+                except Exception as e:
+                    print(f"Error running example {num}: {e}")
+            print("\n" + "="*60)
+            print("All examples completed!")
+            print("="*60)
+        elif choice in examples:
+            name, func = examples[choice]
+            print(f"\n>>> Running Example {choice}: {name}")
+            try:
+                func()
+                print("\n" + "="*60)
+                print(f"Example {choice} completed!")
+                print("="*60)
+            except Exception as e:
+                print(f"\nError running example: {e}")
+        else:
+            print("Invalid choice. Please try again.")
+        
+        # Ask if user wants to continue
+        if choice != 0:
+            continue_choice = input("\nWould you like to run another example? (y/n): ").strip().lower()
+            if continue_choice not in ['y', 'yes']:
+                print("\nGoodbye!")
+                break
 

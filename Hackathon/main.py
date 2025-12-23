@@ -6,7 +6,7 @@ from visualization import create_all_visualizations
 from gradio_app import create_gradio_interface
 from ppd_agent import create_agent_from_training
 
-print("Welcome to the Postpartum Depression Prediction System")
+print("Welcome to the Postpartum Depression Prediction Agent Tool")
 
 # 🗂 Load the PostPartum Depression dataset CSV (download from Kaggle)
 df = pd.read_csv("data/postpartum-depression.csv")
@@ -98,33 +98,15 @@ y_proba, y_pred, roc_auc = train_and_evaluate(pipeline, X_train, y_train, X_test
 
 # 📊 Create visualizations
 create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc, 
-                         pipeline, cat_cols, target)
+                         pipeline, cat_cols, target, 
+                         algorithm_name="XGBoost", save_plots=True)
 
 # 🚀 Launch Gradio Interface
 print("\n" + "="*50)
 print("Launching Gradio Web Interface...")
 print("="*50)
 
-# Create Gradio interface (examples are already included in the interface)
-interface = create_gradio_interface(
-    pipeline, X_train, cat_cols,
-    df=df, X_test=X_test, y_test=y_test, y_pred=y_pred,
-    y_proba=y_proba, roc_auc=roc_auc, target=target,
-    X_train=X_train, y_train=y_train
-)
-
-print("\n✅ Gradio interface is ready!")
-print("📱 The web interface will open in your browser.")
-print("💡 You can use the example cases below the form for quick testing.")
-print("📊 Example cases include:")
-print("   - High risk case (multiple symptoms)")
-print("   - Low risk case (no symptoms)")
-print("   - Moderate risk case (some symptoms)")
-print("   - Very high risk case (all symptoms)")
-print("   - Low-moderate risk (sleep issues only)")
-print("\n" + "="*50)
-
-# 🤖 Create PPD Agent (for programmatic use)
+# 🤖 Create PPD Agent (for programmatic use and Gradio integration)
 print("\n" + "="*50)
 print("Creating PPD Agent Tool...")
 print("="*50)
@@ -141,5 +123,43 @@ print("   - Examples: python agent_examples.py")
 ppd_agent.save("ppd_agent.pkl")
 print("✅ Agent saved to ppd_agent.pkl")
 
+# 🚀 Launch Gradio Interface
+print("\n" + "="*50)
+print("Launching Gradio Web Interface...")
+print("="*50)
+
+# Create Gradio interface with agent (Standalone Python usage - Example 1)
+interface = create_gradio_interface(
+    pipeline, X_train, cat_cols,
+    df=df, X_test=X_test, y_test=y_test, y_pred=y_pred,
+    y_proba=y_proba, roc_auc=roc_auc, target=target,
+    X_train=X_train, y_train=y_train,
+    ppd_agent=ppd_agent  # Pass agent to use in Gradio interface
+)
+
+print("\n✅ Gradio interface is ready!")
+print("📱 The web interface will open in your browser.")
+print("💡 You can use the example cases below the form for quick testing.")
+print("📊 Example cases include:")
+print("   - High risk case (multiple symptoms)")
+print("   - Low risk case (no symptoms)")
+print("   - Moderate risk case (some symptoms)")
+print("   - Very high risk case (all symptoms)")
+print("   - Low-moderate risk (sleep issues only)")
+print("\n🤖 The Gradio interface is now using the PPD Agent (Standalone Python usage - Example 1)")
+print("="*50)
+
 # Launch the interface
-interface.launch(share=False, server_name="127.0.0.1", server_port=7860)
+interface.launch(
+    share=False, 
+    server_name="127.0.0.1", 
+    server_port=7860,
+    css="""
+        .tab-nav button,
+        .tab-nav label,
+        div[data-testid="tab"] button,
+        div[data-testid="tab"] label {
+            font-weight: bold !important;
+        }
+    """
+)

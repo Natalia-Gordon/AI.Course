@@ -14,7 +14,7 @@ import pickle
 import os
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, classification_report
-from MLmodel import create_rf_pipeline, train_and_evaluate
+from MLmodel import create_rf_pipeline, create_XGBoost_pipeline, train_and_evaluate, optimize_XGBoost_hyperparameters
 
 
 class PPDAgent:
@@ -503,7 +503,14 @@ class PPDAgent:
                     "min_samples_split": min_samples_split,
                     "min_samples_leaf": min_samples_leaf,
                     "max_features": max_features
-                }
+                },
+                "pipeline": rf_pipeline,
+                "X_train": X_train_split,
+                "X_test": X_test_split,
+                "y_train": y_train_split,
+                "y_test": y_test_split,
+                "y_proba": y_proba,
+                "y_pred": y_pred
             }
             
         except Exception as e:
@@ -512,6 +519,121 @@ class PPDAgent:
                 "roc_auc": None,
                 "message": f"Training failed: {str(e)}",
                 "error": str(e)
+            }
+    
+    def train_xgboost(self,
+                     X_train: pd.DataFrame = None,
+                     y_train: pd.Series = None,
+                     X_test: pd.DataFrame = None,
+                     y_test: pd.Series = None,
+                     test_size: float = 0.2,
+                     random_state: int = 42,
+                     use_optimization: bool = False,
+                     n_iter: int = 30,
+                     cv: int = 3,
+                     scoring: str = 'roc_auc',
+                     n_jobs: int = -1) -> Dict[str, Any]:
+        """
+        Train an XGBoost model and update the agent's pipeline.
+        
+        Args:
+            X_train: Training features (required)
+            y_train: Training labels (required)
+            X_test: Test features (optional, will split if not provided)
+            y_test: Test labels (optional, will split if not provided)
+            test_size: Test set size if splitting (default: 0.2)
+            random_state: Random seed for reproducibility (default: 42)
+            use_optimization: Whether to use RandomizedSearchCV for hyperparameter optimization (default: False)
+            n_iter: Number of iterations for optimization (default: 30)
+            cv: Number of cross-validation folds (default: 3)
+            scoring: Scoring metric for optimization (default: 'roc_auc')
+            n_jobs: Number of parallel jobs (default: -1)
+        
+        Returns:
+            Dictionary with training results including:
+            - success: Whether training was successful
+            - roc_auc: ROC AUC score on test set
+            - message: Status message
+            - model_type: "XGBoost"
+            - parameters: Best hyperparameters if optimization used
+        """
+        try:
+            if X_train is None:
+                raise ValueError("X_train must be provided for training")
+            
+            if y_train is None:
+                raise ValueError("y_train must be provided for training")
+            
+            # Split data if test set not provided
+            if X_test is None or y_test is None:
+                X_train_split, X_test_split, y_train_split, y_test_split = train_test_split(
+                    X_train, y_train, test_size=test_size,
+                    stratify=y_train, random_state=random_state
+                )
+            else:
+                X_train_split = X_train
+                X_test_split = X_test
+                y_train_split = y_train
+                y_test_split = y_test
+            
+            # Create and train XGBoost pipeline
+            if use_optimization:
+                print("Creating XGBoost pipeline with hyperparameter optimization...")
+                print("⏱ This may take several minutes...")
+                xgb_pipeline, best_params, cv_results = optimize_XGBoost_hyperparameters(
+                    X_train_split, y_train_split, self.cat_cols,
+                    n_iter=n_iter,
+                    cv=cv,
+                    scoring=scoring,
+                    random_state=random_state,
+                    n_jobs=n_jobs
+                )
+                optimization_info = "Hyperparameter optimization applied"
+            else:
+                print("Creating XGBoost pipeline with default parameters...")
+                xgb_pipeline = create_XGBoost_pipeline(self.cat_cols)
+                best_params = {}
+                optimization_info = "Using default hyperparameters"
+            
+            # Train and evaluate
+            print("Training XGBoost model...")
+            y_proba, y_pred, roc_auc = train_and_evaluate(
+                xgb_pipeline, X_train_split, y_train_split, X_test_split, y_test_split
+            )
+            
+            # Update agent's pipeline and training data
+            self.pipeline = xgb_pipeline
+            self.X_train = X_train_split
+            
+            # Reinitialize SHAP explainer with new model
+            print("Reinitializing SHAP explainer with XGBoost model...")
+            self.explainer = shap.TreeExplainer(self.pipeline.named_steps["model"])
+            print("SHAP explainer ready!")
+            
+            return {
+                "success": True,
+                "roc_auc": float(roc_auc),
+                "message": f"XGBoost model trained successfully! ROC AUC: {roc_auc:.4f}",
+                "model_type": "XGBoost",
+                "optimization_info": optimization_info,
+                "parameters": best_params,
+                "pipeline": xgb_pipeline,
+                "X_train": X_train_split,
+                "X_test": X_test_split,
+                "y_train": y_train_split,
+                "y_test": y_test_split,
+                "y_proba": y_proba,
+                "y_pred": y_pred
+            }
+            
+        except Exception as e:
+            import traceback
+            return {
+                "success": False,
+                "roc_auc": None,
+                "message": f"Training failed: {str(e)}",
+                "error": str(e),
+                "traceback": traceback.format_exc()
             }
     
     @classmethod

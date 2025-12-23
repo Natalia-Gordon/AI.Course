@@ -7,6 +7,7 @@ matplotlib.use('Agg')  # Use non-interactive backend to avoid tkinter issues
 import matplotlib.pyplot as plt
 import io
 import base64
+import os
 from MLmodel import create_XGBoost_pipeline, create_rf_pipeline, train_and_evaluate, optimize_XGBoost_hyperparameters, optimize_rf_hyperparameters
 from sklearn.model_selection import train_test_split
 
@@ -254,7 +255,48 @@ def predict_depression(
         )
 
         # Create user-friendly SHAP summary plot
-        plot_html = create_shap_summary_plot(feat_imp, shap_values_single, feature_names)
+        # Determine save path based on current model (if available)
+        save_path_shap = None
+        try:
+            model_type = type(pipeline.named_steps['model']).__name__
+            algo_name = "XGBoost" if "XGB" in model_type.upper() else "RandomForest"
+            save_path_shap = os.path.join("output", "plots", algo_name)
+        except:
+            pass
+        plot_html = create_shap_summary_plot(feat_imp, shap_values_single, feature_names, save_path=save_path_shap)
+        
+        # Create detailed SHAP explanation
+        shap_explanation_lines = []
+        for i, (feat, val) in enumerate(feat_imp, 1):
+            clean_feat = feat.split('__')[-1] if '__' in feat else feat
+            abs_val = abs(val)
+            impact = "high" if abs_val > 0.1 else "moderate" if abs_val > 0.05 else "low"
+            direction = "increases" if val > 0 else "decreases"
+            shap_explanation_lines.append(
+                f"**{clean_feat}**: SHAP value = {val:.4f}\n"
+                f"  • This feature {direction} the PPD risk prediction by {abs_val:.4f}\n"
+                f"  • Impact level: {impact.upper()}\n"
+                f"  • {'Positive SHAP value means this feature pushes the prediction toward higher risk.' if val > 0 else 'Negative SHAP value means this feature pushes the prediction toward lower risk.'}"
+            )
+        
+        shap_explanation = f"""## SHAP (SHapley Additive exPlanations) Analysis
+
+SHAP values explain how each feature contributes to the final prediction.
+- **Positive SHAP values** push the prediction toward higher PPD risk
+- **Negative SHAP values** push the prediction toward lower PPD risk
+- **Magnitude** indicates the strength of the contribution
+
+### Feature Contributions:
+
+{chr(10).join(shap_explanation_lines) if shap_explanation_lines else 'No SHAP values available'}
+
+### How to Interpret:
+- **High impact** (|SHAP| > 0.1): This feature significantly influences the prediction
+- **Moderate impact** (0.05 < |SHAP| ≤ 0.1): This feature moderately influences the prediction
+- **Low impact** (|SHAP| ≤ 0.05): This feature has a minor influence on the prediction
+
+The sum of all SHAP values equals the difference between the model's prediction and the baseline (average prediction).
+"""
 
     except Exception as e:
         import traceback
@@ -262,9 +304,10 @@ def predict_depression(
         print(f"SHAP Error: {error_details}", file=sys.stderr)
         feat_imp_str = f"SHAP explanation unavailable: {str(e)}\n\nPlease ensure the model is trained and the SHAP explainer is initialized."
         personalized_explanation = f"Unable to generate personalized explanation. Error: {str(e)}"
+        shap_explanation = f"## SHAP Explanation Unavailable\n\nError: {str(e)}\n\nPlease ensure the model is trained and the SHAP explainer is initialized."
         plot_html = ""
 
-    return risk_score, feat_imp_str, personalized_explanation, plot_html
+    return risk_score, feat_imp_str, personalized_explanation, shap_explanation, plot_html
 
 
 def generate_personalized_explanation(proba, pred_class, top_features, row, feature_names, shap_values_single):
@@ -345,9 +388,15 @@ def generate_personalized_explanation(proba, pred_class, top_features, row, feat
     return explanation
 
 
-def create_shap_summary_plot(top_features, shap_values_single, feature_names):
+def create_shap_summary_plot(top_features, shap_values_single, feature_names, save_path=None):
     """
     Create a user-friendly SHAP summary plot as HTML.
+    
+    Args:
+        top_features: List of tuples (feature_name, shap_value)
+        shap_values_single: Array of SHAP values
+        feature_names: List of feature names
+        save_path: Optional directory path to save the plot
     """
     try:
         # Extract feature names and values
@@ -377,6 +426,13 @@ def create_shap_summary_plot(top_features, shap_values_single, feature_names):
         
         plt.tight_layout()
         
+        # Save to file if path provided
+        if save_path is not None:
+            os.makedirs(save_path, exist_ok=True)
+            filepath = os.path.join(save_path, "shap_summary_bar.png")
+            plt.savefig(filepath, format='png', dpi=100, bbox_inches='tight')
+            print(f"   💾 Saved: {filepath}")
+        
         # Convert to base64 HTML
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
@@ -389,7 +445,139 @@ def create_shap_summary_plot(top_features, shap_values_single, feature_names):
         return f"<p>Unable to generate plot: {str(e)}</p>"
 
 
-def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True, title=None):
+def create_enhanced_shap_plot(top_features, shap_values_single, feature_names, base_value=0.5, save_path=None):
+    """
+    Create an enhanced SHAP plot with waterfall-style visualization showing cumulative effect.
+    
+    Args:
+        top_features: List of tuples (feature_name, shap_value)
+        shap_values_single: Array of SHAP values
+        feature_names: List of feature names
+        base_value: Base prediction value (default: 0.5)
+        save_path: Optional directory path to save the plot
+    """
+    try:
+        # Extract feature names and values
+        feat_names = [feat.split('__')[-1] if '__' in feat else feat for feat, _ in top_features]
+        shap_vals = [val for _, val in top_features]
+        
+        # Sort by absolute value for better visualization
+        sorted_data = sorted(zip(feat_names, shap_vals), key=lambda x: abs(x[1]), reverse=True)
+        feat_names = [x[0] for x in sorted_data]
+        shap_vals = [x[1] for x in sorted_data]
+        
+        # Create figure with two subplots: bar plot and waterfall
+        fig = plt.figure(figsize=(14, 8))
+        gs = fig.add_gridspec(2, 1, height_ratios=[1, 1.2], hspace=0.3)
+        
+        # Subplot 1: Horizontal bar plot
+        ax1 = fig.add_subplot(gs[0])
+        colors = ['#e74c3c' if val > 0 else '#2ecc71' for val in shap_vals]
+        y_pos = np.arange(len(feat_names))
+        
+        bars = ax1.barh(y_pos, shap_vals, color=colors, alpha=0.7, edgecolor='black', linewidth=1)
+        ax1.set_yticks(y_pos)
+        ax1.set_yticklabels(feat_names, fontsize=10)
+        ax1.set_xlabel('SHAP Value (Impact on Risk)', fontsize=11, fontweight='bold')
+        ax1.set_title('Feature Contributions to PPD Risk Prediction', fontsize=13, fontweight='bold', pad=15)
+        ax1.axvline(x=0, color='black', linestyle='--', linewidth=1)
+        ax1.grid(axis='x', alpha=0.3, linestyle=':')
+        
+        # Add value labels on bars
+        for i, (bar, val) in enumerate(zip(bars, shap_vals)):
+            width = bar.get_width()
+            label_x = width + (0.02 if width > 0 else -0.02)
+            ax1.text(label_x, bar.get_y() + bar.get_height()/2, 
+                    f'{val:+.3f}', ha='left' if width > 0 else 'right', 
+                    va='center', fontsize=9, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+        
+        # Subplot 2: Waterfall-style cumulative plot
+        ax2 = fig.add_subplot(gs[1])
+        
+        # Calculate cumulative values
+        cumulative = [base_value]
+        for val in shap_vals:
+            cumulative.append(cumulative[-1] + val)
+        
+        # Create waterfall bars
+        x_pos = np.arange(len(feat_names) + 1)
+        waterfall_colors = ['#3498db'] + colors  # Base value in blue
+        
+        for i in range(len(feat_names)):
+            # Bar showing the contribution
+            bar_height = shap_vals[i]
+            bar_bottom = cumulative[i]
+            color = '#e74c3c' if bar_height > 0 else '#2ecc71'
+            
+            ax2.bar(i + 1, bar_height, bottom=bar_bottom, color=color, 
+                   alpha=0.7, edgecolor='black', linewidth=1)
+            
+            # Add value label
+            label_y = bar_bottom + bar_height/2
+            ax2.text(i + 1, label_y, f'{bar_height:+.3f}', 
+                    ha='center', va='center', fontsize=8, fontweight='bold',
+                    color='white' if abs(bar_height) > 0.05 else 'black')
+        
+        # Show base value
+        ax2.bar(0, base_value, color='#3498db', alpha=0.7, edgecolor='black', linewidth=1)
+        ax2.text(0, base_value/2, f'Base\n{base_value:.2f}', 
+                ha='center', va='center', fontsize=8, fontweight='bold', color='white')
+        
+        # Show final prediction
+        final_pred = cumulative[-1]
+        ax2.bar(len(feat_names) + 1, final_pred, color='#9b59b6', alpha=0.7, 
+               edgecolor='black', linewidth=2)
+        ax2.text(len(feat_names) + 1, final_pred/2, f'Final\n{final_pred:.2f}', 
+                ha='center', va='center', fontsize=8, fontweight='bold', color='white')
+        
+        # Set labels
+        ax2.set_xticks(range(len(feat_names) + 2))
+        ax2.set_xticklabels(['Base'] + feat_names + ['Final'], rotation=45, ha='right', fontsize=9)
+        ax2.set_ylabel('Cumulative Prediction Value', fontsize=11, fontweight='bold')
+        ax2.set_title('Waterfall Plot: How Features Build Up to Final Prediction', 
+                     fontsize=13, fontweight='bold', pad=15)
+        ax2.grid(axis='y', alpha=0.3, linestyle=':')
+        ax2.set_ylim([0, max(cumulative) * 1.1])
+        
+        # Add legend
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='#e74c3c', alpha=0.7, label='Increases Risk'),
+            Patch(facecolor='#2ecc71', alpha=0.7, label='Decreases Risk'),
+            Patch(facecolor='#3498db', alpha=0.7, label='Base Value'),
+            Patch(facecolor='#9b59b6', alpha=0.7, label='Final Prediction')
+        ]
+        ax2.legend(handles=legend_elements, loc='upper left', fontsize=9)
+        
+        # Use subplots_adjust() instead of tight_layout() for GridSpec compatibility
+        # GridSpec axes are not fully compatible with tight_layout()
+        plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
+        
+        # Save to file if path provided
+        if save_path is not None:
+            os.makedirs(save_path, exist_ok=True)
+            filepath = os.path.join(save_path, "shap_enhanced_waterfall.png")
+            plt.savefig(filepath, format='png', dpi=120, bbox_inches='tight')
+            print(f"   💾 Saved: {filepath}")
+        
+        # Convert to base64 HTML
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=120, bbox_inches='tight')
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        plt.close()
+        
+        return f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%; height:auto;">'
+    except Exception as e:
+        import traceback
+        print(f"Error creating enhanced SHAP plot: {e}")
+        print(traceback.format_exc())
+        # Fallback to simple plot
+        return create_shap_summary_plot(top_features, shap_values_single, feature_names)
+
+
+def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True, title=None, save_path=None):
     """
     Create a SHAP summary plot for class 1 (Yes Depression) using test data.
     
@@ -399,6 +587,7 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
         max_display: Maximum number of features to display
         return_image: If True, return base64 HTML image, else show plot
         title: Optional custom title for the plot
+        save_path: Optional directory path to save the plot
         
     Returns:
         HTML string with embedded image or None
@@ -553,7 +742,7 @@ def create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_ima
 
 def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=None, 
                            y_test=None, y_pred=None, y_proba=None, roc_auc=None, target=None,
-                           X_train=None, y_train=None):
+                           X_train=None, y_train=None, ppd_agent=None):
     """
     Create a Gradio interface for postpartum depression prediction.
 
@@ -570,6 +759,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
         target: Target variable name (for visualizations)
         X_train: Full training features (for model training, optional)
         y_train: Full training labels (for model training, optional)
+        ppd_agent: PPD Agent instance (optional, if provided will use agent.predict() method)
 
     Returns:
         Gradio Interface object
@@ -584,6 +774,7 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
     current_pipeline = [pipeline]  # Use list to allow mutation
     current_explainer = [None]
     current_X_train = [X_train_sample]
+    current_agent = [ppd_agent]  # Store agent if provided
     
     # Store current predictions for visualizations (will be updated when model is trained)
     current_y_pred = [y_pred if y_pred is not None else None]
@@ -626,54 +817,98 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
             optimization_info = ""
             algorithm_name = "XGBoost" if model_algorithm == "Training XGBoost Model" else "Random Forest"
             
-            # Create and train pipeline based on selection
+            # Use PPD Agent tool for training instead of direct algorithm calls
             if model_algorithm == "Training XGBoost Model":
-                if use_optimization:
-                    print("Optimizing XGBoost hyperparameters with RandomizedSearchCV...")
-                    print("⏱ This may take several minutes...")
-                    new_pipeline, best_params, cv_results = optimize_XGBoost_hyperparameters(
-                        X_train_split, y_train_split, cat_cols,
-                        n_iter=30,  # Reduced for faster training in UI
-                        cv=3,       # Reduced for faster training in UI
-                        scoring='roc_auc',
-                        random_state=42,
-                        n_jobs=-1
-                    )
+                # Use agent's train_xgboost method
+                if current_agent[0] is None:
+                    # Create a temporary agent if none exists
+                    from ppd_agent import create_agent_from_training
+                    # Create a dummy agent first (will be updated by training)
+                    temp_pipeline = create_XGBoost_pipeline(cat_cols)
+                    temp_agent = create_agent_from_training(temp_pipeline, X_train_split, cat_cols, list(X_train_split.columns))
+                    current_agent[0] = temp_agent
+                
+                print("Using PPD Agent tool to train XGBoost model...")
+                training_result = current_agent[0].train_xgboost(
+                    X_train=X_train_split,
+                    y_train=y_train_split,
+                    X_test=X_test_split,
+                    y_test=y_test_split,
+                    use_optimization=use_optimization,
+                    n_iter=30,  # Reduced for faster training in UI
+                    cv=3,       # Reduced for faster training in UI
+                    scoring='roc_auc',
+                    random_state=42,
+                    n_jobs=-1
+                )
+                
+                if not training_result["success"]:
+                    error_msg = f"❌ Agent training failed: {training_result.get('message', 'Unknown error')}"
+                    if df is not None and X_test is not None and y_test is not None:
+                        return (error_msg, "", "", "", "")
+                    else:
+                        return error_msg
+                
+                # Extract results from agent training
+                new_pipeline = training_result["pipeline"]
+                y_proba_new = training_result["y_proba"]
+                y_pred_new = training_result["y_pred"]
+                roc_auc_new = training_result["roc_auc"]
+                best_params = training_result.get("parameters", {})
+                
+                # Format optimization info
+                if use_optimization and best_params:
                     optimization_info = f"\n\n🔍 Hyperparameter Optimization Applied:\n"
                     for param, value in best_params.items():
                         param_name = param.replace('model__', '')
                         optimization_info += f"   • {param_name}: {value}\n"
                 else:
-                    print("Training XGBoost model with default parameters...")
-                    new_pipeline = create_XGBoost_pipeline(cat_cols)
                     optimization_info = "\n\nℹ️ Using default hyperparameters. Enable optimization for better performance."
             elif model_algorithm == "Training Random Forest Model":
+                # Use agent's train_random_forest method
+                if current_agent[0] is None:
+                    # Create a temporary agent if none exists
+                    from ppd_agent import create_agent_from_training
+                    from MLmodel import create_rf_pipeline
+                    # Create a dummy agent first (will be updated by training)
+                    temp_pipeline = create_rf_pipeline(cat_cols)
+                    temp_agent = create_agent_from_training(temp_pipeline, X_train_split, cat_cols, list(X_train_split.columns))
+                    current_agent[0] = temp_agent
+                
+                print("Using PPD Agent tool to train Random Forest model...")
+                training_result = current_agent[0].train_random_forest(
+                    X_train=X_train_split,
+                    y_train=y_train_split,
+                    X_test=X_test_split,
+                    y_test=y_test_split,
+                    random_state=42,
+                    n_jobs=-1
+                )
+                
+                if not training_result["success"]:
+                    error_msg = f"❌ Agent training failed: {training_result.get('message', 'Unknown error')}"
+                    if df is not None and X_test is not None and y_test is not None:
+                        return (error_msg, "", "", "", "")
+                    else:
+                        return error_msg
+                
+                # Extract results from agent training (all returned by agent)
+                new_pipeline = training_result["pipeline"]
+                roc_auc_new = training_result["roc_auc"]
+                best_params = training_result.get("parameters", {})
+                y_proba_new = training_result["y_proba"]
+                y_pred_new = training_result["y_pred"]
+                
+                # Format optimization info (Random Forest training doesn't support optimization in agent yet)
                 if use_optimization:
-                    print("Optimizing Random Forest hyperparameters with RandomizedSearchCV...")
-                    print("⏱ This may take several minutes...")
-                    new_pipeline, best_params, cv_results = optimize_rf_hyperparameters(
-                        X_train_split, y_train_split, cat_cols,
-                        n_iter=30,  # Reduced for faster training in UI
-                        cv=3,       # Reduced for faster training in UI
-                        scoring='roc_auc',
-                        random_state=42,
-                        n_jobs=-1
-                    )
-                    optimization_info = f"\n\n🔍 Hyperparameter Optimization Applied:\n"
-                    for param, value in best_params.items():
-                        param_name = param.replace('model__', '')
-                        optimization_info += f"   • {param_name}: {value}\n"
+                    optimization_info = "\n\n⚠️ Hyperparameter optimization for Random Forest is not yet available through the agent tool. Using default parameters."
                 else:
-                    print("Training Random Forest model with default parameters...")
-                    new_pipeline = create_rf_pipeline(cat_cols)
-                    optimization_info = "\n\nℹ️ Using default hyperparameters. Enable optimization for better performance."
+                    optimization_info = "\n\nℹ️ Using default hyperparameters."
             else:
                 return f"❌ Unknown algorithm: {model_algorithm}"
             
-            # Train and evaluate
-            y_proba_new, y_pred_new, roc_auc_new = train_and_evaluate(
-                new_pipeline, X_train_split, y_train_split, X_test_split, y_test_split
-            )
+            # Note: Training and evaluation is now done by the agent tool above
+            # y_proba_new, y_pred_new, roc_auc_new are already set from agent training results
             
             # Debug: Print prediction statistics
             print(f"DEBUG: {algorithm_name} predictions - Unique values: {np.unique(y_pred_new, return_counts=True)}")
@@ -696,6 +931,17 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
             except Exception as e:
                 current_explainer[0] = None
                 explainer_status = f"⚠️ SHAP explainer failed: {str(e)}"
+            
+            # Update agent with new pipeline if agent exists
+            if current_agent[0] is not None:
+                try:
+                    from ppd_agent import create_agent_from_training
+                    current_agent[0] = create_agent_from_training(
+                        new_pipeline, X_train_split, cat_cols, list(X_train_split.columns)
+                    )
+                    explainer_status += "\n✅ PPD Agent updated with new model"
+                except Exception as e:
+                    print(f"Warning: Could not update agent: {e}")
             
             # Update visualizations if test data is available
             confusion_html = ""
@@ -732,25 +978,33 @@ def create_gradio_interface(pipeline, X_train_sample, cat_cols, df=None, X_test=
                     print(f"DEBUG: True Positives: {cm_values[1,1]}, True Negatives: {cm_values[0,0]}")
                     print(f"DEBUG: False Positives: {cm_values[0,1]}, False Negatives: {cm_values[1,0]}")
                     
+                    # Create save path for plots
+                    save_path = os.path.join("output", "plots", algorithm_name.replace(" ", "_"))
+                    os.makedirs(save_path, exist_ok=True)
+                    
                     confusion_html = plot_confusion_matrix(
                         y_test_split, y_pred_new, 
                         title=f"Confusion Matrix - {algorithm_name}",
-                        return_image=True
+                        return_image=True,
+                        save_path=save_path
                     )
                     roc_html = plot_roc_curve(
                         y_test_split, y_proba_new, roc_auc_new,
                         title=f"ROC Curve - {algorithm_name}",
-                        return_image=True
+                        return_image=True,
+                        save_path=save_path
                     )
                     prediction_html = plot_prediction_distribution(
                         y_proba_new, 
                         title=f"Prediction Probability Distribution - {algorithm_name}",
-                        return_image=True
+                        return_image=True,
+                        save_path=save_path
                     )
                     # Update SHAP summary plot for Class 1 with the newly trained model
                     shap_html = create_shap_summary_plot_class1(
                         new_pipeline, X_test_split, max_display=15, return_image=True,
-                        title=f"SHAP Summary Plot - Class 1 (Yes Depression) - {algorithm_name}"
+                        title=f"SHAP Summary Plot - Class 1 (Yes Depression) - {algorithm_name}",
+                        save_path=save_path
                     )
                 except Exception as e:
                     import traceback
@@ -798,14 +1052,124 @@ The model is now ready for predictions!"""
         bonding,
         suicide_attempt,
     ):
+        # Use agent if available (Standalone Python usage - Example 1)
+        if current_agent[0] is not None:
+            try:
+                # Use agent's predict method (Standalone Python usage pattern)
+                result = current_agent[0].predict(
+                    age=age,
+                    feeling_sad=feeling_sad,
+                    irritable=irritable,
+                    trouble_sleeping=trouble_sleeping,
+                    concentration=concentration,
+                    appetite=appetite,
+                    feeling_anxious=feeling_anxious,
+                    guilt=guilt,
+                    bonding=bonding,
+                    suicide_attempt=suicide_attempt
+                )
+                
+                # Format output to match Gradio interface expectations
+                risk_score = f"PPD Risk Score: {result['risk_percentage']:.2f}%"
+                
+                # Format feature importance with detailed SHAP explanation
+                feat_imp_lines = []
+                shap_explanation_lines = []
+                
+                for i, feature in enumerate(result['feature_importance'][:5], 1):
+                    feat_name = feature['feature'].split('__')[-1] if '__' in feature['feature'] else feature['feature']
+                    shap_val = feature['shap_value']
+                    abs_shap = abs(shap_val)
+                    impact = "high" if abs_shap > 0.1 else "moderate" if abs_shap > 0.05 else "low"
+                    direction = "increases" if shap_val > 0 else "decreases"
+                    
+                    # Format for feature importance display
+                    feat_imp_lines.append(
+                        f"{i}. {feat_name}\n   Impact: {impact} ({direction} risk by {abs_shap:.3f})"
+                    )
+                    
+                    # Detailed SHAP explanation
+                    shap_explanation_lines.append(
+                        f"**{feat_name}**: SHAP value = {shap_val:.4f}\n"
+                        f"  • This feature {direction} the PPD risk prediction by {abs_shap:.4f}\n"
+                        f"  • Impact level: {impact.upper()}\n"
+                        f"  • {'Positive SHAP value means this feature pushes the prediction toward higher risk.' if shap_val > 0 else 'Negative SHAP value means this feature pushes the prediction toward lower risk.'}"
+                    )
+                
+                feat_imp_str = "\n\n".join(feat_imp_lines) if feat_imp_lines else "Feature importance not available"
+                
+                # Create comprehensive SHAP explanation
+                shap_explanation = f"""## SHAP (SHapley Additive exPlanations) Analysis
+
+SHAP values explain how each feature contributes to the final prediction. 
+- **Positive SHAP values** push the prediction toward higher PPD risk
+- **Negative SHAP values** push the prediction toward lower PPD risk
+- **Magnitude** indicates the strength of the contribution
+
+### Feature Contributions:
+
+{chr(10).join(shap_explanation_lines) if shap_explanation_lines else 'No SHAP values available'}
+
+### How to Interpret:
+- **High impact** (|SHAP| > 0.1): This feature significantly influences the prediction
+- **Moderate impact** (0.05 < |SHAP| ≤ 0.1): This feature moderately influences the prediction
+- **Low impact** (|SHAP| ≤ 0.05): This feature has a minor influence on the prediction
+
+The sum of all SHAP values equals the difference between the model's prediction and the baseline (average prediction).
+"""
+                
+                # Use agent's explanation
+                personalized_explanation = result['explanation']
+                
+                # Create enhanced SHAP plot with waterfall-style visualization
+                if result['feature_importance']:
+                    top_features = result['feature_importance'][:5]
+                    feat_names = [f['feature'].split('__')[-1] if '__' in f['feature'] else f['feature'] for f in top_features]
+                    shap_vals = np.array([f['shap_value'] for f in top_features])
+                    
+                    # Create both bar plot and waterfall-style plot
+                    # Use 0.5 as base value (average prediction) for waterfall visualization
+                    # Determine save path based on current model
+                    model_type = type(current_agent[0].pipeline.named_steps['model']).__name__
+                    algo_name = "XGBoost" if "XGB" in model_type.upper() else "RandomForest"
+                    save_path_plot = os.path.join("output", "plots", algo_name)
+                    os.makedirs(save_path_plot, exist_ok=True)
+                    
+                    plot_html = create_enhanced_shap_plot(
+                        list(zip(feat_names, shap_vals)),
+                        shap_vals,
+                        feat_names,
+                        base_value=0.5,
+                        save_path=save_path_plot
+                    )
+                else:
+                    plot_html = ""
+                
+                return risk_score, feat_imp_str, personalized_explanation, shap_explanation, plot_html
+                
+            except Exception as e:
+                import traceback
+                error_msg = f"Agent prediction error: {str(e)}\n{traceback.format_exc()}"
+                return (
+                    "Error during prediction",
+                    error_msg,
+                    "Unable to generate explanation.",
+                    "SHAP explanation unavailable due to error.",
+                    ""
+                )
+        
+        # Fallback to original predict_depression if agent not available
         if current_explainer[0] is None:
             return (
                 "SHAP explainer not available",
                 "Please train the model first",
                 "Unable to generate explanation.",
+                "SHAP explanation unavailable. Please train the model first.",
                 ""
             )
-        return predict_depression(
+        
+        # Get results from original predict_depression
+        risk_score, feat_imp_str, personalized_explanation, plot_html = predict_depression(
             current_pipeline[0],
             current_explainer[0],
             feature_columns,
@@ -821,16 +1185,30 @@ The model is now ready for predictions!"""
             bonding,
             suicide_attempt,
         )
+        
+        # Create SHAP explanation for non-agent path
+        shap_explanation = f"""## SHAP (SHapley Additive exPlanations) Analysis
+
+SHAP values explain how each feature contributes to the final prediction.
+- **Positive SHAP values** push the prediction toward higher PPD risk
+- **Negative SHAP values** push the prediction toward lower PPD risk
+- **Magnitude** indicates the strength of the contribution
+
+### Feature Contributions:
+{feat_imp_str}
+
+### How to Interpret:
+- **High impact** (|SHAP| > 0.1): This feature significantly influences the prediction
+- **Moderate impact** (0.05 < |SHAP| ≤ 0.1): This feature moderately influences the prediction
+- **Low impact** (|SHAP| ≤ 0.05): This feature has a minor influence on the prediction
+
+The sum of all SHAP values equals the difference between the model's prediction and the baseline (average prediction).
+"""
+        
+        return risk_score, feat_imp_str, personalized_explanation, shap_explanation, plot_html
 
     # Create Gradio interface
-    with gr.Blocks(title="Postpartum Depression Prediction System", css="""
-        .tab-nav button,
-        .tab-nav label,
-        div[data-testid="tab"] button,
-        div[data-testid="tab"] label {
-            font-weight: bold !important;
-        }
-    """) as interface:
+    with gr.Blocks(title="Postpartum Depression Prediction Agent Tool") as interface:
         gr.Markdown("# 🏥 Postpartum Depression Risk Assessment Model Training Agent")
         
         # Model selection and training section
@@ -852,9 +1230,105 @@ The model is now ready for predictions!"""
                 training_status = gr.Textbox(
                     label="Training Status",
                     interactive=False,
-                    lines=8,
+                    lines=1,
                     value="Ready to train model. Select an algorithm and click 'Train Model'."
                 )
+        
+        # Add visualization tabs
+        if df is not None and X_test is not None and y_test is not None:
+            with gr.Tabs() as viz_tabs:
+                with gr.Tab("1. Target Distribution"):
+                    target_dist_plot = gr.HTML(label="Target Distribution")
+                
+                with gr.Tab("2. Feature Distributions"):
+                    feature_dist_plot = gr.HTML(label="Feature Distributions by Target")
+                
+                with gr.Tab("3. Confusion Matrix"):
+                    confusion_matrix_plot = gr.HTML(label="Confusion Matrix")
+                
+                with gr.Tab("4. ROC Curve"):
+                    roc_curve_plot = gr.HTML(label="ROC Curve")
+                
+                with gr.Tab("5. Prediction Distribution"):
+                    prediction_dist_plot = gr.HTML(label="Prediction Probability Distribution")
+                
+                with gr.Tab("6. Correlation Heatmap"):
+                    correlation_heatmap_plot = gr.HTML(label="Correlation Heatmap")
+                
+                with gr.Tab("7. SHAP Summary (Class 1 - Yes Depression)"):
+                    shap_summary_class1_plot = gr.HTML(label="SHAP Summary Plot - Class 1 (Yes Depression)")
+            
+            # Load visualizations when interface loads
+            def load_visualizations():
+                from visualization import (
+                    plot_target_distribution, plot_feature_distributions,
+                    plot_confusion_matrix, plot_roc_curve,
+                    plot_prediction_distribution, plot_correlation_heatmap
+                )
+                
+                # Determine algorithm name from pipeline
+                try:
+                    model_type = type(pipeline.named_steps['model']).__name__
+                    algorithm_name = "XGBoost" if "XGB" in model_type.upper() else "RandomForest"
+                    save_path_viz = os.path.join("output", "plots", algorithm_name)
+                    os.makedirs(save_path_viz, exist_ok=True)
+                except:
+                    save_path_viz = None
+                
+                plots = {}
+                try:
+                    plots['target'] = plot_target_distribution(df[target], return_image=True, save_path=save_path_viz)
+                except Exception as e:
+                    plots['target'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['features'] = plot_feature_distributions(df, cat_cols, target, return_image=True, save_path=save_path_viz)
+                except Exception as e:
+                    plots['features'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['confusion'] = plot_confusion_matrix(y_test, y_pred, return_image=True, save_path=save_path_viz)
+                except Exception as e:
+                    plots['confusion'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['roc'] = plot_roc_curve(y_test, y_proba, roc_auc, return_image=True, save_path=save_path_viz)
+                except Exception as e:
+                    plots['roc'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['prediction'] = plot_prediction_distribution(y_proba, return_image=True, save_path=save_path_viz)
+                except Exception as e:
+                    plots['prediction'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['correlation'] = plot_correlation_heatmap(df, target, return_image=True, save_path=save_path_viz)
+                except Exception as e:
+                    plots['correlation'] = f"<p>Error: {str(e)}</p>"
+                
+                try:
+                    plots['shap_class1'] = create_shap_summary_plot_class1(
+                        pipeline, X_test, max_display=15, return_image=True, save_path=save_path_viz
+                    )
+                except Exception as e:
+                    plots['shap_class1'] = f"<p>Error: {str(e)}</p>"
+                
+                return (
+                    plots['target'],
+                    plots['features'],
+                    plots['confusion'],
+                    plots['roc'],
+                    plots['prediction'],
+                    plots['correlation'],
+                    plots['shap_class1']
+                )
+            
+            # Load visualizations on interface load
+            interface.load(fn=load_visualizations, outputs=[
+                target_dist_plot, feature_dist_plot, confusion_matrix_plot,
+                roc_curve_plot, prediction_dist_plot, correlation_heatmap_plot,
+                shap_summary_class1_plot
+            ])
         
         gr.Markdown("---")
         gr.Markdown(
@@ -915,150 +1389,6 @@ The model is now ready for predictions!"""
                     choices=["Yes", "No", "Not interested to say"],
                     value="No",
                 )
-
-        predict_btn = gr.Button("🔍 Assess Risk", variant="primary")
-
-        with gr.Row():
-            risk_output = gr.Textbox(label="Risk Assessment", interactive=False)
-            personalized_explanation = gr.Textbox(
-                label="Personalized Explanation",
-                interactive=False,
-                lines=4,
-            )
-
-        with gr.Row():
-            feature_importance = gr.Textbox(
-                label="Top 5 Feature Contributions (SHAP)",
-                interactive=False,
-                lines=8,
-            )
-            shap_plot = gr.HTML(label="SHAP Summary Plot")
-
-        # Add visualization tabs
-        if df is not None and X_test is not None and y_test is not None:
-            with gr.Tabs() as viz_tabs:
-                with gr.Tab("1. Target Distribution"):
-                    target_dist_plot = gr.HTML(label="Target Distribution")
-                
-                with gr.Tab("2. Feature Distributions"):
-                    feature_dist_plot = gr.HTML(label="Feature Distributions by Target")
-                
-                with gr.Tab("3. Confusion Matrix"):
-                    confusion_matrix_plot = gr.HTML(label="Confusion Matrix")
-                
-                with gr.Tab("4. ROC Curve"):
-                    roc_curve_plot = gr.HTML(label="ROC Curve")
-                
-                with gr.Tab("5. Prediction Distribution"):
-                    prediction_dist_plot = gr.HTML(label="Prediction Probability Distribution")
-                
-                with gr.Tab("6. Correlation Heatmap"):
-                    correlation_heatmap_plot = gr.HTML(label="Correlation Heatmap")
-                
-                with gr.Tab("7. SHAP Summary (Class 1 - Yes Depression)"):
-                    shap_summary_class1_plot = gr.HTML(label="SHAP Summary Plot - Class 1 (Yes Depression)")
-            
-            # Load visualizations when interface loads
-            def load_visualizations():
-                from visualization import (
-                    plot_target_distribution, plot_feature_distributions,
-                    plot_confusion_matrix, plot_roc_curve,
-                    plot_prediction_distribution, plot_correlation_heatmap
-                )
-                
-                plots = {}
-                try:
-                    plots['target'] = plot_target_distribution(df[target], return_image=True)
-                except Exception as e:
-                    plots['target'] = f"<p>Error: {str(e)}</p>"
-                
-                try:
-                    plots['features'] = plot_feature_distributions(df, cat_cols, target, return_image=True)
-                except Exception as e:
-                    plots['features'] = f"<p>Error: {str(e)}</p>"
-                
-                try:
-                    plots['confusion'] = plot_confusion_matrix(y_test, y_pred, return_image=True)
-                except Exception as e:
-                    plots['confusion'] = f"<p>Error: {str(e)}</p>"
-                
-                try:
-                    plots['roc'] = plot_roc_curve(y_test, y_proba, roc_auc, return_image=True)
-                except Exception as e:
-                    plots['roc'] = f"<p>Error: {str(e)}</p>"
-                
-                try:
-                    plots['prediction'] = plot_prediction_distribution(y_proba, return_image=True)
-                except Exception as e:
-                    plots['prediction'] = f"<p>Error: {str(e)}</p>"
-                
-                try:
-                    plots['correlation'] = plot_correlation_heatmap(df, target, return_image=True)
-                except Exception as e:
-                    plots['correlation'] = f"<p>Error: {str(e)}</p>"
-                
-                try:
-                    plots['shap_class1'] = create_shap_summary_plot_class1(pipeline, X_test, max_display=15, return_image=True)
-                except Exception as e:
-                    plots['shap_class1'] = f"<p>Error: {str(e)}</p>"
-                
-                return (
-                    plots['target'],
-                    plots['features'],
-                    plots['confusion'],
-                    plots['roc'],
-                    plots['prediction'],
-                    plots['correlation'],
-                    plots['shap_class1']
-                )
-            
-            # Load visualizations on interface load
-            interface.load(
-                fn=load_visualizations,
-                outputs=[
-                    target_dist_plot,
-                    feature_dist_plot,
-                    confusion_matrix_plot,
-                    roc_curve_plot,
-                    prediction_dist_plot,
-                    correlation_heatmap_plot,
-                    shap_summary_class1_plot
-                ]
-            )
-
-        # Connect training button
-        # If visualizations are available, update them when training
-        if df is not None and X_test is not None and y_test is not None:
-            train_btn.click(
-                fn=train_model_wrapper,
-                inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot],
-            )
-        else:
-            # If no test data, only update training status
-            train_btn.click(
-                fn=train_model_wrapper,
-                inputs=[model_algorithm, use_optimization],
-                outputs=[training_status],
-            )
-        
-        # Connect prediction button
-        predict_btn.click(
-            fn=predict_wrapper,
-            inputs=[
-                age,
-                feeling_sad,
-                irritable,
-                trouble_sleeping,
-                concentration,
-                appetite,
-                feeling_anxious,
-                guilt,
-                bonding,
-                suicide_attempt,
-            ],
-            outputs=[risk_output, feature_importance, personalized_explanation, shap_plot],
-        )
 
         # Add examples
         gr.Markdown("### 📋 Example Cases")
@@ -1145,6 +1475,64 @@ The model is now ready for predictions!"""
                 suicide_attempt,
             ],
             label="Example Cases",
+        )
+
+        predict_btn = gr.Button("🔍 Assess Risk", variant="primary")
+
+        with gr.Row():
+            risk_output = gr.Textbox(label="Risk Assessment", interactive=False)
+            personalized_explanation = gr.Textbox(
+                label="Personalized Explanation",
+                interactive=False,
+                lines=4,
+            )
+
+        with gr.Row():
+            feature_importance = gr.Textbox(
+                label="Top 5 Feature Contributions (SHAP)",
+                interactive=False,
+                lines=8,
+            )
+            shap_explanation = gr.Markdown(
+                label="Detailed SHAP Explanation",
+                value="SHAP explanation will appear here after prediction."
+            )
+        
+        with gr.Row():
+            shap_plot = gr.HTML(label="SHAP Visualization (Bar Plot & Waterfall)")
+
+        # Connect training button
+        # If visualizations are available, update them when training
+        if df is not None and X_test is not None and y_test is not None:
+            train_btn.click(
+                fn=train_model_wrapper,
+                inputs=[model_algorithm, use_optimization],
+                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot],
+            )
+        else:
+            # If no test data, only update training status
+            train_btn.click(
+                fn=train_model_wrapper,
+                inputs=[model_algorithm, use_optimization],
+                outputs=[training_status],
+            )
+        
+        # Connect prediction button
+        predict_btn.click(
+            fn=predict_wrapper,
+            inputs=[
+                age,
+                feeling_sad,
+                irritable,
+                trouble_sleeping,
+                concentration,
+                appetite,
+                feeling_anxious,
+                guilt,
+                bonding,
+                suicide_attempt,
+            ],
+            outputs=[risk_output, feature_importance, personalized_explanation, shap_explanation, shap_plot],
         )
 
         gr.Markdown("### ⚠️ Disclaimer")
