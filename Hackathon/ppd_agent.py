@@ -46,10 +46,21 @@ class PPDAgent:
         # Get feature dtypes from training data
         self.feature_dtypes = {col: str(X_train[col].dtype) for col in self.feature_columns}
         
-        # Initialize SHAP explainer
-        print("Initializing SHAP explainer...")
-        self.explainer = shap.TreeExplainer(self.pipeline.named_steps["model"])
-        print("SHAP explainer ready!")
+        # Initialize SHAP explainer (only if model is trained)
+        try:
+            model = self.pipeline.named_steps.get("model")
+            if model is not None and hasattr(model, 'feature_importances_') and model.feature_importances_ is not None:
+                print("Initializing SHAP explainer...")
+                self.explainer = shap.TreeExplainer(model)
+                print("SHAP explainer ready!")
+            else:
+                # Model not trained yet, explainer will be created after training
+                self.explainer = None
+                print("Model not trained yet. SHAP explainer will be created after training.")
+        except Exception as e:
+            # Model not trained or explainer creation failed
+            self.explainer = None
+            print(f"SHAP explainer not initialized (model may not be trained yet): {e}")
     
     def predict(self, 
                 age: str,

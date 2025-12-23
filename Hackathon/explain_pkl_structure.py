@@ -4,6 +4,8 @@ Script to explain the structure of ppd_agent.pkl file
 
 import pickle
 import pandas as pd
+import os
+import sys
 
 print("=" * 70)
 print("PPD Agent Pickle File Structure Explanation")
@@ -11,7 +13,13 @@ print("=" * 70)
 
 try:
     # Try to load the pickle file
-    with open("ppd_agent.pkl", "rb") as f:
+    agent_file = "output/agents/ppd_agent.pkl"
+    if not os.path.exists(agent_file):
+        print(f"ERROR: {agent_file} file not found!")
+        print("Please run main.py first to create the agent.")
+        sys.exit(1)
+    
+    with open(agent_file, "rb") as f:
         agent_data = pickle.load(f)
     
     print("\n1. FILE FORMAT:")
@@ -70,13 +78,12 @@ try:
     print("   - 'feature_dtypes': Validates input data types")
     
     print("\n4. FILE SIZE:")
-    import os
-    file_size = os.path.getsize("ppd_agent.pkl")
+    file_size = os.path.getsize(agent_file)
     print(f"   - Size: {file_size:,} bytes ({file_size / 1024:.2f} KB)")
     print("   - Contains: Trained model weights, training data, metadata")
     
     print("\n5. USAGE:")
-    print("   - Loaded by PPDAgent.load('ppd_agent.pkl')")
+    print(f"   - Loaded by PPDAgent.load('{agent_file}')")
     print("   - Automatically loaded when API server starts")
     print("   - Used for making PPD risk predictions")
     print("   - Provides SHAP explanations for predictions")
@@ -90,7 +97,7 @@ try:
     print("=" * 70)
     
 except FileNotFoundError:
-    print("ERROR: ppd_agent.pkl file not found!")
+    print(f"ERROR: {agent_file} file not found!")
     print("Please run retrain_agent.py first to create the file.")
 except Exception as e:
     print(f"ERROR loading file: {e}")

@@ -88,9 +88,12 @@ ppd_agent = create_agent_from_training(pipeline, X_train, cat_cols, list(X_train
 print("PPD Agent created!")
 
 # Save agent
-print("\nSaving agent to ppd_agent.pkl...")
-ppd_agent.save("ppd_agent.pkl")
-print("Agent saved successfully!")
+import os
+os.makedirs("output/agents", exist_ok=True)
+agent_path = "output/agents/ppd_agent.pkl"
+print(f"\nSaving agent to {agent_path}...")
+ppd_agent.save(agent_path)
+print(f"✅ Agent saved successfully to {agent_path}!")
 
 print("\n" + "=" * 60)
 print("Done! The agent is now compatible with your current sklearn version.")

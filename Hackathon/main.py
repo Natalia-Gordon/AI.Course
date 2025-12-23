@@ -86,55 +86,33 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,
 
 print(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
 
-# 🧠 Train the model with default parameters
+# 🧠 Create untrained pipeline (will be trained when user clicks "Start Train Model" button)
 print("\n" + "="*50)
-print("Training XGBoost Model with Default Parameters")
+print("Preparing Model Interface")
 print("="*50)
-print("💡 Note: Use the Gradio interface to enable RandomizedSearchCV optimization if desired.")
+print("💡 Model will be trained when you click 'Start Train Model' in the Gradio interface.")
 
-# Create and train pipeline with default parameters
+# Create untrained pipeline (just for initialization - will be trained via Gradio)
 pipeline = create_XGBoost_pipeline(cat_cols)
-y_proba, y_pred, roc_auc = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
 
-# 📊 Create visualizations
-create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc, 
-                         pipeline, cat_cols, target, 
-                         algorithm_name="XGBoost", save_plots=True)
-
-# 🚀 Launch Gradio Interface
-print("\n" + "="*50)
-print("Launching Gradio Web Interface...")
-print("="*50)
-
-# 🤖 Create PPD Agent (for programmatic use and Gradio integration)
-print("\n" + "="*50)
-print("Creating PPD Agent Tool...")
-print("="*50)
-
-ppd_agent = create_agent_from_training(pipeline, X_train, cat_cols, list(X_train.columns))
-print("✅ PPD Agent created and ready for use!")
-print("\n💡 You can now use the agent programmatically:")
-print("   - Standalone: from ppd_agent import PPDAgent")
-print("   - API: python api_server.py (then initialize agent)")
-print("   - LangChain: from langchain_tool import create_langchain_tool")
-print("   - Examples: python agent_examples.py")
-
-# Save agent for later use
-ppd_agent.save("ppd_agent.pkl")
-print("✅ Agent saved to ppd_agent.pkl")
+# Initialize variables as None (will be set after training)
+y_proba = None
+y_pred = None
+roc_auc = None
+ppd_agent = None
 
 # 🚀 Launch Gradio Interface
 print("\n" + "="*50)
 print("Launching Gradio Web Interface...")
 print("="*50)
 
-# Create Gradio interface with agent (Standalone Python usage - Example 1)
+# Create Gradio interface (model will be trained when user clicks "Start Train Model")
 interface = create_gradio_interface(
     pipeline, X_train, cat_cols,
     df=df, X_test=X_test, y_test=y_test, y_pred=y_pred,
     y_proba=y_proba, roc_auc=roc_auc, target=target,
     X_train=X_train, y_train=y_train,
-    ppd_agent=ppd_agent  # Pass agent to use in Gradio interface
+    ppd_agent=ppd_agent  # Will be created after first training
 )
 
 print("\n✅ Gradio interface is ready!")

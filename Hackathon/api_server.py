@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     global agent
     if agent is None:
         # Try to load from saved file
-        agent_file = "ppd_agent.pkl"
+        agent_file = "output/agents/ppd_agent.pkl"
         if os.path.exists(agent_file):
             try:
                 print(f"Loading agent from {agent_file}...")
@@ -226,13 +226,13 @@ async def get_schema():
 
 if __name__ == "__main__":
     # This will be called when running the server directly
-    # The agent will be automatically loaded from ppd_agent.pkl if it exists
+    # The agent will be automatically loaded from output/agents/ppd_agent.pkl if it exists
     # Otherwise, you can initialize it programmatically:
     #   from api_server import initialize_agent
     #   from ppd_agent import PPDAgent
-    #   agent = PPDAgent.load("ppd_agent.pkl")
+    #   agent = PPDAgent.load("output/agents/ppd_agent.pkl")
     #   initialize_agent(agent)
     print("Starting PPD Prediction API Server...")
-    print("The agent will be automatically loaded from ppd_agent.pkl if available.")
+    print("The agent will be automatically loaded from output/agents/ppd_agent.pkl if available.")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 

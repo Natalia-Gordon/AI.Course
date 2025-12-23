@@ -281,10 +281,14 @@ def example_7_save_load():
     agent = setup_agent()
     
     # Save agent
-    agent.save("ppd_agent.pkl")
+    import os
+    os.makedirs("output/agents", exist_ok=True)
+    agent_path = "output/agents/ppd_agent.pkl"
+    agent.save(agent_path)
+    print(f"✅ Agent saved to {agent_path}")
     
     # Load agent
-    loaded_agent = PPDAgent.load("ppd_agent.pkl")
+    loaded_agent = PPDAgent.load(agent_path)
     
     # Use loaded agent
     result = loaded_agent.predict(
