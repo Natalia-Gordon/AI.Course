@@ -6,12 +6,11 @@ This module has been refactored to use separate modules for:
 - gradio_visualizations: Visualization functions with type hints
 - exceptions: Custom exception classes for better error handling
 """
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Any, List
 import gradio as gr
 import numpy as np
 import pandas as pd
 import os
-import io
 import base64
 import shap
 import matplotlib
@@ -20,32 +19,34 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
+# Optional import for chatbot (requires python-dotenv package)
+try:
+    from dotenv import load_dotenv  # type: ignore
+    DOTENV_AVAILABLE = True
+except ImportError:
+    load_dotenv = None
+    DOTENV_AVAILABLE = False
+
 # Import from refactored modules
-from gradio_predictions import predict_depression, generate_personalized_explanation
+from gradio_predictions import predict_depression
 from gradio_visualizations import (
-    create_shap_summary_plot,
     create_enhanced_shap_plot,
-    create_shap_summary_plot_class1,
-    generate_detailed_shap_explanation
+    create_shap_summary_plot_class1
 )
 from gradio_helpers import (
-    get_algorithm_name,
     clean_feature_name,
-    calculate_impact_level,
     format_feature_importance_line,
     generate_shap_explanation_markdown,
     get_save_path_for_algorithm
 )
-from exceptions import (
-    PredictionError,
-    SHAPExplanationError,
-    VisualizationError
-)
+# Exception classes are imported but may be used for future error handling
+# from exceptions import (
+#     PredictionError,
+#     SHAPExplanationError,
+#     VisualizationError
+# )
 from MLmodel import (
-    create_XGBoost_pipeline,
-    create_rf_pipeline,
-    optimize_XGBoost_hyperparameters,
-    optimize_rf_hyperparameters
+    create_XGBoost_pipeline
 )
 
 
@@ -104,17 +105,21 @@ def create_gradio_interface(
     loaded_algorithm = None
     if ppd_agent is None:
         import os
+        from pathlib import Path
+        # Get script directory to resolve relative paths
+        script_dir = Path(__file__).parent
         # Try to load XGBoost first, then Random Forest
         agent_paths = [
-            "output/agents/ppd_agent_xgboost.pkl",
-            "output/agents/ppd_agent_rf.pkl"
+            script_dir / "output" / "agents" / "ppd_agent_xgboost.pkl",
+            script_dir / "output" / "agents" / "ppd_agent_rf.pkl"
         ]
         
         for agent_path in agent_paths:
-            if os.path.exists(agent_path):
+            if agent_path.exists():
                 try:
                     from ppd_agent import PPDAgent
-                    loaded_agent = PPDAgent.load(agent_path)
+                    # Convert Path object to string for PPDAgent.load()
+                    loaded_agent = PPDAgent.load(str(agent_path))
                     ppd_agent = loaded_agent
                     # Update pipeline from loaded agent
                     if hasattr(loaded_agent, 'pipeline') and loaded_agent.pipeline is not None:
@@ -131,17 +136,33 @@ def create_gradio_interface(
                 except Exception as e:
                     print(f"⚠️ Could not load agent from {agent_path}: {e}")
                     continue
-    
+
     # Use mutable containers to store current pipeline and explainer
     current_pipeline = [pipeline]  # Use list to allow mutation
     current_explainer = [None]
     current_X_train = [X_train_sample]
-    current_agent = [ppd_agent]  # Store agent if provided
+    current_agent = [ppd_agent]  # Store agent if provided (may be loaded from file)
+    
+    # If agent was loaded, make sure current_agent is set
+    if agent_loaded and ppd_agent is not None:
+        current_agent[0] = ppd_agent
     
     # Store current predictions for visualizations (will be updated when model is trained)
     current_y_pred = [y_pred if y_pred is not None else None]
     current_y_proba = [y_proba if y_proba is not None else None]
     current_roc_auc = [roc_auc if roc_auc is not None else None]
+
+    # LangChain agent for chatbot (will be initialized when agent is available)
+    langchain_agent_instance = [None]
+    langchain_available = False  # Track if LangChain is available
+    
+    # Check if LangChain is available (check once at startup)
+    try:
+        import langchain
+        langchain_available = True
+    except ImportError:
+        langchain_available = False
+        print("ℹ️ LangChain not installed. Chatbot feature will be disabled.")
 
     # Create SHAP explainer (only if pipeline is trained or agent is loaded)
     model_trained = False
@@ -166,6 +187,176 @@ def create_gradio_interface(
     # If agent was loaded, mark model as trained
     if agent_loaded:
         model_trained = True
+    
+    # LangChain agent initialization function
+    def initialize_langchain_agent():
+        """Initialize LangChain agent with PPD tool if agent is available."""
+        if langchain_agent_instance[0] is not None:
+            return  # Already initialized
+        
+        if current_agent[0] is None:
+            return  # Agent not available yet
+        
+        # Check if LangChain is available at all
+        if not langchain_available:
+            return  # LangChain not installed, skip silently
+        
+        try:
+            # Check if python-dotenv is available
+            if not DOTENV_AVAILABLE or load_dotenv is None:
+                return  # Skip silently if dotenv not available
+            
+            # Load environment variables from parent directory (.env file)
+            env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+            load_dotenv(env_path)
+            
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if not openai_api_key:
+                return  # Skip silently if API key not found
+            
+            # Initialize LangChain agent (try both old and new API)
+            try:
+                from langchain.agents import initialize_agent, AgentType
+                # Try both old and new OpenAI import locations
+                try:
+                    from langchain.llms import OpenAI  # type: ignore
+                except ImportError:
+                    from langchain_openai import OpenAI
+                from langchain_tool import create_langchain_tool
+                
+                # Create tool from PPD agent
+                tool = create_langchain_tool(current_agent[0])
+                
+                # Create OpenAI LLM
+                llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
+                
+                # Initialize LangChain agent (old API)
+                langchain_agent_instance[0] = initialize_agent(
+                    tools=[tool],
+                    llm=llm,
+                    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+                    verbose=False
+                )
+                print("✅ LangChain agent initialized successfully for chatbot!")
+            except (ImportError, AttributeError):
+                # Try LangChain 1.x API (create_agent)
+                try:
+                    from langchain.agents import create_agent
+                    from langchain_openai import ChatOpenAI
+                    from langchain_tool import create_langchain_tool
+                    
+                    # Create tool from PPD agent
+                    tool = create_langchain_tool(current_agent[0])
+                    
+                    # Create OpenAI LLM
+                    model = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
+                    
+                    # Create agent (LangChain 1.x API)
+                    langchain_agent_instance[0] = create_agent(
+                        model=model,
+                        tools=[tool],
+                        system_prompt="You are a helpful assistant that can answer questions about postpartum depression (PPD) risk prediction using the available tool."
+                    )
+                    print("✅ LangChain agent initialized successfully for chatbot (using LangChain 1.x API)!")
+                except ImportError:
+                    # Try LangChain 0.3.x API (create_react_agent)
+                    try:
+                        from langchain.agents import create_react_agent, AgentExecutor
+                        from langchain_core.prompts import PromptTemplate
+                        from langchain_openai import ChatOpenAI
+                        from langchain_tool import create_langchain_tool
+                        
+                        # Create tool from PPD agent
+                        tool = create_langchain_tool(current_agent[0])
+                        
+                        # Create OpenAI LLM
+                        llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
+                        
+                        # Create prompt template
+                        prompt = PromptTemplate.from_template("""Answer the following questions as best you can. You have access to the following tool:
+                        
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}""")
+                        
+                        # Create agent (LangChain 0.3.x API)
+                        agent = create_react_agent(llm, [tool], prompt)
+                        langchain_agent_instance[0] = AgentExecutor(agent=agent, tools=[tool], verbose=False)
+                        print("✅ LangChain agent initialized successfully for chatbot (using LangChain 0.3.x API)!")
+                    except ImportError:
+                        # LangChain API not compatible - skip silently
+                        pass
+                    except Exception as e3:
+                        # Other errors - skip silently
+                        pass
+                except Exception as e3:
+                    # Other errors - skip silently
+                    pass
+            except Exception:
+                # Other errors - skip silently
+                pass
+        except Exception:
+            # All errors - skip silently
+            pass
+    
+    def chatbot_handler(message, history):
+        """Handle chatbot messages using LangChain agent."""
+        # Try to initialize agent if not already initialized
+        if langchain_agent_instance[0] is None:
+            initialize_langchain_agent()
+        
+        if langchain_agent_instance[0] is None:
+            return "❌ Chatbot is not available. Please ensure:\n1. The model has been trained\n2. OPENAI_API_KEY is set in .env file\n3. LangChain and OpenAI packages are installed."
+        
+        if current_agent[0] is None:
+            return "❌ PPD Agent is not available. Please train the model first using the 'Start Train Model' button."
+        
+        try:
+            # Run the LangChain agent (handle both old and new API)
+            agent = langchain_agent_instance[0]
+            if hasattr(agent, 'run'):
+                # Old API (LangChain 0.3.x with AgentExecutor)
+                response = agent.run(message)
+            elif hasattr(agent, 'invoke'):
+                # New API (LangChain 1.x with create_agent)
+                result = agent.invoke({"messages": [{"role": "user", "content": message}]})
+                # Extract response from messages or structured_response
+                if isinstance(result, dict):
+                    if "messages" in result and len(result["messages"]) > 0:
+                        last_message = result["messages"][-1]
+                        response = last_message.content if hasattr(last_message, 'content') else str(last_message)
+                    elif "output" in result:
+                        response = result["output"]
+                    elif "structured_response" in result:
+                        response = str(result["structured_response"])
+                    else:
+                        response = str(result)
+                else:
+                    response = str(result)
+            else:
+                # Fallback: try to call directly
+                response = agent(message)
+            return str(response) if response else "I'm sorry, I couldn't generate a response. Please try again."
+        except Exception as e:
+            import traceback
+            error_msg = str(e)
+            print(f"Chatbot error: {error_msg}")
+            print(f"Traceback: {traceback.format_exc()}")
+            return f"❌ Error: {error_msg}\n\nPlease try rephrasing your question or check if the model is properly trained."
 
     # Training function
     def train_model_wrapper(model_algorithm, use_optimization):
@@ -211,19 +402,19 @@ def create_gradio_interface(
                     X_test=X_test_split,
                     y_test=y_test_split,
                     use_optimization=use_optimization,
-                    n_iter=30,  # Reduced for faster training in UI
-                    cv=3,       # Reduced for faster training in UI
-                    scoring='roc_auc',
-                    random_state=42,
-                    n_jobs=-1
-                )
+                        n_iter=30,  # Reduced for faster training in UI
+                        cv=3,       # Reduced for faster training in UI
+                        scoring='roc_auc',
+                        random_state=42,
+                        n_jobs=-1
+                    )
                 
                 if not training_result["success"]:
                     error_msg = f"❌ Agent training failed: {training_result.get('message', 'Unknown error')}"
                     if df is not None and X_test is not None and y_test is not None:
-                        return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=agent_loaded))
+                        return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
                     else:
-                        return (error_msg, gr.update(interactive=False), gr.update(visible=agent_loaded))
+                        return (error_msg, gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
                 
                 # Extract results from agent training
                 new_pipeline = training_result["pipeline"]
@@ -258,16 +449,16 @@ def create_gradio_interface(
                     y_train=y_train_split,
                     X_test=X_test_split,
                     y_test=y_test_split,
-                    random_state=42,
-                    n_jobs=-1
-                )
+                        random_state=42,
+                        n_jobs=-1
+                    )
                 
                 if not training_result["success"]:
                     error_msg = f"❌ Agent training failed: {training_result.get('message', 'Unknown error')}"
                     if df is not None and X_test is not None and y_test is not None:
-                        return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=agent_loaded))
-                    else:
-                        return (error_msg, gr.update(interactive=False), gr.update(visible=agent_loaded))
+                        return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
+                else:
+                        return (error_msg, gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
                 
                 # Extract results from agent training (all returned by agent)
                 new_pipeline = training_result["pipeline"]
@@ -297,6 +488,14 @@ def create_gradio_interface(
             current_y_pred[0] = y_pred_new
             current_y_proba[0] = y_proba_new
             current_roc_auc[0] = roc_auc_new
+            
+            # Note: current_agent[0] already has the trained pipeline since training was done via agent
+            # We just need to update the SHAP explainer and initialize LangChain agent
+            if current_agent[0] is not None:
+                # Agent's pipeline is already updated (training was done via agent.train_xgboost/train_random_forest)
+                # Reinitialize SHAP explainer in agent (already done by agent training, but ensure it's set)
+                # Initialize LangChain agent after training
+                initialize_langchain_agent()
             
             # Reinitialize SHAP explainer
             try:
@@ -421,18 +620,18 @@ def create_gradio_interface(
 The model is now ready for predictions!"""
             
             # Return based on whether test data is available for visualizations
-            # Also enable the "Assess Risk" button and show "Retrain Model" button after successful training
+            # Also enable the "Assess Risk" button, hide "Start Train Model" button, and show "Retrain Model" button after successful training
             if df is not None and X_test is not None and y_test is not None:
-                return (status_message, confusion_html, roc_html, prediction_html, shap_html, gr.update(interactive=True), gr.update(visible=True))
+                return (status_message, confusion_html, roc_html, prediction_html, shap_html, gr.update(interactive=True), gr.update(visible=False), gr.update(visible=True))
             else:
-                return (status_message, gr.update(interactive=True), gr.update(visible=True))
+                return (status_message, gr.update(interactive=True), gr.update(visible=False), gr.update(visible=True))
             
         except Exception as e:
             error_msg = f"❌ Training failed: {str(e)}"
             if df is not None and X_test is not None and y_test is not None:
-                return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=agent_loaded))
+                return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
             else:
-                return (error_msg, gr.update(interactive=False), gr.update(visible=agent_loaded))
+                return (error_msg, gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
 
     # Create a wrapper function that includes pipeline and explainer
     def predict_wrapper(
@@ -585,15 +784,18 @@ The model is now ready for predictions!"""
                     value=False,
                     info="Enable hyperparameter optimization for the selected model. This will take longer but may improve model performance."
                 )
-                train_btn = gr.Button("🚀 Start Train Model", variant="secondary")
-                retrain_btn = gr.Button("🔄 Retrain Model", variant="secondary", visible=agent_loaded)
+                # Set button visibility based on whether agent is loaded
+                train_btn_visible = not agent_loaded
+                retrain_btn_visible = agent_loaded
+                train_btn = gr.Button("🚀 Start Train Model", variant="secondary", visible=train_btn_visible)
+                retrain_btn = gr.Button("🔄 Retrain Model", variant="secondary", visible=retrain_btn_visible)
                 training_status = gr.Textbox(
                     label="Training Status",
                     interactive=False,
                     lines=1,
                     value=f"✅ {loaded_algorithm} model loaded from saved agent. Ready for predictions!" if agent_loaded and loaded_algorithm else "Ready to train model. Select an algorithm and click 'Start Train Model'. ⚠️ Note: You must train the model before making predictions."
                 )
-        
+
         # Add visualization tabs
         if df is not None and X_test is not None and y_test is not None:
             with gr.Tabs() as viz_tabs:
@@ -619,6 +821,20 @@ The model is now ready for predictions!"""
                     shap_summary_class1_plot = gr.HTML(label="SHAP Summary Plot - Class 1 (Yes Depression)")
             
             # Load visualizations when interface loads
+            def load_plot_if_exists(plot_filename, save_path):
+                """Load a plot from file if it exists, return None if not found."""
+                if save_path and plot_filename:
+                    plot_path = os.path.join(save_path, plot_filename)
+                    if os.path.exists(plot_path):
+                        try:
+                            import base64
+                            with open(plot_path, 'rb') as f:
+                                img_data = base64.b64encode(f.read()).decode('utf-8')
+                            return f'<img src="data:image/png;base64,{img_data}" style="max-width:100%; height:auto;">'
+                        except Exception as e:
+                            print(f"⚠️ Could not load plot {plot_filename}: {e}")
+                return None
+            
             def load_visualizations():
                 from visualization import (
                     plot_target_distribution, plot_feature_distributions,
@@ -662,54 +878,108 @@ The model is now ready for predictions!"""
                         print(f"⚠️ Could not generate predictions for visualizations: {e}")
                 
                 plots = {}
-                try:
-                    plots['target'] = plot_target_distribution(df[target], return_image=True, save_path=save_path_viz)
-                except Exception as e:
-                    plots['target'] = f"<p>Error: {str(e)}</p>"
                 
-                try:
-                    plots['features'] = plot_feature_distributions(df, cat_cols, target, return_image=True, save_path=save_path_viz)
-                except Exception as e:
-                    plots['features'] = f"<p>Error: {str(e)}</p>"
+                # Try to load existing plots first, generate if not found
+                plot_files = {
+                    'target': 'target_distribution.png',
+                    'features': 'feature_distributions.png',
+                    'confusion': 'confusion_matrix.png',
+                    'roc': 'roc_curve.png',
+                    'prediction': 'prediction_distribution.png',
+                    'correlation': 'correlation_heatmap.png',
+                    'shap_class1': 'shap_summary_class1.png'
+                }
                 
-                try:
-                    if viz_y_pred is not None and y_test is not None:
-                        plots['confusion'] = plot_confusion_matrix(y_test, viz_y_pred, return_image=True, save_path=save_path_viz)
+                # Load target distribution plot
+                plots['target'] = load_plot_if_exists(plot_files['target'], save_path_viz)
+                if plots['target'] is None:
+                    try:
+                        plots['target'] = plot_target_distribution(df[target], return_image=True, save_path=save_path_viz)
+                        print(f"✅ Generated {plot_files['target']}")
+                    except Exception as e:
+                        plots['target'] = f"<p>Error: {str(e)}</p>"
+                else:
+                    print(f"📂 Loaded existing {plot_files['target']}")
+                
+                # Load feature distributions plot
+                plots['features'] = load_plot_if_exists(plot_files['features'], save_path_viz)
+                if plots['features'] is None:
+                    try:
+                        plots['features'] = plot_feature_distributions(df, cat_cols, target, return_image=True, save_path=save_path_viz)
+                        print(f"✅ Generated {plot_files['features']}")
+                    except Exception as e:
+                        plots['features'] = f"<p>Error: {str(e)}</p>"
+                else:
+                    print(f"📂 Loaded existing {plot_files['features']}")
+                
+                # Load confusion matrix plot
+                if viz_y_pred is not None and y_test is not None:
+                    plots['confusion'] = load_plot_if_exists(plot_files['confusion'], save_path_viz)
+                    if plots['confusion'] is None:
+                        try:
+                            plots['confusion'] = plot_confusion_matrix(y_test, viz_y_pred, return_image=True, save_path=save_path_viz)
+                            print(f"✅ Generated {plot_files['confusion']}")
+                        except Exception as e:
+                            plots['confusion'] = f"<p>Error: {str(e)}</p>"
                     else:
-                        plots['confusion'] = "<p>Confusion matrix not available (model not trained or predictions not available)</p>"
-                except Exception as e:
-                    plots['confusion'] = f"<p>Error: {str(e)}</p>"
+                        print(f"📂 Loaded existing {plot_files['confusion']}")
+                else:
+                    plots['confusion'] = "<p>Confusion matrix not available (model not trained or predictions not available)</p>"
                 
-                try:
-                    if viz_y_proba is not None and y_test is not None and viz_roc_auc is not None:
-                        plots['roc'] = plot_roc_curve(y_test, viz_y_proba, roc_auc=viz_roc_auc, return_image=True, save_path=save_path_viz)
+                # Load ROC curve plot
+                if viz_y_proba is not None and y_test is not None and viz_roc_auc is not None:
+                    plots['roc'] = load_plot_if_exists(plot_files['roc'], save_path_viz)
+                    if plots['roc'] is None:
+                        try:
+                            plots['roc'] = plot_roc_curve(y_test, viz_y_proba, roc_auc=viz_roc_auc, return_image=True, save_path=save_path_viz)
+                            print(f"✅ Generated {plot_files['roc']}")
+                        except Exception as e:
+                            plots['roc'] = f"<p>Error: {str(e)}</p>"
                     else:
-                        plots['roc'] = "<p>ROC curve not available (model not trained or predictions not available)</p>"
-                except Exception as e:
-                    plots['roc'] = f"<p>Error: {str(e)}</p>"
+                        print(f"📂 Loaded existing {plot_files['roc']}")
+                else:
+                    plots['roc'] = "<p>ROC curve not available (model not trained or predictions not available)</p>"
                 
-                try:
-                    if viz_y_proba is not None:
-                        plots['prediction'] = plot_prediction_distribution(viz_y_proba, return_image=True, save_path=save_path_viz)
+                # Load prediction distribution plot
+                if viz_y_proba is not None:
+                    plots['prediction'] = load_plot_if_exists(plot_files['prediction'], save_path_viz)
+                    if plots['prediction'] is None:
+                        try:
+                            plots['prediction'] = plot_prediction_distribution(viz_y_proba, return_image=True, save_path=save_path_viz)
+                            print(f"✅ Generated {plot_files['prediction']}")
+                        except Exception as e:
+                            plots['prediction'] = f"<p>Error: {str(e)}</p>"
                     else:
-                        plots['prediction'] = "<p>Prediction distribution not available (model not trained or predictions not available)</p>"
-                except Exception as e:
-                    plots['prediction'] = f"<p>Error: {str(e)}</p>"
+                        print(f"📂 Loaded existing {plot_files['prediction']}")
+                else:
+                    plots['prediction'] = "<p>Prediction distribution not available (model not trained or predictions not available)</p>"
                 
-                try:
-                    plots['correlation'] = plot_correlation_heatmap(df, target, return_image=True, save_path=save_path_viz)
-                except Exception as e:
-                    plots['correlation'] = f"<p>Error: {str(e)}</p>"
+                # Load correlation heatmap plot
+                plots['correlation'] = load_plot_if_exists(plot_files['correlation'], save_path_viz)
+                if plots['correlation'] is None:
+                    try:
+                        plots['correlation'] = plot_correlation_heatmap(df, target, return_image=True, save_path=save_path_viz)
+                        print(f"✅ Generated {plot_files['correlation']}")
+                    except Exception as e:
+                        plots['correlation'] = f"<p>Error: {str(e)}</p>"
+                else:
+                    print(f"📂 Loaded existing {plot_files['correlation']}")
                 
-                try:
-                    if viz_pipeline is not None and X_test is not None:
-                        plots['shap_class1'] = create_shap_summary_plot_class1(
-                            viz_pipeline, X_test, max_display=15, return_image=True, save_path=save_path_viz
-                        )
+                # Load SHAP summary plot
+                if viz_pipeline is not None and X_test is not None:
+                    plots['shap_class1'] = load_plot_if_exists(plot_files['shap_class1'], save_path_viz)
+                    if plots['shap_class1'] is None:
+                        try:
+                            plots['shap_class1'] = create_shap_summary_plot_class1(
+                                viz_pipeline, X_test, max_display=15, return_image=True, save_path=save_path_viz
+                            )
+                            print(f"✅ Generated {plot_files['shap_class1']}")
+                        except Exception as e:
+                            plots['shap_class1'] = f"<p>Error: {str(e)}</p>"
                     else:
-                        plots['shap_class1'] = "<p>SHAP summary plot not available (model not trained or test data not available)</p>"
-                except Exception as e:
-                    plots['shap_class1'] = f"<p>Error: {str(e)}</p>"
+                        print(f"📂 Loaded existing {plot_files['shap_class1']}")
+                else:
+                    plots['shap_class1'] = "<p>SHAP summary plot not available (model not trained or test data not available)</p>"
                 
                 return (
                     plots['target'],
@@ -725,7 +995,7 @@ The model is now ready for predictions!"""
             interface.load(fn=load_visualizations, outputs=[
                 target_dist_plot, feature_dist_plot, confusion_matrix_plot,
                 roc_curve_plot, prediction_dist_plot, correlation_heatmap_plot,
-                shap_summary_class1_plot
+                    shap_summary_class1_plot
             ])
         
         gr.Markdown("---")
@@ -791,7 +1061,7 @@ The model is now ready for predictions!"""
                     label="Suicide attempt",
                     choices=["Yes", "No", "Not interested to say"],
                     value="No",
-                )
+        )
 
         # Add examples
         gr.Markdown("### 📋 Example Cases")
@@ -914,26 +1184,26 @@ The model is now ready for predictions!"""
             train_btn.click(
                 fn=train_model_wrapper,
                 inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, predict_btn, retrain_btn],
+                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, predict_btn, train_btn, retrain_btn],
             )
             # Retrain button uses the same function
             retrain_btn.click(
                 fn=train_model_wrapper,
                 inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, predict_btn, retrain_btn],
+                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, predict_btn, train_btn, retrain_btn],
             )
         else:
             # If no test data, only update training status
             train_btn.click(
                 fn=train_model_wrapper,
                 inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, predict_btn, retrain_btn],
+                outputs=[training_status, predict_btn, train_btn, retrain_btn],
             )
             # Retrain button uses the same function
             retrain_btn.click(
                 fn=train_model_wrapper,
                 inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, predict_btn, retrain_btn],
+                outputs=[training_status, predict_btn, train_btn, retrain_btn],
             )
         
         # Connect prediction button
@@ -953,6 +1223,177 @@ The model is now ready for predictions!"""
             ],
             outputs=[risk_output, feature_importance, personalized_explanation, shap_explanation, shap_plot],
         )
+        
+        # Add Chatbot Tab
+        gr.Markdown("---")
+        gr.Markdown("## 💬 AI Chatbot Assistant")
+        gr.Markdown(
+            "Ask questions about postpartum depression risk assessment. "
+            "The chatbot can help you understand risk factors, interpret results, and answer questions about the model."
+        )
+        
+        # Example questions for chatbot
+        chatbot_examples = [
+            "What is the PPD risk for a 30-year-old patient who feels sad, is irritable, and has trouble sleeping?",
+            "Can you explain what factors contribute most to postpartum depression risk?",
+            "What does a high risk score mean?",
+            "How does age affect the risk of postpartum depression?",
+            "What symptoms are most important for predicting postpartum depression?"
+        ]
+        
+        # Helper function to ensure list-of-lists format for chatbot
+        # Gradio expects: List[List[str | None | Tuple]] - list of lists!
+        def ensure_dict_format(history):
+            """Ensure history is in dictionary format: [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}, ...]"""
+            if history is None or not isinstance(history, list):
+                return []
+            result = []
+            for item in history:
+                try:
+                    # Handle dictionary format with 'role' and 'content' (standard Gradio format)
+                    if isinstance(item, dict) and "role" in item and "content" in item:
+                        result.append({"role": str(item["role"]), "content": str(item["content"])})
+                    # Handle dictionary format with 'text' and 'type' (alternative Gradio format)
+                    elif isinstance(item, dict) and "text" in item:
+                        # Convert 'text' format to 'content' format, infer role from context
+                        text_content = str(item.get("text", ""))
+                        # If it's a list of dicts with 'text', extract the text
+                        if isinstance(text_content, list) and len(text_content) > 0:
+                            if isinstance(text_content[0], dict) and "text" in text_content[0]:
+                                text_content = text_content[0]["text"]
+                        # Try to infer role - if we have alternating pattern, use it; otherwise default to user
+                        role = item.get("role", "user")
+                        result.append({"role": role, "content": str(text_content)})
+                    # Handle tuple/list format (old format) - convert to dict
+                    elif isinstance(item, (tuple, list)) and len(item) == 2:
+                        result.append({"role": "user", "content": str(item[0])})
+                        result.append({"role": "assistant", "content": str(item[1])})
+                    # Handle ChatMessage objects (if available)
+                    elif hasattr(item, 'role') and hasattr(item, 'content'):
+                        result.append({"role": str(item.role), "content": str(item.content)})
+                except (TypeError, ValueError, AttributeError):
+                    continue
+            return result
+        
+        # Initialize chatbot - Gradio 3.50+ expects dictionary format with 'role' and 'content'
+        chatbot = gr.Chatbot(
+            label="Chat with AI Assistant",
+            height=400
+        )
+        
+        with gr.Row():
+            chatbot_msg = gr.Textbox(
+                label="Ask a question",
+                placeholder="Type your question here...",
+                lines=2,
+                scale=4
+            )
+            chatbot_submit_btn = gr.Button("Send", variant="primary", scale=1)
+        
+        with gr.Row():
+            chatbot_clear = gr.Button("Clear Chat", variant="secondary")
+        
+        gr.Examples(
+            examples=chatbot_examples,
+            inputs=chatbot_msg,
+            label="Example Questions"
+        )
+        
+        def chat_handler(message, history):
+            """Handle chatbot messages - ensures dictionary format for Gradio compatibility."""
+            try:
+                # Normalize history to dictionary format: [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}, ...]
+                normalized_history = ensure_dict_format(history) if history else []
+                
+                # Handle empty message
+                if not message:
+                    return normalized_history, ""
+                
+                # Extract message text - handle both string and dict formats
+                message_str = ""
+                if isinstance(message, dict):
+                    if "text" in message:
+                        text_val = message["text"]
+                        # Handle nested list format: [{'text': '...', 'type': 'text'}]
+                        if isinstance(text_val, list) and len(text_val) > 0:
+                            if isinstance(text_val[0], dict) and "text" in text_val[0]:
+                                message_str = str(text_val[0]["text"]).strip()
+                            else:
+                                message_str = str(text_val[0]).strip()
+                        else:
+                            message_str = str(text_val).strip()
+                    elif "content" in message:
+                        message_str = str(message["content"]).strip()
+                    else:
+                        message_str = str(message).strip()
+                elif isinstance(message, list) and len(message) > 0:
+                    # Handle list format: [{'text': '...', 'type': 'text'}]
+                    if isinstance(message[0], dict):
+                        if "text" in message[0]:
+                            message_str = str(message[0]["text"]).strip()
+                        elif "content" in message[0]:
+                            message_str = str(message[0]["content"]).strip()
+                        else:
+                            message_str = str(message[0]).strip()
+                    else:
+                        message_str = str(message[0]).strip()
+                else:
+                    message_str = str(message).strip()
+                
+                if not message_str:
+                    return normalized_history, ""
+                
+                # Get response from LangChain agent
+                try:
+                    response = chatbot_handler(message_str, normalized_history)
+                    response = str(response) if response else "I'm sorry, I couldn't generate a response. Please try again."
+                except Exception as e:
+                    import traceback
+                    print(f"Chatbot handler error: {traceback.format_exc()}")
+                    response = f"❌ Error processing your message: {str(e)}"
+                
+                # Append new message and response as dictionaries (Gradio expects dict format with 'role' and 'content')
+                normalized_history.append({"role": "user", "content": message_str})
+                normalized_history.append({"role": "assistant", "content": str(response)})
+                return normalized_history, ""
+            except Exception as e:
+                import traceback
+                print(f"Chat handler error: {traceback.format_exc()}")
+                # Return safe default format - empty list
+                return [], ""
+        
+        # Clear handler with safe format
+        def clear_chat():
+            """Clear chat and return empty list (dictionary format)."""
+            return [], ""  # Empty list is valid format
+        
+        # Submit on button click
+        chatbot_submit_btn.click(
+            fn=chat_handler,
+            inputs=[chatbot_msg, chatbot],
+            outputs=[chatbot, chatbot_msg]
+        )
+        
+        # Also submit on Enter key press
+        chatbot_msg.submit(
+            fn=chat_handler,
+            inputs=[chatbot_msg, chatbot],
+            outputs=[chatbot, chatbot_msg]
+        )
+        
+        chatbot_clear.click(fn=clear_chat, outputs=[chatbot, chatbot_msg])
+        
+        # Initialize LangChain agent if agent is already loaded (non-blocking)
+        def init_langchain_after_load():
+            """Initialize LangChain agent after interface loads."""
+            if agent_loaded and current_agent[0] is not None:
+                try:
+                    initialize_langchain_agent()
+                except Exception as e:
+                    print(f"⚠️ Could not initialize LangChain agent on startup: {e}")
+        
+        # Schedule initialization after interface loads (non-blocking)
+        interface.load(fn=init_langchain_after_load, inputs=None, outputs=None)
 
         gr.Markdown("### ⚠️ Disclaimer")
         gr.Markdown(

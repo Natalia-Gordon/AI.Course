@@ -1,5 +1,6 @@
 # 📌 Standard libraries
 import pandas as pd
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 from MLmodel import create_XGBoost_pipeline, train_and_evaluate
 from visualization import create_all_visualizations
@@ -9,7 +10,10 @@ from ppd_agent import create_agent_from_training
 print("Welcome to the Postpartum Depression Prediction Agent Tool")
 
 # 🗂 Load the PostPartum Depression dataset CSV (download from Kaggle)
-df = pd.read_csv("data/postpartum-depression.csv")
+# Get the script directory and construct path relative to it
+script_dir = Path(__file__).parent
+data_path = script_dir / "data" / "postpartum-depression.csv"
+df = pd.read_csv(data_path)
 
 # 📊 Show basic info
 print(df.shape)

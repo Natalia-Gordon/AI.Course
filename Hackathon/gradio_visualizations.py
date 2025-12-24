@@ -14,13 +14,13 @@ import os
 import shap
 from sklearn.pipeline import Pipeline
 
-from exceptions import VisualizationError, SHAPExplanationError
+from exceptions import VisualizationError, SHAPExplanationError, PipelineError
 
 
 def create_shap_summary_plot(
     top_features: List[Tuple[str, float]],
-    shap_values_single: np.ndarray,
-    feature_names: np.ndarray,
+    _shap_values_single: np.ndarray,  # Unused but kept for API compatibility
+    _feature_names: np.ndarray,  # Unused but kept for API compatibility
     save_path: Optional[str] = None
 ) -> str:
     """
@@ -28,8 +28,8 @@ def create_shap_summary_plot(
     
     Args:
         top_features: List of tuples (feature_name, shap_value)
-        shap_values_single: Array of SHAP values
-        feature_names: Array of feature names
+        shap_values_single: Array of SHAP values (unused, kept for API compatibility)
+        feature_names: Array of feature names (unused, kept for API compatibility)
         save_path: Optional directory path to save the plot
     
     Returns:
@@ -350,7 +350,7 @@ def create_shap_summary_plot_class1(
                              feature_names=feature_names_to_use,
                              max_display=max_display,
                              show=False)
-        except Exception as plot_error:
+        except Exception:
             # Fallback: try without feature names
             try:
                 shap.summary_plot(shap_values_class_1, X_test_processed, 
@@ -456,4 +456,6 @@ def generate_detailed_shap_explanation(
         return "\n".join(explanation_lines)
     except Exception as e:
         return f"## SHAP Explanation Unavailable\n\nError generating explanation: {str(e)}"
+
+
 
