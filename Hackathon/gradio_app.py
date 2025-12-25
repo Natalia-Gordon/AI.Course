@@ -1224,7 +1224,142 @@ The model is now ready for predictions!"""
             outputs=[risk_output, feature_importance, personalized_explanation, shap_explanation, shap_plot],
         )
         
-        # Add Chatbot Tab
+        # Add EPDS Chatbot Tab
+        gr.Markdown("---")
+        gr.Markdown("## 📋 Edinburgh Postnatal Depression Scale (EPDS) Assessment")
+        gr.Markdown("סוכן דינמי עם LangChain: יודע מתי לשאול שאלות EPDS, אוסף טקסט חופשי, משתמש ב-NLP, ומתחבר למודל XGBoost")
+        
+        # Import EPDS agent module
+        try:
+            from epds_agent import EPDSAgent
+            EPDS_AVAILABLE = True
+        except ImportError as e:
+            print(f"⚠️ EPDS agent module not available: {e}")
+            EPDS_AVAILABLE = False
+        
+        if EPDS_AVAILABLE:
+            # Create EPDS agent instance (with PPD agent connection if available)
+            epds_agent_instance = [EPDSAgent(ppd_agent=current_agent[0] if current_agent[0] is not None else None)]
+            
+            def update_epds_agent():
+                """Update EPDS agent when PPD agent becomes available."""
+                if current_agent[0] is not None and epds_agent_instance[0] is not None:
+                    epds_agent_instance[0].ppd_agent = current_agent[0]
+                    if epds_agent_instance[0].langchain_agent is not None:
+                        # Reinitialize with updated PPD agent
+                        epds_agent_instance[0]._initialize_langchain()
+            
+            with gr.Row():
+                epds_name = gr.Textbox(
+                    label="שם (אופציונלי)",
+                    placeholder="הזיני את שמך (אופציונלי)",
+                    scale=2
+                )
+                epds_start_btn = gr.Button("התחל הערכה", variant="primary", scale=1)
+            
+            epds_chatbot = gr.Chatbot(
+                label="EPDS Assessment Chat",
+                height=400
+            )
+            
+            epds_status = gr.Markdown("לחצי על 'התחל הערכה' כדי להתחיל את ההערכה.")
+            
+            # Import EPDS_QUESTIONS for status display
+            try:
+                from epds_agent import EPDS_QUESTIONS
+            except ImportError:
+                EPDS_QUESTIONS = []  # Fallback
+            
+            def epds_start_handler(name):
+                """Start EPDS conversation."""
+                try:
+                    # Update agent connection before starting
+                    update_epds_agent()
+                    epds_agent = epds_agent_instance[0]
+                    response = epds_agent.start_conversation(name)
+                    history = [{"role": "assistant", "content": response}]
+                    return history, "הזיני תשובה או טקסט חופשי:", "הערכה בתהליך... שאלה 1/10"
+                except Exception as e:
+                    import traceback
+                    print(f"EPDS start error: {traceback.format_exc()}")
+                    return [], "", f"שגיאה: {str(e)}"
+            
+            def epds_chat_handler(message, history):
+                """Handle EPDS chat messages using intelligent agent."""
+                try:
+                    # Update agent connection
+                    update_epds_agent()
+                    epds_agent = epds_agent_instance[0]
+                    
+                    if epds_agent.state is None:
+                        return history if history else [], "אנא לחצי על 'התחל הערכה' תחילה.", "מוכן להתחלה"
+                    
+                    # Normalize history
+                    if history is None:
+                        history = []
+                    
+                    # Process message using intelligent agent
+                    response = epds_agent.process_message(str(message))
+                    
+                    # Update history from agent's conversation history
+                    if epds_agent.state and epds_agent.state.conversation_history:
+                        history = epds_agent.state.conversation_history.copy()
+                    
+                    # Determine status
+                    state = epds_agent.state
+                    if state:
+                        if state.assessment_complete:
+                            status_text = "הערכה הושלמה ✅"
+                        elif state.needs_free_text:
+                            status_text = "ממתין לתשובה חופשית..."
+                        else:
+                            status_text = f"שאלה {state.current_question_index + 1}/{len(EPDS_QUESTIONS) if EPDS_QUESTIONS else 10}"
+                    else:
+                        status_text = "מוכן"
+                    
+                    return history, "", status_text
+                except Exception as e:
+                    import traceback
+                    print(f"EPDS chat error: {traceback.format_exc()}")
+                    return history if history else [], "", f"שגיאה: {str(e)}"
+            
+            epds_msg = gr.Textbox(
+                label="תשובה",
+                placeholder="הזיני תשובה (0-3) או טקסט חופשי",
+                lines=2
+            )
+            
+            epds_send_btn = gr.Button("שלח", variant="primary")
+            epds_clear_btn = gr.Button("נקה", variant="secondary")
+            
+            def epds_clear():
+                """Clear EPDS conversation."""
+                epds_agent_instance[0].reset()
+                return [], "", "לחצי על 'התחל הערכה' כדי להתחיל את ההערכה."
+            
+            epds_start_btn.click(
+                fn=epds_start_handler,
+                inputs=[epds_name],
+                outputs=[epds_chatbot, epds_msg, epds_status]
+            )
+            
+            epds_send_btn.click(
+                fn=epds_chat_handler,
+                inputs=[epds_msg, epds_chatbot],
+                outputs=[epds_chatbot, epds_msg, epds_status]
+            )
+            
+            epds_msg.submit(
+                fn=epds_chat_handler,
+                inputs=[epds_msg, epds_chatbot],
+                outputs=[epds_chatbot, epds_msg, epds_status]
+            )
+            
+            epds_clear_btn.click(
+                fn=epds_clear,
+                outputs=[epds_chatbot, epds_msg, epds_status]
+            )
+        
         gr.Markdown("---")
         gr.Markdown("## 💬 AI Chatbot Assistant")
         gr.Markdown(
