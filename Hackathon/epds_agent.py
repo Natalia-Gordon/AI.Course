@@ -184,57 +184,68 @@ class EPDSAnswerInterpreterTool(BaseTool):
 
 
 class SentimentAnalysisTool(BaseTool):
-    """Tool for analyzing sentiment and distress in text."""
+    """Tool for analyzing sentiment and distress in text using LLM."""
     
     name: str = "analyze_sentiment"
-    description: str = "Analyzes text for emotional sentiment and distress keywords. Returns sentiment score (-1 to 1) and detected keywords."
+    description: str = "Analyzes text for emotional sentiment and distress using advanced NLP. Returns sentiment score (-1 to 1), distress level, and detected emotional themes."
+    
+    def __init__(self, epds_agent=None, **kwargs):
+        """Initialize with reference to EPDSAgent for LLM access."""
+        super().__init__(**kwargs)
+        self.epds_agent = epds_agent
     
     def _run(self, text: str) -> str:
-        """Analyze sentiment and detect distress keywords with enhanced sensitivity."""
+        """Analyze sentiment and detect distress using LLM-based analysis."""
         try:
-            text_lower = text.lower()
-            sentiment = TextBlob(text).sentiment.polarity
-            
-            # Enhanced keyword detection (check both full words and substrings)
-            keywords_found = []
-            for keyword in DISTRESS_KEYWORDS:
-                if keyword.lower() in text_lower:
-                    keywords_found.append(keyword)
-            
-            # Check for high-priority distress indicators (suicidal ideation, self-harm)
-            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
-                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
-            has_high_priority = any(kw in text_lower for kw in high_priority_keywords)
-            
-            # Enhanced distress level calculation
-            # Factor in sentiment, keyword count, and priority indicators
-            keyword_count = len(keywords_found)
-            if has_high_priority:
-                distress_level = "גבוה מאוד"
-                urgency = "דחוף"
-            elif sentiment < -0.4 or keyword_count >= 3:
-                distress_level = "גבוה"
-                urgency = "גבוה"
-            elif sentiment < -0.2 or keyword_count >= 2:
-                distress_level = "בינוני-גבוה"
-                urgency = "בינוני"
-            elif sentiment < 0 or keyword_count >= 1:
-                distress_level = "בינוני"
-                urgency = "נמוך-בינוני"
+            # Use LLM-based analysis if agent is available
+            if self.epds_agent is not None:
+                distress_analysis = self.epds_agent._analyze_distress_with_llm(text)
+                result = {
+                    "sentiment_score": distress_analysis["sentiment_score"],
+                    "distress_level": distress_analysis["distress_level"],
+                    "urgency": distress_analysis["urgency"],
+                    "themes": distress_analysis["themes"],
+                    "high_priority": distress_analysis["high_priority"],
+                    "method": distress_analysis.get("method", "llm")
+                }
             else:
-                distress_level = "נמוך"
-                urgency = "נמוך"
+                # Fallback to keyword-based analysis
+                text_lower = text.lower()
+                sentiment = TextBlob(text).sentiment.polarity
+                keywords_found = [k for k in DISTRESS_KEYWORDS if k.lower() in text_lower]
+                high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
+                                         "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
+                has_high_priority = any(kw in text_lower for kw in high_priority_keywords)
+                
+                keyword_count = len(keywords_found)
+                if has_high_priority:
+                    distress_level = "גבוה מאוד"
+                    urgency = "דחוף"
+                elif sentiment < -0.4 or keyword_count >= 3:
+                    distress_level = "גבוה"
+                    urgency = "גבוה"
+                elif sentiment < -0.2 or keyword_count >= 2:
+                    distress_level = "בינוני-גבוה"
+                    urgency = "בינוני"
+                elif sentiment < 0 or keyword_count >= 1:
+                    distress_level = "בינוני"
+                    urgency = "נמוך-בינוני"
+                else:
+                    distress_level = "נמוך"
+                    urgency = "נמוך"
+                
+                result = {
+                    "sentiment_score": round(sentiment, 2),
+                    "distress_level": distress_level,
+                    "urgency": urgency,
+                    "themes": keywords_found[:5],
+                    "high_priority": has_high_priority,
+                    "method": "keywords"
+                }
             
-            result = {
-                "sentiment_score": round(sentiment, 2),
-                "distress_level": distress_level,
-                "urgency": urgency,
-                "keywords": keywords_found,
-                "high_priority": has_high_priority,
-                "keyword_count": keyword_count
-            }
-            
-            return f"ניתוח רגשי: רמת מצוקה {distress_level} (דחיפות: {urgency}), ציון רגשי: {result['sentiment_score']}, מילות מפתח: {', '.join(result['keywords'][:5]) if result['keywords'] else 'אין'}"
+            themes_str = ', '.join(result['themes'][:5]) if result['themes'] else 'אין'
+            method_str = "LLM" if result.get("method") == "llm" else "מילות מפתח"
+            return f"ניתוח רגשי ({method_str}): רמת מצוקה {result['distress_level']} (דחיפות: {result['urgency']}), ציון רגשי: {result['sentiment_score']}, נושאים: {themes_str}"
         except Exception as e:
             return f"שגיאה בניתוח רגשי: {str(e)}"
     
@@ -400,9 +411,9 @@ class EPDSAgent:
                 openai_api_key=openai_api_key
             )
             
-            # Create tools
+            # Create tools - pass self reference for LLM access in SentimentAnalysisTool
             tools = [
-                SentimentAnalysisTool(),
+                SentimentAnalysisTool(epds_agent=self),
                 EPDSAnswerInterpreterTool(),
             ]
             
@@ -583,15 +594,12 @@ class EPDSAgent:
             # Get current question
             current_question = EPDS_QUESTIONS[self.state.current_question_index]
             
-            # Always check for emotional distress first - even if they gave a numeric answer
-            sentiment_tool = SentimentAnalysisTool()
-            sentiment_result = sentiment_tool._run(user_message)
-            
-            # Check for high-priority distress indicators (suicidal ideation, self-harm)
-            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
-                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
-            text_lower = user_message.lower()
-            has_high_priority_distress = any(kw in text_lower for kw in high_priority_keywords)
+            # Use LLM-based distress analysis instead of keyword matching
+            distress_analysis = self._analyze_distress_with_llm(user_message)
+            has_high_priority_distress = distress_analysis["high_priority"]
+            distress_level = distress_analysis["distress_level"]
+            urgency = distress_analysis["urgency"]
+            detected_themes = distress_analysis["themes"]
             
             # If high priority distress detected, respond with immediate support
             if has_high_priority_distress:
@@ -613,15 +621,15 @@ class EPDSAgent:
                 self.state.epds_answers.append(answer)
                 self.state.current_question_index += 1
                 
-                # Check for emotional content even in numeric answers
-                has_distress_keywords = any(kw in user_message for kw in DISTRESS_KEYWORDS)
+                # Check for emotional content using LLM analysis
+                has_emotional_content = distress_level in ["בינוני", "בינוני-גבוה", "גבוה", "גבוה מאוד"] or len(detected_themes) > 0
                 
                 if self.state.current_question_index < len(EPDS_QUESTIONS):
                     # More questions to ask - use natural, conversational phrasing
                     next_epds_q = EPDS_QUESTIONS[self.state.current_question_index]
                     next_q_conversational = self._convert_question_to_conversational(next_epds_q, self.state.current_question_index + 1)
                     
-                    if has_distress_keywords and not has_high_priority_distress:
+                    if has_emotional_content and not has_high_priority_distress:
                         # Acknowledge the emotional sharing before continuing naturally
                         transition = self._get_natural_transition(previous_answer_emotional=True)
                         response = f"{transition}. {next_q_conversational}"
@@ -637,7 +645,8 @@ class EPDSAgent:
                     response += "זה יעזור לי להבין טוב יותר את המצב שלך, אבל זה לגמרי אופציונלי."
             else:
                 # No clear answer extracted - use LLM to understand and respond naturally
-                has_distress_keywords = any(kw in user_message for kw in DISTRESS_KEYWORDS)
+                # Use distress analysis to determine if emotional content exists
+                has_emotional_content = distress_level in ["בינוני", "בינוני-גבוה", "גבוה", "גבוה מאוד"] or len(detected_themes) > 0
                 
                 if self.llm is not None and not has_high_priority_distress:
                     # Use LLM to generate a natural, empathetic response
@@ -682,7 +691,7 @@ class EPDSAgent:
                     except Exception as e:
                         # Fallback if LLM fails - use conversational format
                         current_q_conversational = self._convert_question_to_conversational(current_question)
-                        if has_distress_keywords and not has_high_priority_distress:
+                        if has_emotional_content and not has_high_priority_distress:
                             transition = self._get_natural_transition(previous_answer_emotional=True)
                             response = f"{transition}. {current_q_conversational}"
                         else:
@@ -691,7 +700,7 @@ class EPDSAgent:
                 else:
                     # No LLM available - use conversational format with rule-based response
                     current_q_conversational = self._convert_question_to_conversational(current_question)
-                    if has_distress_keywords and not has_high_priority_distress:
+                    if has_emotional_content and not has_high_priority_distress:
                         transition = self._get_natural_transition(previous_answer_emotional=True)
                         response = f"{transition}. {current_q_conversational}"
                     else:
@@ -703,14 +712,12 @@ class EPDSAgent:
             self.state.free_text = user_message
             self.state.free_text_collected = True
             
-            # Analyze sentiment with enhanced detection
-            sentiment, keywords = self._analyze_sentiment(user_message)
-            
-            # Check for high-priority distress
-            text_lower = user_message.lower()
-            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
-                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
-            has_high_priority = any(kw in text_lower for kw in high_priority_keywords)
+            # Use LLM-based distress analysis instead of keyword matching
+            distress_analysis = self._analyze_distress_with_llm(user_message)
+            sentiment = distress_analysis["sentiment_score"]
+            keywords = distress_analysis["themes"]
+            has_high_priority = distress_analysis["high_priority"]
+            distress_level = distress_analysis["distress_level"]
             
             # Save assessment
             record_id, total_score = save_epds_assessment(
@@ -719,8 +726,8 @@ class EPDSAgent:
                 keywords
             )
             
-            # Determine risk level
-            risk_assessment = self._assess_risk(total_score, sentiment, keywords)
+            # Determine risk level (enhanced with LLM analysis)
+            risk_assessment = self._assess_risk(total_score, sentiment, keywords, distress_analysis)
             
             # Generate sensitive, supportive response
             response = f"תודה רבה על השיתוף הכנה והאמון 💙\n\n"
@@ -779,14 +786,124 @@ class EPDSAgent:
         
         return response
     
-    def _analyze_sentiment(self, text: str) -> Tuple[float, List[str]]:
-        """Analyze sentiment and detect keywords."""
+    def _analyze_distress_with_llm(self, text: str) -> Dict[str, Any]:
+        """
+        Use LLM to analyze emotional distress from natural language.
+        Returns a dictionary with distress level, urgency, sentiment, and detected themes.
+        """
+        if self.llm is None:
+            # Fallback to keyword-based analysis
+            return self._analyze_distress_keywords(text)
+        
         try:
+            analysis_prompt = f"""אתה מומחה לניתוח רגשי וזיהוי מצוקה נפשית.
+
+טקסט של מטופלת: "{text}"
+
+תפקידך: לנתח את הטקסט ולזהות:
+1. רמת מצוקה רגשית (נמוך/בינוני/גבוה/גבוה מאוד)
+2. דחיפות (נמוך/בינוני/גבוה/דחוף)
+3. ציון רגשי (-1 עד 1, כאשר -1 הוא שלילי מאוד)
+4. נושאים רגשיים מרכזיים (רשימה קצרה)
+5. האם יש סימני מצוקה גבוהה מאוד (מחשבות אובדניות, פגיעה עצמית) - כן/לא
+
+חזור בפורמט JSON:
+{{
+    "distress_level": "נמוך/בינוני/גבוה/גבוה מאוד",
+    "urgency": "נמוך/בינוני/גבוה/דחוף",
+    "sentiment_score": מספר בין -1 ל-1,
+    "themes": ["נושא 1", "נושא 2"],
+    "high_priority": true/false,
+    "explanation": "הסבר קצר"
+}}"""
+            
+            llm_response = self.llm.invoke(analysis_prompt).content.strip()
+            
+            # Try to parse JSON response
+            import json
+            # Extract JSON from response (might have extra text)
+            json_start = llm_response.find('{')
+            json_end = llm_response.rfind('}') + 1
+            if json_start >= 0 and json_end > json_start:
+                json_str = llm_response[json_start:json_end]
+                result = json.loads(json_str)
+                
+                # Normalize values
+                return {
+                    "distress_level": result.get("distress_level", "בינוני"),
+                    "urgency": result.get("urgency", "בינוני"),
+                    "sentiment_score": float(result.get("sentiment_score", 0.0)),
+                    "themes": result.get("themes", []),
+                    "high_priority": result.get("high_priority", False),
+                    "explanation": result.get("explanation", ""),
+                    "method": "llm"
+                }
+        except Exception as e:
+            # Fallback to keyword-based analysis
+            pass
+        
+        # Fallback to keyword-based analysis
+        return self._analyze_distress_keywords(text)
+    
+    def _analyze_distress_keywords(self, text: str) -> Dict[str, Any]:
+        """Fallback keyword-based distress analysis."""
+        try:
+            text_lower = text.lower()
             sentiment = TextBlob(text).sentiment.polarity
-            keywords = [k for k in DISTRESS_KEYWORDS if k in text]
-            return sentiment, keywords
+            
+            # Enhanced keyword detection
+            keywords_found = []
+            for keyword in DISTRESS_KEYWORDS:
+                if keyword.lower() in text_lower:
+                    keywords_found.append(keyword)
+            
+            # Check for high-priority distress indicators
+            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
+                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
+            has_high_priority = any(kw in text_lower for kw in high_priority_keywords)
+            
+            # Calculate distress level
+            keyword_count = len(keywords_found)
+            if has_high_priority:
+                distress_level = "גבוה מאוד"
+                urgency = "דחוף"
+            elif sentiment < -0.4 or keyword_count >= 3:
+                distress_level = "גבוה"
+                urgency = "גבוה"
+            elif sentiment < -0.2 or keyword_count >= 2:
+                distress_level = "בינוני-גבוה"
+                urgency = "בינוני"
+            elif sentiment < 0 or keyword_count >= 1:
+                distress_level = "בינוני"
+                urgency = "נמוך-בינוני"
+            else:
+                distress_level = "נמוך"
+                urgency = "נמוך"
+            
+            return {
+                "distress_level": distress_level,
+                "urgency": urgency,
+                "sentiment_score": round(sentiment, 2),
+                "themes": keywords_found[:5],  # Top 5 keywords as themes
+                "high_priority": has_high_priority,
+                "explanation": f"זוהו {keyword_count} מילות מפתח רגשיות",
+                "method": "keywords"
+            }
         except:
-            return 0.0, []
+            return {
+                "distress_level": "נמוך",
+                "urgency": "נמוך",
+                "sentiment_score": 0.0,
+                "themes": [],
+                "high_priority": False,
+                "explanation": "",
+                "method": "fallback"
+            }
+    
+    def _analyze_sentiment(self, text: str) -> Tuple[float, List[str]]:
+        """Analyze sentiment and detect keywords - now uses LLM-based analysis."""
+        distress_analysis = self._analyze_distress_with_llm(text)
+        return distress_analysis["sentiment_score"], distress_analysis["themes"]
     
     def _assess_risk(self, epds_score: int, sentiment: float, keywords: List[str]) -> Dict[str, str]:
         """Assess risk level based on EPDS score, sentiment, and keywords."""
