@@ -907,8 +907,8 @@ class EPDSAgent:
         distress_analysis = self._analyze_distress_with_llm(text)
         return distress_analysis["sentiment_score"], distress_analysis["themes"]
     
-    def _assess_risk(self, epds_score: int, sentiment: float, keywords: List[str]) -> Dict[str, str]:
-        """Assess risk level based on EPDS score, sentiment, and keywords."""
+    def _assess_risk(self, epds_score: int, sentiment: float, keywords: List[str], distress_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+        """Assess risk level based on EPDS score, sentiment, keywords, and LLM distress analysis."""
         # EPDS risk levels
         if epds_score >= 13:
             risk_level = "גבוה"
@@ -920,11 +920,25 @@ class EPDSAgent:
             risk_level = "נמוך-בינוני"
             recommendation = "מומלץ להמשיך לעקוב אחרי המצב"
         
-        # Adjust based on sentiment and keywords
-        if sentiment < -0.3 or len(keywords) >= 2:
-            if risk_level == "נמוך-בינוני":
-                risk_level = "בינוני"
-                recommendation = "מומלץ לשקול שיחה עם איש מקצוע"
+        # Enhance with LLM-based distress analysis if available
+        if distress_analysis and distress_analysis.get("method") == "llm":
+            llm_distress_level = distress_analysis.get("distress_level", "")
+            llm_urgency = distress_analysis.get("urgency", "")
+            
+            # If LLM detected high distress, adjust risk level upward
+            if llm_distress_level in ["גבוה", "גבוה מאוד"] or llm_urgency == "דחוף":
+                if risk_level == "נמוך-בינוני":
+                    risk_level = "בינוני"
+                    recommendation = "מומלץ לשקול שיחה עם איש מקצוע"
+                elif risk_level == "בינוני":
+                    risk_level = "בינוני-גבוה"
+                    recommendation = "מומלץ לעקוב אחרי המצב ולשקול ייעוץ מקצועי"
+        else:
+            # Fallback to sentiment and keyword-based adjustment
+            if sentiment < -0.3 or len(keywords) >= 2:
+                if risk_level == "נמוך-בינוני":
+                    risk_level = "בינוני"
+                    recommendation = "מומלץ לשקול שיחה עם איש מקצוע"
         
         return {
             "risk_level": risk_level,
