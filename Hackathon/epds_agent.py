@@ -87,7 +87,29 @@ EPDS_COLUMN_NAMES = [
     "מחשבות פגיעה עצמית"
 ]
 
-DISTRESS_KEYWORDS = ["קשה", "עייפה", "בודדה", "לחוצה", "לא מצליחה", "עצובה", "מדוכאת", "ייאוש"]
+# Expanded list of Hebrew distress keywords and verbal cues
+DISTRESS_KEYWORDS = [
+    # Direct emotional distress
+    "קשה", "עייפה", "בודדה", "לחוצה", "לא מצליחה", "עצובה", "מדוכאת", "ייאוש",
+    # Additional emotional states
+    "כועסת", "מתוסכלת", "חסרת תקווה", "מפוחדת", "חרדה", "פחד", "בהלה", "דאגה",
+    "עצבנית", "מאוכזבת", "אשמה", "אשמה", "אכזבה", "תסכול", "כעס", "זעם",
+    # Physical/mental exhaustion
+    "תשושה", "מותשת", "חסרת אנרגיה", "לא יכולה", "לא יכולה יותר", "נשברת",
+    "לא מצליחה להתמודד", "מוצפת", "מבולבלת", "לא מבינה", "אבודה",
+    # Relationship/social distress
+    "בודדה", "מבודדת", "לא מבינים אותי", "אף אחד לא מבין", "לא רואה אותי",
+    "קושי עם התינוק", "לא מתחברת", "קושי להתחבר", "לא אוהבת", "מפחדת",
+    # Self-harm/suicidal ideation (high priority)
+    "לא רוצה לחיות", "רוצה למות", "לא כדאי", "למה לי", "אין טעם", "אובדן תקווה",
+    "לפגוע בעצמי", "להיפצע", "למות", "סוף", "זה הסוף",
+    # Sleep and daily functioning
+    "לא ישנה", "לא מצליחה לישון", "נדודי שינה", "עייפה כל הזמן",
+    "לא רוצה לקום", "לא רוצה לעשות כלום", "לא מתפקדת",
+    # Coping difficulties
+    "לא יודעת מה לעשות", "לא יודעת איך להתמודד", "אובדת עצות",
+    "חסרת אונים", "חסרת שליטה", "מרגישה לכודה", "אין מוצא"
+]
 
 
 class EPDSState(BaseModel):
@@ -104,6 +126,63 @@ class EPDSState(BaseModel):
     assessment_complete: bool = False
 
 
+class EPDSAnswerInterpreterTool(BaseTool):
+    """Tool for interpreting natural language responses to EPDS questions."""
+    
+    name: str = "interpret_epds_answer"
+    description: str = "Interprets a natural language response to an EPDS question and converts it to a score (0-3). The response should be analyzed based on how often or how much the feeling/behavior occurred in the past week."
+    
+    def _run(self, question: str, user_response: str) -> str:
+        """Interpret natural language response to EPDS question."""
+        try:
+            response_lower = user_response.lower()
+            
+            # Direct numeric answer
+            numbers = re.findall(r'\d+', user_response)
+            if numbers:
+                score = int(numbers[0])
+                if 0 <= score <= 3:
+                    return f"SCORE:{score}"
+            
+            # Hebrew expressions for frequency/intensity
+            # 0 = בכלל לא / מעולם לא
+            if any(word in response_lower for word in ['בכלל לא', 'מעולם לא', 'אף פעם לא', 'אפס', '0']):
+                return "SCORE:0"
+            
+            # 1 = לא לעתים קרובות / כמעט אף פעם
+            if any(word in response_lower for word in ['לא לעתים קרובות', 'כמעט לא', 'בדרך כלל לא', '1']):
+                return "SCORE:1"
+            
+            # 2 = לפעמים / מדי פעם
+            if any(word in response_lower for word in ['לפעמים', 'מדי פעם', 'בינוני', 'קצת', '2']):
+                return "SCORE:2"
+            
+            # 3 = לעתים קרובות מאוד / הרבה / תמיד
+            if any(word in response_lower for word in ['לעתים קרובות מאוד', 'הרבה', 'תמיד', 'כמעט תמיד', '3']):
+                return "SCORE:3"
+            
+            # Try sentiment-based interpretation
+            blob = TextBlob(user_response)
+            sentiment = blob.sentiment.polarity
+            
+            # If very negative sentiment, likely higher score (more frequent/problematic)
+            if sentiment < -0.5:
+                return "SCORE:3"
+            elif sentiment < -0.2:
+                return "SCORE:2"
+            elif sentiment < 0:
+                return "SCORE:1"
+            else:
+                return "SCORE:0"
+                
+        except Exception as e:
+            return f"ERROR: {str(e)}"
+    
+    async def _arun(self, question: str, user_response: str) -> str:
+        """Async version."""
+        return self._run(question, user_response)
+
+
 class SentimentAnalysisTool(BaseTool):
     """Tool for analyzing sentiment and distress in text."""
     
@@ -111,27 +190,51 @@ class SentimentAnalysisTool(BaseTool):
     description: str = "Analyzes text for emotional sentiment and distress keywords. Returns sentiment score (-1 to 1) and detected keywords."
     
     def _run(self, text: str) -> str:
-        """Analyze sentiment and detect distress keywords."""
+        """Analyze sentiment and detect distress keywords with enhanced sensitivity."""
         try:
+            text_lower = text.lower()
             sentiment = TextBlob(text).sentiment.polarity
-            keywords_found = [k for k in DISTRESS_KEYWORDS if k in text]
             
-            # Determine distress level
-            if sentiment < -0.3 or len(keywords_found) >= 2:
+            # Enhanced keyword detection (check both full words and substrings)
+            keywords_found = []
+            for keyword in DISTRESS_KEYWORDS:
+                if keyword.lower() in text_lower:
+                    keywords_found.append(keyword)
+            
+            # Check for high-priority distress indicators (suicidal ideation, self-harm)
+            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
+                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
+            has_high_priority = any(kw in text_lower for kw in high_priority_keywords)
+            
+            # Enhanced distress level calculation
+            # Factor in sentiment, keyword count, and priority indicators
+            keyword_count = len(keywords_found)
+            if has_high_priority:
+                distress_level = "גבוה מאוד"
+                urgency = "דחוף"
+            elif sentiment < -0.4 or keyword_count >= 3:
                 distress_level = "גבוה"
-            elif sentiment < 0 or len(keywords_found) >= 1:
+                urgency = "גבוה"
+            elif sentiment < -0.2 or keyword_count >= 2:
+                distress_level = "בינוני-גבוה"
+                urgency = "בינוני"
+            elif sentiment < 0 or keyword_count >= 1:
                 distress_level = "בינוני"
+                urgency = "נמוך-בינוני"
             else:
                 distress_level = "נמוך"
+                urgency = "נמוך"
             
             result = {
                 "sentiment_score": round(sentiment, 2),
                 "distress_level": distress_level,
+                "urgency": urgency,
                 "keywords": keywords_found,
-                "interpretation": f"רמת מצוקה: {distress_level}"
+                "high_priority": has_high_priority,
+                "keyword_count": keyword_count
             }
             
-            return f"ניתוח רגשי: {result['interpretation']}, ציון: {result['sentiment_score']}, מילות מפתח: {', '.join(result['keywords']) if result['keywords'] else 'אין'}"
+            return f"ניתוח רגשי: רמת מצוקה {distress_level} (דחיפות: {urgency}), ציון רגשי: {result['sentiment_score']}, מילות מפתח: {', '.join(result['keywords'][:5]) if result['keywords'] else 'אין'}"
         except Exception as e:
             return f"שגיאה בניתוח רגשי: {str(e)}"
     
@@ -300,6 +403,7 @@ class EPDSAgent:
             # Create tools
             tools = [
                 SentimentAnalysisTool(),
+                EPDSAnswerInterpreterTool(),
             ]
             
             # Add PPD prediction tool if agent is available
@@ -382,7 +486,8 @@ class EPDSAgent:
             self.langchain_agent = None
     
     def start_conversation(self, patient_name: str = "") -> str:
-        """Start a new EPDS conversation."""
+        """Start a new EPDS conversation with a sensitive, non-intrusive greeting."""
+        name_part = f" {patient_name}" if patient_name else ""
         self.state = EPDSState(
             session_id=str(uuid.uuid4()),
             patient_name=patient_name if patient_name else f"Patient_{uuid.uuid4().hex[:8]}",
@@ -391,11 +496,20 @@ class EPDSAgent:
             assessment_complete=False
         )
         
-        greeting = f"שלום! אני כאן כדי לעזור לך להעריך את המצב הרגשי שלך לאחר הלידה. 😊\n\n"
-        greeting += f"אני אמנחה אותך דרך שאלות קצרות. תוכלי לענות עם מספר 0-3 או במילים:\n"
-        greeting += f"0 = בכלל לא\n1 = לא לעתים קרובות\n2 = לפעמים\n3 = לעתים קרובות מאוד\n\n"
-        greeting += f"אם תרצי לשתף רגשות נוספים, תמיד אפשר! 💙\n\n"
-        greeting += f"בואי נתחיל - שאלה 1:\n{EPDS_QUESTIONS[0]}"
+        # More sensitive and non-intrusive greeting - emphasizing natural language
+        greeting = f"שלום{name_part}! 💙\n\n"
+        greeting += f"אני כאן כדי להקשיב ולעזור לך להבין טוב יותר איך את מרגישה בתקופה הזאת.\n\n"
+        greeting += f"אני אשאל אותך כמה שאלות קצרות על השבוע האחרון. "
+        greeting += f"אין תשובות נכונות או שגויות - חשוב לי לשמוע בדיוק איך את מרגישה.\n\n"
+        greeting += f"💬 את מוזמנת לענות בדרך הטבעית שלך - במילים שלך, כאוות נפשך. "
+        greeting += f"אני מבינה עברית ואקשיב לך בקשב. אם תרצי, את יכולה גם לענות עם מספר (0-3):\n"
+        greeting += f"• 0 = בכלל לא\n"
+        greeting += f"• 1 = לא לעתים קרובות\n"
+        greeting += f"• 2 = לפעמים\n"
+        greeting += f"• 3 = לעתים קרובות מאוד\n\n"
+        greeting += f"💙 אם תרצי לשתף רגשות או מחשבות נוספות, את מוזמנת לעשות זאת בכל שלב. "
+        greeting += f"אני כאן להקשיב ולתמוך.\n\n"
+        greeting += f"בואי נתחיל:\n\nשאלה 1:\n{EPDS_QUESTIONS[0]}"
         
         self.state.conversation_history.append({
             "role": "assistant",
@@ -417,7 +531,31 @@ class EPDSAgent:
         
         # Check if we're in EPDS question phase
         if self.state.current_question_index < len(EPDS_QUESTIONS):
-            # Try to extract answer
+            # Get current question
+            current_question = EPDS_QUESTIONS[self.state.current_question_index]
+            
+            # Always check for emotional distress first - even if they gave a numeric answer
+            sentiment_tool = SentimentAnalysisTool()
+            sentiment_result = sentiment_tool._run(user_message)
+            
+            # Check for high-priority distress indicators (suicidal ideation, self-harm)
+            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
+                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
+            text_lower = user_message.lower()
+            has_high_priority_distress = any(kw in text_lower for kw in high_priority_keywords)
+            
+            # If high priority distress detected, respond with immediate support
+            if has_high_priority_distress:
+                response = "💙 אני מבינה שאת חווה קושי גדול. חשוב לי שתדעי שאת לא לבד.\n\n"
+                response += "אם את חווה מחשבות קשות או מחשבות על פגיעה בעצמך, אני ממליצה בחום לפנות מיד לעזרה מקצועית:\n"
+                response += "• ער״ן (חירום נפשי): 1201\n"
+                response += "• נט״ל: 1-800-363-363\n"
+                response += "• או פני לחדר מיון קרוב\n\n"
+                response += "אני כאן להקשיב. רוצה לשתף עוד?\n\n"
+                response += f"בואי נמשיך עם השאלה:\n{EPDS_QUESTIONS[self.state.current_question_index]}\n"
+                response += "(תוכלי לענות 0-3 או לשתף רגשות נוספים)"
+            
+            # Try to extract numeric answer
             answer = extract_answer_score(user_message)
             
             if answer is not None:
@@ -425,39 +563,96 @@ class EPDSAgent:
                 self.state.epds_answers.append(answer)
                 self.state.current_question_index += 1
                 
+                # Check for emotional content even in numeric answers
+                has_distress_keywords = any(kw in user_message for kw in DISTRESS_KEYWORDS)
+                
                 if self.state.current_question_index < len(EPDS_QUESTIONS):
                     # More questions to ask
                     next_q = EPDS_QUESTIONS[self.state.current_question_index]
-                    response = f"תודה! שאלה {self.state.current_question_index + 1}:\n{next_q}"
+                    if has_distress_keywords and not has_high_priority_distress:
+                        # Acknowledge the emotional sharing before continuing
+                        response = f"תודה על השיתוף הכנה 💙\n\nשאלה {self.state.current_question_index + 1}:\n{next_q}"
+                    else:
+                        response = f"תודה! שאלה {self.state.current_question_index + 1}:\n{next_q}"
                 else:
-                    # All questions answered - ask for free text
+                    # All questions answered - ask for free text in a sensitive way
                     self.state.needs_free_text = True
-                    response = "תודה על התשובות! 💙\n\nרוצה לשתף במשפט או שניים איך את מרגישה רגשית לאחר הלידה? זה יעזור לי להבין טוב יותר את המצב שלך."
+                    response = "תודה רבה על השיתוף הכנה והאמון 💙\n\n"
+                    response += "אם תרצי, אני כאן להקשיב - רוצה לשתף במשפט או שניים איך את מרגישה רגשית בתקופה הזאת? "
+                    response += "זה יעזור לי להבין טוב יותר את המצב שלך, אבל זה לגמרי אופציונלי."
             else:
-                # Not a clear answer - use NLP to understand and guide
-                if self.langchain_agent is not None:
-                    # Use LangChain agent for intelligent response
+                # No clear answer extracted - use LLM to understand and respond naturally
+                has_distress_keywords = any(kw in user_message for kw in DISTRESS_KEYWORDS)
+                
+                if self.llm is not None and not has_high_priority_distress:
+                    # Use LLM to generate a natural, empathetic response
                     try:
-                        sentiment_tool = SentimentAnalysisTool()
-                        sentiment_result = sentiment_tool._run(user_message)
+                        llm_context = f"""אתה סוכן רפואי אמפתי שמנהל שיחה עם אישה לאחר לידה.
+
+השאלה הנוכחית: {current_question}
+
+התשובה של המטופלת: {user_message}
+
+התשובה לא ברורה כציון מספרי (0-3). תפקידך:
+1. להבין את התשובה במילים הטבעיות שלה
+2. לאשר שאת מבין/ה (אמפתיה)
+3. לנסות לפרש את התשובה לציון 0-3 אם אפשר
+4. אם לא אפשר, להזמין אותה לפרט קצת יותר
+
+חזור עם תגובה קצרה, אמפתית וטבעית בעברית. אם הצלחת לפרש לציון, ציין אותו בסוף בצורה עדינה."""
                         
-                        # Determine if they're sharing emotions or answering question
-                        if any(kw in user_message for kw in DISTRESS_KEYWORDS):
-                            response = f"אני מבינה שאת מרגישה {sentiment_result}. תודה על השיתוף 💙\n\nבואי נמשיך - {EPDS_QUESTIONS[self.state.current_question_index]}\nאנא עני עם מספר 0-3:"
+                        llm_response = self.llm.invoke(llm_context).content.strip()
+                        response = llm_response
+                        
+                        # Try to extract any score the LLM might have inferred
+                        extracted_score = extract_answer_score(llm_response)
+                        if extracted_score is not None:
+                            answer = extracted_score
+                            self.state.epds_answers.append(answer)
+                            self.state.current_question_index += 1
+                            if self.state.current_question_index < len(EPDS_QUESTIONS):
+                                response += f"\n\nשאלה {self.state.current_question_index + 1}:\n{EPDS_QUESTIONS[self.state.current_question_index]}"
+                            else:
+                                self.state.needs_free_text = True
+                                response += "\n\nתודה רבה על השיתוף הכנה 💙\n"
+                                response += "אם תרצי, אני כאן להקשיב - רוצה לשתף במשפט או שניים איך את מרגישה רגשית בתקופה הזאת?"
                         else:
-                            response = f"לא הבנתי את התשובה. אנא עני על השאלה עם מספר 0-3:\n{EPDS_QUESTIONS[self.state.current_question_index]}"
-                    except:
-                        response = f"אנא עני עם מספר 0-3 על השאלה:\n{EPDS_QUESTIONS[self.state.current_question_index]}"
+                            # Add the current question again for context
+                            response += f"\n\nהשאלה היא:\n{current_question}"
+                    except Exception as e:
+                        # Fallback if LLM fails
+                        if has_distress_keywords and not has_high_priority_distress:
+                            response = f"אני מבינה שאת משתפת רגשות, תודה על האמון 💙\n\n"
+                            response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
+                            response += f"תוכלי לענות במילים שלך או עם מספר (0-3)."
+                        else:
+                            response = f"אני כאן להקשיב 💙\n\n"
+                            response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
+                            response += f"תוכלי לענות במילים שלך או עם מספר (0 = בכלל לא, 1 = לא לעתים קרובות, 2 = לפעמים, 3 = לעתים קרובות מאוד)"
                 else:
-                    response = f"אנא עני עם מספר 0-3 על השאלה:\n{EPDS_QUESTIONS[self.state.current_question_index]}"
+                    # No LLM available - use rule-based response
+                    if has_distress_keywords and not has_high_priority_distress:
+                        response = f"אני מבינה שאת משתפת רגשות, תודה על האמון 💙\n\n"
+                        response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
+                        response += f"תוכלי לענות במילים שלך או עם מספר (0-3)."
+                    else:
+                        response = f"אני כאן להקשיב 💙\n\n"
+                        response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
+                        response += f"תוכלי לענות במילים שלך או עם מספר (0 = בכלל לא, 1 = לא לעתים קרובות, 2 = לפעמים, 3 = לעתים קרובות מאוד)"
         
         elif self.state.needs_free_text and not self.state.free_text_collected:
-            # Collecting free text
+            # Collecting free text - enhanced emotional sensitivity
             self.state.free_text = user_message
             self.state.free_text_collected = True
             
-            # Analyze sentiment
+            # Analyze sentiment with enhanced detection
             sentiment, keywords = self._analyze_sentiment(user_message)
+            
+            # Check for high-priority distress
+            text_lower = user_message.lower()
+            high_priority_keywords = ["לא רוצה לחיות", "רוצה למות", "לפגוע בעצמי", "להיפצע", 
+                                     "לא כדאי", "אין טעם", "אובדן תקווה", "זה הסוף"]
+            has_high_priority = any(kw in text_lower for kw in high_priority_keywords)
             
             # Save assessment
             record_id, total_score = save_epds_assessment(
@@ -469,16 +664,37 @@ class EPDSAgent:
             # Determine risk level
             risk_assessment = self._assess_risk(total_score, sentiment, keywords)
             
-            # Generate response
-            response = f"תודה רבה על השיתוף הכנה 💙\n\n"
+            # Generate sensitive, supportive response
+            response = f"תודה רבה על השיתוף הכנה והאמון 💙\n\n"
+            
+            # If high priority distress detected, add immediate support message
+            if has_high_priority:
+                response += "⚠️ אני רוצה להדגיש: אם את חווה מחשבות קשות או מחשבות על פגיעה בעצמך, "
+                response += "אני ממליצה בחום לפנות מיד לעזרה מקצועית:\n"
+                response += "• ער״ן (חירום נפשי): 1201\n"
+                response += "• נט״ל: 1-800-363-363\n"
+                response += "• או פני לחדר מיון קרוב\n\n"
+            
             response += f"📊 תוצאות ההערכה:\n"
             response += f"ציון EPDS: {total_score}/30\n"
-            response += f"רמת סיכון: {risk_assessment['risk_level']}\n"
-            response += f"{risk_assessment['recommendation']}\n\n"
+            response += f"רמת סיכון: {risk_assessment['risk_level']}\n\n"
+            response += f"💙 {risk_assessment['recommendation']}\n\n"
+            
+            # Add supportive message based on risk level
+            if total_score >= 13:
+                response += "אני רואה שאת חווה קושי משמעותי. זה לגמרי נורמלי ונפוץ, ואת לא לבד. "
+                response += "הרבה אימהות חוות תחושות דומות לאחר לידה. מומלץ מאוד לשקול פניה לייעוץ מקצועי שיכול לעזור. "
+                response += "יש תמיכה זמינה, ואת ראויה לקבל אותה. 💙\n\n"
+            elif total_score >= 10:
+                response += "אני רואה שיש תחושות של קושי. חשוב לעקוב אחרי המצב ולהיות קשובה לעצמך. "
+                response += "אם התחושות נמשכות או מתחזקות, זה בסדר לבקש עזרה. 💙\n\n"
+            else:
+                response += "תודה על השיתוף. אם תרגישי שמשהו משתנה או אם תחושי צורך, "
+                response += "תמיד אפשר לשוב ולשוחח או לפנות לעזרה. 💙\n\n"
             
             if self.ppd_agent is not None:
-                response += f"💡 רוצה שאעריך את הסיכון שלך גם עם מודל XGBoost המתקדם?\n"
-                response += f"אם כן, ספרי לי קצת על הסימפטומים שלך (שינה, תיאבון, חרדה וכו')."
+                response += f"💡 אם תרצי, אני יכולה לעזור להעריך את המצב גם עם כלי נוסף. "
+                response += f"זה אופציונלי לחלוטין - רק אם את מרגישה בנוח."
             
             response += f"\n✅ התשובות נשמרו בהצלחה (רשומה #{record_id})"
             
