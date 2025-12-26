@@ -189,6 +189,8 @@ class SentimentAnalysisTool(BaseTool):
     name: str = "analyze_sentiment"
     description: str = "Analyzes text for emotional sentiment and distress using advanced NLP. Returns sentiment score (-1 to 1), distress level, and detected emotional themes."
     
+    epds_agent: Optional[Any] = None
+    
     def __init__(self, epds_agent=None, **kwargs):
         """Initialize with reference to EPDSAgent for LLM access."""
         super().__init__(**kwargs)
