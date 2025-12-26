@@ -485,8 +485,61 @@ class EPDSAgent:
             print(f"⚠️ Could not initialize LangChain agent: {e}")
             self.langchain_agent = None
     
+    def _convert_question_to_conversational(self, epds_question: str, question_number: int = None) -> str:
+        """Convert EPDS question to natural, conversational phrasing using LLM."""
+        if self.llm is None:
+            # Fallback to simple natural phrasing
+            return epds_question.replace("בשבוע האחרון, ", "").replace("הצלחתי", "הצלחת").replace("ציפיתי", "ציפית")
+        
+        try:
+            conversion_prompt = f"""אתה מנהל שיחה טבעית ואמפתית עם אישה לאחר לידה.
+
+השאלה המקורית (EPDS): {epds_question}
+
+תפקידך: להמיר את השאלה לשפה טבעית ושיחה, כאילו אתה שואל חברה או מכרה. 
+- הסר את המילה "בשבוע האחרון" אם היא בתחילת השאלה (תוכל להזכיר אותה באופן טבעי)
+- שנה את הניסוח לניסוח טבעי ושיחה
+- שמור על המשמעות המקורית
+- השתמש בשפה חמה ואמפתית
+- אל תדבר על "שאלה מספר X" או "שאלה 1" - רק שאל את השאלה באופן טבעי
+
+דוגמה:
+מקור: "בשבוע האחרון, הצלחתי לצחוק ולראות את הצד המצחיק של דברים"
+שיחה: "אני רוצה לשאול - איך את מרגישה עם הומור וצחוק? את מצליחה לראות את הצד המצחיק של דברים?"
+
+חזור רק עם השאלה המתורגמת, ללא הסברים נוספים."""
+            
+            conversational_question = self.llm.invoke(conversion_prompt).content.strip()
+            return conversational_question
+        except Exception:
+            # Fallback if LLM fails
+            return epds_question.replace("בשבוע האחרון, ", "")
+    
+    def _get_natural_transition(self, previous_answer_emotional: bool = False) -> str:
+        """Get a natural transition phrase between questions."""
+        transitions = [
+            "בסדר, בואי נמשיך",
+            "אני מבינה",
+            "תודה ששיתפת",
+            "אני מקשיבה",
+            "כן, אני מבינה מה את אומרת"
+        ]
+        
+        if previous_answer_emotional:
+            emotional_transitions = [
+                "תודה על השיתוף הכנה 💙",
+                "אני מבינה שזה חשוב לך",
+                "תודה על האמון",
+                "אני מקשיבה ומבינה"
+            ]
+            import random
+            return random.choice(emotional_transitions)
+        else:
+            import random
+            return random.choice(transitions)
+    
     def start_conversation(self, patient_name: str = "") -> str:
-        """Start a new EPDS conversation with a sensitive, non-intrusive greeting."""
+        """Start a new EPDS conversation with a natural, human-like greeting."""
         name_part = f" {patient_name}" if patient_name else ""
         self.state = EPDSState(
             session_id=str(uuid.uuid4()),
@@ -496,20 +549,16 @@ class EPDSAgent:
             assessment_complete=False
         )
         
-        # More sensitive and non-intrusive greeting - emphasizing natural language
+        # Natural, conversational greeting - like talking to a friend
         greeting = f"שלום{name_part}! 💙\n\n"
-        greeting += f"אני כאן כדי להקשיב ולעזור לך להבין טוב יותר איך את מרגישה בתקופה הזאת.\n\n"
-        greeting += f"אני אשאל אותך כמה שאלות קצרות על השבוע האחרון. "
-        greeting += f"אין תשובות נכונות או שגויות - חשוב לי לשמוע בדיוק איך את מרגישה.\n\n"
-        greeting += f"💬 את מוזמנת לענות בדרך הטבעית שלך - במילים שלך, כאוות נפשך. "
-        greeting += f"אני מבינה עברית ואקשיב לך בקשב. אם תרצי, את יכולה גם לענות עם מספר (0-3):\n"
-        greeting += f"• 0 = בכלל לא\n"
-        greeting += f"• 1 = לא לעתים קרובות\n"
-        greeting += f"• 2 = לפעמים\n"
-        greeting += f"• 3 = לעתים קרובות מאוד\n\n"
-        greeting += f"💙 אם תרצי לשתף רגשות או מחשבות נוספות, את מוזמנת לעשות זאת בכל שלב. "
-        greeting += f"אני כאן להקשיב ולתמוך.\n\n"
-        greeting += f"בואי נתחיל:\n\nשאלה 1:\n{EPDS_QUESTIONS[0]}"
+        greeting += f"אני כאן כדי להקשיב ולשוחח איתך על איך את מרגישה בתקופה הזאת.\n\n"
+        greeting += f"אני רוצה להכיר אותך קצת יותר ולהבין איך את חווה את התקופה שלאחר הלידה. "
+        greeting += f"בואי נשוחח קצת - אין תשובות נכונות או שגויות, פשוט רציתי לשמוע בדיוק איך את מרגישה.\n\n"
+        greeting += f"את מוזמנת לענות איך שאת רוצה - במילים שלך, כאוות נפשך. אני מבינה עברית ואקשיב לך בקשב. 💙\n\n"
+        
+        # Convert first question to conversational format
+        first_question_conversational = self._convert_question_to_conversational(EPDS_QUESTIONS[0])
+        greeting += f"{first_question_conversational}"
         
         self.state.conversation_history.append({
             "role": "assistant",
@@ -552,8 +601,9 @@ class EPDSAgent:
                 response += "• נט״ל: 1-800-363-363\n"
                 response += "• או פני לחדר מיון קרוב\n\n"
                 response += "אני כאן להקשיב. רוצה לשתף עוד?\n\n"
-                response += f"בואי נמשיך עם השאלה:\n{EPDS_QUESTIONS[self.state.current_question_index]}\n"
-                response += "(תוכלי לענות 0-3 או לשתף רגשות נוספים)"
+                # Continue naturally with conversational question
+                current_q_conversational = self._convert_question_to_conversational(current_question)
+                response += f"אם תרצי, בואי נמשיך. {current_q_conversational}"
             
             # Try to extract numeric answer
             answer = extract_answer_score(user_message)
@@ -567,13 +617,18 @@ class EPDSAgent:
                 has_distress_keywords = any(kw in user_message for kw in DISTRESS_KEYWORDS)
                 
                 if self.state.current_question_index < len(EPDS_QUESTIONS):
-                    # More questions to ask
-                    next_q = EPDS_QUESTIONS[self.state.current_question_index]
+                    # More questions to ask - use natural, conversational phrasing
+                    next_epds_q = EPDS_QUESTIONS[self.state.current_question_index]
+                    next_q_conversational = self._convert_question_to_conversational(next_epds_q, self.state.current_question_index + 1)
+                    
                     if has_distress_keywords and not has_high_priority_distress:
-                        # Acknowledge the emotional sharing before continuing
-                        response = f"תודה על השיתוף הכנה 💙\n\nשאלה {self.state.current_question_index + 1}:\n{next_q}"
+                        # Acknowledge the emotional sharing before continuing naturally
+                        transition = self._get_natural_transition(previous_answer_emotional=True)
+                        response = f"{transition}. {next_q_conversational}"
                     else:
-                        response = f"תודה! שאלה {self.state.current_question_index + 1}:\n{next_q}"
+                        # Natural transition to next question
+                        transition = self._get_natural_transition(previous_answer_emotional=False)
+                        response = f"{transition}. {next_q_conversational}"
                 else:
                     # All questions answered - ask for free text in a sensitive way
                     self.state.needs_free_text = True
@@ -611,34 +666,37 @@ class EPDSAgent:
                             self.state.epds_answers.append(answer)
                             self.state.current_question_index += 1
                             if self.state.current_question_index < len(EPDS_QUESTIONS):
-                                response += f"\n\nשאלה {self.state.current_question_index + 1}:\n{EPDS_QUESTIONS[self.state.current_question_index]}"
+                                # Continue naturally to next question
+                                next_epds_q = EPDS_QUESTIONS[self.state.current_question_index]
+                                next_q_conversational = self._convert_question_to_conversational(next_epds_q, self.state.current_question_index + 1)
+                                transition = self._get_natural_transition(previous_answer_emotional=True)
+                                response += f"\n\n{transition}. {next_q_conversational}"
                             else:
                                 self.state.needs_free_text = True
                                 response += "\n\nתודה רבה על השיתוף הכנה 💙\n"
                                 response += "אם תרצי, אני כאן להקשיב - רוצה לשתף במשפט או שניים איך את מרגישה רגשית בתקופה הזאת?"
                         else:
-                            # Add the current question again for context
-                            response += f"\n\nהשאלה היא:\n{current_question}"
+                            # Add the current question again in conversational format
+                            current_q_conversational = self._convert_question_to_conversational(current_question)
+                            response += f"\n\n{current_q_conversational}"
                     except Exception as e:
-                        # Fallback if LLM fails
+                        # Fallback if LLM fails - use conversational format
+                        current_q_conversational = self._convert_question_to_conversational(current_question)
                         if has_distress_keywords and not has_high_priority_distress:
-                            response = f"אני מבינה שאת משתפת רגשות, תודה על האמון 💙\n\n"
-                            response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
-                            response += f"תוכלי לענות במילים שלך או עם מספר (0-3)."
+                            transition = self._get_natural_transition(previous_answer_emotional=True)
+                            response = f"{transition}. {current_q_conversational}"
                         else:
-                            response = f"אני כאן להקשיב 💙\n\n"
-                            response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
-                            response += f"תוכלי לענות במילים שלך או עם מספר (0 = בכלל לא, 1 = לא לעתים קרובות, 2 = לפעמים, 3 = לעתים קרובות מאוד)"
+                            transition = self._get_natural_transition(previous_answer_emotional=False)
+                            response = f"{transition}. {current_q_conversational}"
                 else:
-                    # No LLM available - use rule-based response
+                    # No LLM available - use conversational format with rule-based response
+                    current_q_conversational = self._convert_question_to_conversational(current_question)
                     if has_distress_keywords and not has_high_priority_distress:
-                        response = f"אני מבינה שאת משתפת רגשות, תודה על האמון 💙\n\n"
-                        response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
-                        response += f"תוכלי לענות במילים שלך או עם מספר (0-3)."
+                        transition = self._get_natural_transition(previous_answer_emotional=True)
+                        response = f"{transition}. {current_q_conversational}"
                     else:
-                        response = f"אני כאן להקשיב 💙\n\n"
-                        response += f"בואי נמשיך עם השאלה:\n{current_question}\n\n"
-                        response += f"תוכלי לענות במילים שלך או עם מספר (0 = בכלל לא, 1 = לא לעתים קרובות, 2 = לפעמים, 3 = לעתים קרובות מאוד)"
+                        transition = self._get_natural_transition(previous_answer_emotional=False)
+                        response = f"{transition}. {current_q_conversational}"
         
         elif self.state.needs_free_text and not self.state.free_text_collected:
             # Collecting free text - enhanced emotional sensitivity
