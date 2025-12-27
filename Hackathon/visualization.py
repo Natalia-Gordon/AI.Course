@@ -96,6 +96,12 @@ def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=Fals
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows))
     axes = axes.flatten() if n_features > 1 else [axes]
     
+    # Translate column names to English
+    try:
+        from gradio_helpers import translate_feature_name
+    except ImportError:
+        translate_feature_name = lambda x: x  # Fallback if translation not available
+    
     for idx, col in enumerate(valid_cat_cols[:n_features]):
         ax = axes[idx]
         # Double-check that Name and ID are not being plotted
@@ -103,8 +109,10 @@ def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=Fals
             continue
         crosstab = pd.crosstab(df[col], df[target])
         crosstab.plot(kind='bar', ax=ax, color=['#2ecc71', '#e74c3c'])
-        ax.set_title(f'{col}', fontweight='bold')
-        ax.set_xlabel(col)
+        # Translate column name for display
+        translated_col = translate_feature_name(col)
+        ax.set_title(f'{translated_col}', fontweight='bold')
+        ax.set_xlabel(translated_col)
         ax.set_ylabel('Count')
         ax.legend(['No', 'Yes'])
         ax.tick_params(axis='x', rotation=45)
@@ -375,18 +383,49 @@ def plot_correlation_heatmap(df, target, return_image=False, save_path=None):
                 numerical_cols.remove(col_to_remove)
         
         if len(numerical_cols) > 1:
-            plt.figure(figsize=(12, 10))
+            # Translate column names to English and truncate if too long
+            translated_cols = []
+            try:
+                from gradio_helpers import translate_feature_name
+                for col in numerical_cols:
+                    try:
+                        translated_name = translate_feature_name(col)
+                        # Truncate very long names to prevent display issues
+                        if len(translated_name) > 30:
+                            translated_name = translated_name[:27] + '...'
+                        translated_cols.append(translated_name)
+                    except Exception:
+                        # If translation fails for a specific column, use original (truncated if needed)
+                        display_name = col[:30] + '...' if len(col) > 30 else col
+                        translated_cols.append(display_name)
+            except ImportError:
+                # Fallback if translation not available
+                translated_cols = [col[:30] + '...' if len(col) > 30 else col for col in numerical_cols]
+            
+            # Calculate dynamic figure size based on number of features
+            n_features = len(numerical_cols)
+            fig_size = max(14, min(24, n_features * 0.9)), max(12, min(24, n_features * 0.9))
+            
+            fig, ax = plt.subplots(figsize=fig_size)
             corr_matrix = df_encoded[numerical_cols].corr()
             
-            # Create heatmap
+            # Create heatmap with translated column names
             sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
-                       center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8},
-                       xticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols],
-                       yticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols])
-            plt.title('Correlation Heatmap (Categorical Features Encoded)', fontsize=14, fontweight='bold')
-            plt.xticks(rotation=45, ha='right')
-            plt.yticks(rotation=0)
-            plt.tight_layout()
+                       center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.8},
+                       xticklabels=translated_cols,
+                       yticklabels=translated_cols,
+                       ax=ax,
+                       annot_kws={'size': 8})  # Smaller annotation font for readability
+            
+            # Set title
+            ax.set_title('Correlation Heatmap (Categorical Features Encoded)', fontsize=14, fontweight='bold', pad=20)
+            
+            # Rotate and align labels properly to prevent overlap
+            plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor', fontsize=9)
+            plt.setp(ax.get_yticklabels(), rotation=0, ha='right', fontsize=9)
+            
+            # Adjust layout to ensure labels are fully visible
+            plt.tight_layout(pad=3.0)
             
             if return_image:
                 result = _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")

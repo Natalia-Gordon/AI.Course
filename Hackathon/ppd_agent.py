@@ -48,8 +48,8 @@ class PPDAgent:
         
         self.feature_columns = feature_columns if feature_columns is not None else list(X_train.columns)
         
-        # Filter out target column if present
-        self.feature_columns = [col for col in self.feature_columns if col != "PPD_Composite"]
+        # Filter out target column if present (support both PPD and PPD_Composite)
+        self.feature_columns = [col for col in self.feature_columns if col not in ["PPD", "PPD_Composite"]]
         
         # Ensure ID and Name are never in feature columns (ID is for merging, Name is for display only)
         if 'ID' in self.feature_columns:
@@ -129,8 +129,59 @@ class PPDAgent:
         
         if feature_importance:
             top_features = feature_importance[:3]
-            feature_names = [f["feature"].split("_")[-1] if "_" in f["feature"] else f["feature"] 
-                           for f in top_features]
+            # Clean feature names properly from one-hot encoded format
+            feature_names = []
+            try:
+                from gradio_helpers import clean_feature_name, translate_feature_name
+                
+                # Get original feature columns for matching
+                original_features = getattr(self, 'feature_columns', [])
+                
+                for f in top_features:
+                    feat_name = f["feature"]
+                    # Use clean_feature_name to remove preprocessing prefixes
+                    clean_name = clean_feature_name(feat_name)
+                    
+                    # Extract base feature name from one-hot encoded format
+                    # One-hot encoded features have format: "FeatureName_CategoryValue"
+                    # We want to extract "FeatureName" (everything before the last underscore)
+                    base_feature = clean_name
+                    if '_' in clean_name:
+                        # Try to match against original feature columns
+                        parts = clean_name.rsplit('_', 1)  # Split from right, only once
+                        if len(parts) == 2:
+                            potential_base = parts[0]
+                            # Check if this matches an original feature column
+                            # Match case-insensitively and handle spaces
+                            potential_base_normalized = potential_base.replace('_', ' ').strip()
+                            found_match = False
+                            for orig_feat in original_features:
+                                if (potential_base_normalized.lower() == orig_feat.lower() or 
+                                    potential_base.lower() == orig_feat.lower().replace(' ', '_')):
+                                    base_feature = orig_feat
+                                    found_match = True
+                                    break
+                            
+                            # If no match found, use the part before last underscore
+                            if not found_match:
+                                base_feature = potential_base
+                    
+                    feature_names.append(base_feature)
+                
+                # Translate to English
+                feature_names = [translate_feature_name(name) for name in feature_names]
+            except (ImportError, AttributeError):
+                # Fallback: simple cleaning
+                for f in top_features:
+                    feat_name = f["feature"]
+                    # Remove preprocessing prefixes
+                    if '__' in feat_name:
+                        feat_name = feat_name.split('__')[-1]
+                    # Extract base feature (everything before last underscore)
+                    if '_' in feat_name:
+                        feat_name = feat_name.rsplit('_', 1)[0]
+                    feature_names.append(feat_name)
+            
             impacts = [f["impact"] for f in top_features]
             
             if len(top_features) > 0:
@@ -852,7 +903,7 @@ class PPDAgent:
             
             # Update feature columns and dtypes based on new training data
             self.feature_columns = list(X_train_split.columns)
-            self.feature_columns = [col for col in self.feature_columns if col != "PPD_Composite"]
+            self.feature_columns = [col for col in self.feature_columns if col not in ["PPD", "PPD_Composite"]]
             self.feature_dtypes = {col: str(X_train_split[col].dtype) for col in self.feature_columns}
             
             # Update cat_cols to match actual dtypes in X_train_split (already validated above)
@@ -997,7 +1048,7 @@ class PPDAgent:
             
             # Update feature columns and dtypes based on new training data
             self.feature_columns = list(X_train_split.columns)
-            self.feature_columns = [col for col in self.feature_columns if col != "PPD_Composite"]
+            self.feature_columns = [col for col in self.feature_columns if col not in ["PPD", "PPD_Composite"]]
             self.feature_dtypes = {col: str(X_train_split[col].dtype) for col in self.feature_columns}
             
             # Update cat_cols to match actual dtypes in X_train_split (already validated above)

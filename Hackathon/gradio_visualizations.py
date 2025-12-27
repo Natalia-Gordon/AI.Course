@@ -15,6 +15,7 @@ import shap
 from sklearn.pipeline import Pipeline
 
 from exceptions import VisualizationError, SHAPExplanationError, PipelineError
+from gradio_helpers import translate_feature_name
 
 
 def create_shap_summary_plot(
@@ -41,6 +42,8 @@ def create_shap_summary_plot(
     try:
         # Extract feature names and values
         feat_names = [feat.split('__')[-1] if '__' in feat else feat for feat, _ in top_features]
+        # Translate Hebrew feature names to English
+        feat_names = [translate_feature_name(name) for name in feat_names]
         shap_vals = [val for _, val in top_features]
         
         # Create horizontal bar plot - use consistent, moderate size
@@ -117,6 +120,8 @@ def create_enhanced_shap_plot(
     try:
         # Extract feature names and values
         feat_names = [feat.split('__')[-1] if '__' in feat else feat for feat, _ in top_features]
+        # Translate Hebrew feature names to English
+        feat_names = [translate_feature_name(name) for name in feat_names]
         shap_vals = [val for _, val in top_features]
         
         # Sort by absolute value for better visualization
@@ -340,6 +345,8 @@ def create_shap_summary_plot_class1(
         feature_names_to_use = [
             name.split('__')[-1] if '__' in name else name for name in feature_names_to_use
         ]
+        # Translate Hebrew feature names to English
+        feature_names_to_use = [translate_feature_name(name) for name in feature_names_to_use]
         
         # Ensure X_test_processed has matching features
         if X_test_processed.shape[1] != n_features:
@@ -436,6 +443,8 @@ def generate_detailed_shap_explanation(
         
         for i, feature in enumerate(feature_importance[:5], 1):
             feat_name = feature.get('feature', 'Unknown').split('__')[-1]
+            # Translate Hebrew feature names to English
+            feat_name = translate_feature_name(feat_name)
             shap_val = feature.get('shap_value', 0.0)
             abs_val = abs(shap_val)
             impact = "high" if abs_val > 0.1 else "moderate" if abs_val > 0.05 else "low"

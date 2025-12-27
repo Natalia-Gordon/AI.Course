@@ -23,19 +23,53 @@ def get_algorithm_name(pipeline: Pipeline) -> str:
         return "Unknown"
 
 
+# Translation dictionary for Hebrew feature names to English
+FEATURE_NAME_TRANSLATIONS = {
+    "מחשבות פגיעה עצמית": "Self-harm thoughts",
+    # Add more translations as needed
+}
+
+
+def translate_feature_name(feature_name: str) -> str:
+    """
+    Translate Hebrew feature names to English for visualization.
+    
+    Args:
+        feature_name: Feature name (may be Hebrew)
+        
+    Returns:
+        Translated feature name in English, or original if no translation exists
+    """
+    # Check for exact match
+    if feature_name in FEATURE_NAME_TRANSLATIONS:
+        return FEATURE_NAME_TRANSLATIONS[feature_name]
+    
+    # Check if the Hebrew text appears in the feature name (may have prefixes/suffixes)
+    for hebrew, english in FEATURE_NAME_TRANSLATIONS.items():
+        if hebrew in feature_name:
+            return feature_name.replace(hebrew, english)
+    
+    return feature_name
+
+
 def clean_feature_name(feature_name: str) -> str:
     """
-    Clean feature name by removing preprocessing prefixes.
+    Clean feature name by removing preprocessing prefixes and translate Hebrew to English.
     
     Args:
         feature_name: Raw feature name (may contain prefixes like 'cat__', 'num__', etc.)
     
     Returns:
-        Cleaned feature name
+        Cleaned and translated feature name
     """
+    # First clean the preprocessing prefixes
     if '__' in feature_name:
-        return feature_name.split('__')[-1]
-    return feature_name
+        cleaned = feature_name.split('__')[-1]
+    else:
+        cleaned = feature_name
+    
+    # Then translate Hebrew to English
+    return translate_feature_name(cleaned)
 
 
 def calculate_impact_level(shap_value: float) -> str:

@@ -95,23 +95,18 @@ initial_shape = df.shape
 df.dropna(axis=0, inplace=True)
 print(f"Dropped {initial_shape[0] - df.shape[0]} rows with missing values")
 
-# 🧩 Create composite target based on EPDS Total Scores and self-harm thoughts
-# EPDS scoring: >= 13 indicates Likely PPD, 11-12 indicates Mild depression or dejection, <= 10 indicates Low PPD risk
-# מחשבות פגיעה עצמית (self-harm thoughts) > 0 is a high risk indicator
-target = "PPD_Composite"
+# 🧩 Use PPD field from Psychiatric_data.csv as binary target value
+target = "PPD"
 
-# Convert Total Scores to numeric if it's not already
-df['Total Scores'] = pd.to_numeric(df['Total Scores'], errors='coerce')
-df['מחשבות פגיעה עצמית'] = pd.to_numeric(df['מחשבות פגיעה עצמית'], errors='coerce')
+# Convert PPD column from "Yes"/"No" to binary (1/0)
+if target not in df.columns:
+    raise ValueError(f"PPD column not found in merged dataframe. Available columns: {list(df.columns)}")
 
-# Create composite target: PPD = 1 if:
-# - Total Scores >= 11 (EPDS threshold for Likely PPD), OR
-# - מחשבות פגיעה עצמית > 0 (self-harm thoughts present - very high risk indicator)
-epds_threshold = 11
-df[target] = ((df['Total Scores'] >= epds_threshold) | 
-              (df['מחשבות פגיעה עצמית'] > 0)).astype(int)
+# Map "Yes" -> 1, "No" -> 0, handling case-insensitive values and any whitespace
+df[target] = df[target].astype(str).str.strip().str.lower()
+df[target] = df[target].map({'yes': 1, 'no': 0}).astype(int)
 
-print(f"\n📊 Composite Target Distribution (PPD = 1 if Total Scores >= {epds_threshold} (Likely PPD) OR מחשבות פגיעה עצמית > 0):")
+print(f"\n📊 PPD Target Distribution (from Psychiatric_data.csv):")
 print(df[target].value_counts())
 print(f"Proportions: {df[target].value_counts(normalize=True).to_dict()}")
 
@@ -125,8 +120,8 @@ if 'Age' in df.columns:
 
 # Drop ID and Name from features (they are identifiers, not features)
 # ID is used for data merging only, Name is only for display purposes
-# Also drop Total Scores and מחשבות פגיעה עצמית as they are used for target creation, not as features
-X = df.drop(columns=[target, 'ID', 'Name', 'Total Scores' , 'מחשבות פגיעה עצמית'], errors='ignore')
+# Drop PPD as it is the target variable
+X = df.drop(columns=[target, 'ID', 'Name'], errors='ignore')
 y = df[target]
 
 # Validate that ID and Name are not in features

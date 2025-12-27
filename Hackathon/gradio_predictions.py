@@ -224,6 +224,9 @@ def predict_depression(
                         continue  # Skip if not numeric
                     
                     clean_feat = feat.split('__')[-1] if '__' in feat else feat
+                    # Translate Hebrew feature names to English
+                    from gradio_helpers import translate_feature_name
+                    clean_feat = translate_feature_name(clean_feat)
                     # SHAP value interpretation:
                     # Positive SHAP = increases risk (pushes prediction toward class 1)
                     # Negative SHAP = decreases risk (pushes prediction toward class 0)
@@ -347,7 +350,24 @@ def generate_personalized_explanation(
 """
     
     for feat, val in top_features[:3]:  # Top 3 features
-        clean_feat = feat.split('__')[-1] if '__' in feat else feat
+        # Clean feature name properly from one-hot encoded format
+        try:
+            from gradio_helpers import clean_feature_name, translate_feature_name
+            clean_feat = clean_feature_name(feat)
+            # Extract base feature name from one-hot encoded format
+            # One-hot encoded features have format: "FeatureName_CategoryValue"
+            if '_' in clean_feat:
+                # Extract base feature (everything before last underscore)
+                base_feat = clean_feat.rsplit('_', 1)[0]
+                clean_feat = base_feat
+            # Translate to English
+            clean_feat = translate_feature_name(clean_feat)
+        except ImportError:
+            # Fallback: simple cleaning
+            clean_feat = feat.split('__')[-1] if '__' in feat else feat
+            if '_' in clean_feat:
+                clean_feat = clean_feat.rsplit('_', 1)[0]
+        
         direction = "increases" if val > 0 else "decreases"
         explanation += f"\n- **{clean_feat}**: {direction.capitalize()} risk (SHAP: {val:+.3f})"
     

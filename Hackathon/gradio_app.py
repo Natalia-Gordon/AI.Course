@@ -562,6 +562,7 @@ Thought:{agent_scratchpad}""")
             roc_html = ""
             prediction_html = ""
             shap_html = ""
+            correlation_html = ""
             
             # Update visualizations using the test data and new predictions
             # Always use y_test_split and y_pred_new to ensure we're showing the current model's performance
@@ -615,6 +616,12 @@ Thought:{agent_scratchpad}""")
                         title=f"SHAP Summary Plot - Class 1 (Yes Depression) - {algorithm_name}",
                         save_path=save_path
                     )
+                    # Generate correlation heatmap
+                    if df is not None and target is not None:
+                        from visualization import plot_correlation_heatmap
+                        correlation_html = plot_correlation_heatmap(
+                            df, target, return_image=True, save_path=save_path
+                        )
                 except Exception as e:
                     import traceback
                     print(f"Warning: Could not update visualizations: {e}")
@@ -623,6 +630,7 @@ Thought:{agent_scratchpad}""")
                     roc_html = f"<p>Error updating ROC curve: {str(e)}</p>"
                     prediction_html = f"<p>Error updating prediction distribution: {str(e)}</p>"
                     shap_html = f"<p>Error updating SHAP summary plot: {str(e)}</p>"
+                    correlation_html = f"<p>Error updating correlation heatmap: {str(e)}</p>"
             
             status_message = f"""✅ {algorithm_name} model trained successfully!
 
@@ -638,14 +646,14 @@ The model is now ready for predictions!"""
             # Return based on whether test data is available for visualizations
             # Also enable the "Assess Risk" button, hide "Start Train Model" button, and show "Retrain Model" button after successful training
             if df is not None and X_test is not None and y_test is not None:
-                return (status_message, confusion_html, roc_html, prediction_html, shap_html, gr.update(interactive=True), gr.update(visible=False), gr.update(visible=True))
+                return (status_message, confusion_html, roc_html, prediction_html, shap_html, correlation_html, gr.update(interactive=True), gr.update(visible=False), gr.update(visible=True))
             else:
                 return (status_message, gr.update(interactive=True), gr.update(visible=False), gr.update(visible=True))
             
         except Exception as e:
             error_msg = f"❌ Training failed: {str(e)}"
             if df is not None and X_test is not None and y_test is not None:
-                return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
+                return (error_msg, "", "", "", "", "", gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
             else:
                 return (error_msg, gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
 
@@ -1136,11 +1144,6 @@ The model is now ready for predictions!"""
         gr.Markdown(
             "**Enter the following information to assess the risk of postpartum depression.**"
         )
-        gr.Markdown(
-            "⚠️ **Important:** You must train the model first by clicking 'Start Train Model' above before you can make predictions. "
-            "The 'Assess Risk' button will be enabled automatically after successful training.",
-            elem_classes=["warning-message"]
-        )
 
         gr.Markdown("### Patient Information")
         with gr.Row():
@@ -1287,26 +1290,40 @@ The model is now ready for predictions!"""
 
         gr.Examples(
             examples=[
-                # High risk case
+                # High risk case - Direct criteria met (EPDS > 12, Total Scores = 14)
                 [
-                    "יעל חמו", 14, 30, "Married", "High", "Secular", "Self-Employed",
+                    "יעל חמו", 7, 35, "Married", "High", "Secular", "Self-Employed",
                     "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "Yes", "No",
-                    "Insomnia", "Yes", "Interrupted", "Moderate", "No"
+                    "Normal", "Yes", "Interrupted", "Moderate", "No"
                 ],
-                # Low risk case
+                # Low risk case - Very low EPDS score (Total Scores = 2)
                 [
-                    "ענת גרוס", 2, 35, "Married", "High", "Secular", "Employed (Full-Time)",
+                    "ענת גרוס", 9, 27, "Married", "Low", "Peripheral Jewish towns", "Employed (Full-Time)",
+                    "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
+                    "Not documented", "Not documented", "Yes", "No",
+                    "RLS", "No", "High", "High", "Physical"
+                ],
+                # Very high risk case - Direct criteria met (EPDS = 27 > 12, self-harm thoughts = 2)
+                [
+                    "חנה ברק", 5, 27, "Married", "Low", "Peripheral Jewish towns", "Employed (Full-Time)",
                     "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "No", "No",
-                    "Normal", "No", "High", "High", "No"
+                    "Insomnia", "No", "High", "High", "Economic"
                 ],
-                # Moderate risk case
+                # Moderate risk case - Risk factors present (Very Low SES, Haredi, Verbal DV, Anxiety History)
                 [
-                    "יעלה שביט", 1, 27, "Married", "Low", "Peripheral Jewish towns", "Employed (Full-Time)",
+                    "ענת דדון", 14, 24, "Married", "Very Low", "Haredi", "Employed (Full-Time)",
                     "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
+                    "Not documented", "Documented", "Yes", "No",
+                    "RLS", "Yes", "High", "High", "Verbal"
+                ],
+                # Risk-based case - Single, Unemployed, Interrupted support, Low family support
+                [
+                    "עדן אבוטבול", 4, 39, "Never-Married (Single)", "High", "Secular", "Unemployed",
+                    "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "No", "No",
-                    "RLS", "Yes", "High", "High", "No"
+                    "Normal", "No", "Interrupted", "Low", "No"
                 ],
             ],
             inputs=[
@@ -1378,13 +1395,13 @@ The model is now ready for predictions!"""
             train_btn.click(
                 fn=train_model_wrapper,
                 inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, predict_btn, train_btn, retrain_btn],
+                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, correlation_heatmap_plot, predict_btn, train_btn, retrain_btn],
             )
             # Retrain button uses the same function
             retrain_btn.click(
                 fn=train_model_wrapper,
                 inputs=[model_algorithm, use_optimization],
-                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, predict_btn, train_btn, retrain_btn],
+                outputs=[training_status, confusion_matrix_plot, roc_curve_plot, prediction_dist_plot, shap_summary_class1_plot, correlation_heatmap_plot, predict_btn, train_btn, retrain_btn],
             )
         else:
             # If no test data, only update training status
