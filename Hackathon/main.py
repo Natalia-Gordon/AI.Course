@@ -9,78 +9,144 @@ from ppd_agent import create_agent_from_training
 
 print("Welcome to the Postpartum Depression Prediction Agent Tool")
 
-# 🗂 Load the PostPartum Depression dataset CSV (download from Kaggle)
+# 🗂 Load the PostPartum Depression dataset from multiple CSV files
 # Get the script directory and construct path relative to it
 script_dir = Path(__file__).parent
-data_path = script_dir / "data" / "postpartum-depression.csv"
-df = pd.read_csv(data_path)
+data_dir = script_dir / "data"
+
+print("Loading data from multiple CSV files...")
+
+# Load Demographics.csv (full)
+demographics = pd.read_csv(data_dir / "Demographics.csv")
+print(f"Demographics shape: {demographics.shape}")
+
+# Load EPDS_answers.csv (only Name, Total Scores, מחשבות פגיעה עצמית columns)
+epds_columns = ["ID", "Name", "Total Scores", "מחשבות פגיעה עצמית"]
+epds = pd.read_csv(data_dir / "EPDS_answers.csv", usecols=epds_columns)
+print(f"EPDS_answers shape: {epds.shape}")
+
+# Load Clinical_data.csv (full)
+clinical = pd.read_csv(data_dir / "Clinical_data.csv")
+print(f"Clinical_data shape: {clinical.shape}")
+
+# Load Psychiatric_data.csv (full)
+psychiatric = pd.read_csv(data_dir / "Psychiatric_data.csv")
+print(f"Psychiatric_data shape: {psychiatric.shape}")
+
+# Load Functional_Psychosocial_data.csv (full)
+functional = pd.read_csv(data_dir / "Functional_Psychosocial_data.csv")
+print(f"Functional_Psychosocial_data shape: {functional.shape}")
+
+# Merge all dataframes on ID (foreign key)
+print("\nMerging dataframes on ID (foreign key)...")
+
+# Validate ID integrity before merging
+print("Validating ID integrity...")
+demographics_ids = set(demographics['ID'].unique())
+epds_ids = set(epds['ID'].unique())
+clinical_ids = set(clinical['ID'].unique())
+psychiatric_ids = set(psychiatric['ID'].unique())
+functional_ids = set(functional['ID'].unique())
+
+print(f"  Demographics: {len(demographics_ids)} unique IDs")
+print(f"  EPDS_answers: {len(epds_ids)} unique IDs")
+print(f"  Clinical_data: {len(clinical_ids)} unique IDs")
+print(f"  Psychiatric_data: {len(psychiatric_ids)} unique IDs")
+print(f"  Functional_Psychosocial_data: {len(functional_ids)} unique IDs")
+
+# Check for duplicate IDs within each table
+for name, df_check in [("Demographics", demographics), ("EPDS_answers", epds), 
+                        ("Clinical_data", clinical), ("Psychiatric_data", psychiatric),
+                        ("Functional_Psychosocial_data", functional)]:
+    duplicates = df_check['ID'].duplicated().sum()
+    if duplicates > 0:
+        print(f"  ⚠️  Warning: {duplicates} duplicate IDs found in {name}")
+
+# Perform inner joins on ID (foreign key) - keeps only records with matching IDs across all tables
+df = demographics.copy()
+df = df.merge(epds, on="ID", how="inner", suffixes=("", "_epds"), validate="one_to_one")
+df = df.merge(clinical, on="ID", how="inner", validate="one_to_one")
+df = df.merge(psychiatric, on="ID", how="inner", validate="one_to_one")
+df = df.merge(functional, on="ID", how="inner", validate="one_to_one")
+
+# Handle duplicate Name column (keep the one from Demographics, drop _epds suffix if exists)
+# Note: Name is kept in df for display purposes only, but will be excluded from model training
+if "Name_epds" in df.columns:
+    df.drop(columns=["Name_epds"], inplace=True)
+
+print(f"\nMerged dataframe shape: {df.shape}")
+print(f"Final unique IDs: {df['ID'].nunique()}")
+print("Note: ID is used for data merging only, Name is for display only - both will be excluded from model training")
 
 # 📊 Show basic info
-print(df.shape)
+print("\nDataframe info:")
 print(df.head())
 print(df.info())
 
-# Drop the Timestamp column
-df.drop(columns=['Timestamp'], axis=1, inplace=True)
-
 # Check the unique values in each column of data
-for column in df.columns:
-    print(f"{column}: {df[column].unique()}")
+print("\nChecking unique values in key columns:")
+for column in df.columns[:10]:  # Show first 10 columns
+    unique_vals = df[column].unique()[:10]  # Show first 10 unique values
+    print(f"{column}: {unique_vals}")
 
 # Drop the rows with missing values
+print("\nDropping rows with missing values...")
+initial_shape = df.shape
 df.dropna(axis=0, inplace=True)
+print(f"Dropped {initial_shape[0] - df.shape[0]} rows with missing values")
 
-# 🧩 Create composite target based on multiple symptoms (better for PPD diagnosis)
-# Define all symptom columns
-symptom_cols = [
-    "Feeling sad or Tearful",
-    "Irritable towards baby & partner",
-    "Trouble sleeping at night",
-    "Problems concentrating or making decision",
-    "Overeating or loss of appetite",
-    "Feeling anxious",
-    "Feeling of guilt",
-    "Problems of bonding with baby",
-    "Suicide attempt"
-]
+# 🧩 Create composite target based on EPDS Total Scores and self-harm thoughts
+# EPDS scoring: >= 13 indicates Likely PPD, 11-12 indicates Mild depression or dejection, <= 10 indicates Low PPD risk
+# מחשבות פגיעה עצמית (self-harm thoughts) > 0 is a high risk indicator
+target = "PPD_Composite"
 
-# Calculate symptom count (how many symptoms answered "Yes")
-df['symptom_count'] = df[symptom_cols].apply(
-    lambda x: (x == "Yes").sum(), axis=1
-)
-
-# Calculate "No" answer count (how many symptoms answered "No")
-df['no_count'] = df[symptom_cols].apply(
-    lambda x: (x == "No").sum(), axis=1
-)
+# Convert Total Scores to numeric if it's not already
+df['Total Scores'] = pd.to_numeric(df['Total Scores'], errors='coerce')
+df['מחשבות פגיעה עצמית'] = pd.to_numeric(df['מחשבות פגיעה עצמית'], errors='coerce')
 
 # Create composite target: PPD = 1 if:
-# - 4+ symptoms present, OR
-# - less than 4 "No" answers, OR
-# - "Suicide attempt" is not "No" (very high risk indicator)
-# If someone has very few "No" answers, they're experiencing many symptoms, indicating higher risk
-threshold = 4
-no_threshold = 4
-target = "PPD_Composite"
-df[target] = ((df['symptom_count'] >= threshold) | 
-              (df['no_count'] < no_threshold) | 
-              (df['Suicide attempt'] != "No")).astype(int)
+# - Total Scores >= 11 (EPDS threshold for Likely PPD), OR
+# - מחשבות פגיעה עצמית > 0 (self-harm thoughts present - very high risk indicator)
+epds_threshold = 11
+df[target] = ((df['Total Scores'] >= epds_threshold) | 
+              (df['מחשבות פגיעה עצמית'] > 0)).astype(int)
 
-print(f"\n📊 Composite Target Distribution (PPD = 1 if {threshold}+ 'Yes' symptoms OR <{no_threshold} 'No' answers OR Suicide attempt != 'No'):")
+print(f"\n📊 Composite Target Distribution (PPD = 1 if Total Scores >= {epds_threshold} (Likely PPD) OR מחשבות פגיעה עצמית > 0):")
 print(df[target].value_counts())
 print(f"Proportions: {df[target].value_counts(normalize=True).to_dict()}")
 
-# 🧩 Identify categorical features (all symptom columns + Age, excluding target columns)
-cat_cols = [c for c in df.columns if df[c].dtype == "object" and c not in [target, 'symptom_count', 'no_count']]
-
-# 🧪 Handle missing values (drop symptom_count and no_count columns as they're just for target creation)
-df.drop(columns=['symptom_count', 'no_count'], axis=1, inplace=True, errors='ignore')
+# 🧪 Handle missing values (final check)
 df = df.dropna()
 
-X = df.drop(columns=[target])
+# Ensure Age is numeric (convert if needed)
+if 'Age' in df.columns:
+    df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
+    print(f"  Age column converted to numeric: {df['Age'].dtype}")
+
+# Drop ID and Name from features (they are identifiers, not features)
+# ID is used for data merging only, Name is only for display purposes
+# Also drop Total Scores and מחשבות פגיעה עצמית as they are used for target creation, not as features
+X = df.drop(columns=[target, 'ID', 'Name', 'Total Scores' , 'מחשבות פגיעה עצמית'], errors='ignore')
 y = df[target]
 
-print("Final feature shape:", X.shape)
+# Validate that ID and Name are not in features
+if 'ID' in X.columns or 'Name' in X.columns:
+    raise ValueError("ERROR: ID or Name columns found in features! They should not be used for model training.")
+
+# 🧩 Identify categorical and numeric features AFTER creating X (to ensure we only use features in X)
+cat_cols = [c for c in X.columns if X[c].dtype == "object"]
+numeric_cols = [c for c in X.columns if X[c].dtype in ['int64', 'float64']]
+
+print(f"\n📊 Feature Analysis:")
+print(f"  Total features: {X.shape[1]}")
+print(f"  Categorical features ({len(cat_cols)}): {cat_cols}")
+print(f"  Numeric features ({len(numeric_cols)}): {numeric_cols}")
+print(f"  Feature columns: {list(X.columns)}")
+print(f"  Feature dtypes:\n{X.dtypes}")
+
+print(f"\n✅ Final feature set:")
+print(f"  Target distribution: {y.value_counts().to_dict()}")
+print(f"  Target proportions: {y.value_counts(normalize=True).to_dict()}")
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y,
@@ -97,7 +163,58 @@ print("="*50)
 print("💡 Model will be trained when you click 'Start Train Model' in the Gradio interface.")
 
 # Create untrained pipeline (just for initialization - will be trained via Gradio)
+print(f"\n🔧 Initializing model pipeline...")
+print(f"  Categorical columns for OneHotEncoder: {cat_cols}")
+print(f"  Numeric columns (will pass through): {numeric_cols}")
+print(f"  Total feature columns: {len(X.columns)}")
+
+# Validate that all categorical columns are in X
+missing_cat_cols = [col for col in cat_cols if col not in X.columns]
+if missing_cat_cols:
+    print(f"  ⚠️  Warning: Some categorical columns not found in X: {missing_cat_cols}")
+    cat_cols = [col for col in cat_cols if col in X.columns]
+
+# Validate that all columns are accounted for
+all_feature_cols = set(cat_cols + numeric_cols)
+X_cols = set(X.columns)
+if all_feature_cols != X_cols:
+    missing = X_cols - all_feature_cols
+    extra = all_feature_cols - X_cols
+    if missing:
+        print(f"  ⚠️  Warning: Some X columns not categorized: {missing}")
+    if extra:
+        print(f"  ⚠️  Warning: Some categorized columns not in X: {extra}")
+
 pipeline = create_XGBoost_pipeline(cat_cols)
+print(f"  ✅ Pipeline initialized successfully!")
+
+# Test pipeline with a sample row to ensure it works correctly
+try:
+    print(f"\n🧪 Testing pipeline with sample data...")
+    sample_row = X_train.iloc[[0]]  # Get first row
+    print(f"  Sample row shape: {sample_row.shape}")
+    print(f"  Sample row columns: {list(sample_row.columns)}")
+    
+    # Try to transform the sample (this will fail if pipeline is misconfigured)
+    # Note: We can't call transform on untrained pipeline, but we can check the structure
+    preprocessor = pipeline.named_steps.get("preprocess")
+    if preprocessor is not None:
+        print(f"  ✅ Preprocessor found: {type(preprocessor).__name__}")
+        print(f"  Preprocessor transformers: {[t[0] for t in preprocessor.transformers]}")
+        if hasattr(preprocessor, 'remainder'):
+            print(f"  Remainder handling: {preprocessor.remainder}")
+    else:
+        print(f"  ⚠️  Warning: No preprocessor found in pipeline")
+    
+    model = pipeline.named_steps.get("model")
+    if model is not None:
+        print(f"  ✅ Model found: {type(model).__name__}")
+    else:
+        print(f"  ⚠️  Warning: No model found in pipeline")
+        
+    print(f"  ✅ Pipeline structure validated!")
+except Exception as e:
+    print(f"  ⚠️  Warning during pipeline validation: {e}")
 
 # Initialize variables as None (will be set after training)
 y_proba = None

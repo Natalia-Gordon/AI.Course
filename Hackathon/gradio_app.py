@@ -206,11 +206,12 @@ def create_gradio_interface(
             if not DOTENV_AVAILABLE or load_dotenv is None:
                 return  # Skip silently if dotenv not available
             
-            # Load environment variables from parent directory (.env file)
-            env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-            load_dotenv(env_path)
+            # Load environment variables from current directory (.env file)
+            load_dotenv()
             
             openai_api_key = os.getenv("OPENAI_API_KEY")
+            if openai_api_key:
+                openai_api_key = openai_api_key.strip()  # Remove any whitespace/newlines
             if not openai_api_key:
                 return  # Skip silently if API key not found
             
@@ -457,7 +458,7 @@ Thought:{agent_scratchpad}""")
                     error_msg = f"❌ Agent training failed: {training_result.get('message', 'Unknown error')}"
                     if df is not None and X_test is not None and y_test is not None:
                         return (error_msg, "", "", "", "", gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
-                else:
+                    else:
                         return (error_msg, gr.update(interactive=False), gr.update(visible=not agent_loaded), gr.update(visible=agent_loaded))
                 
                 # Extract results from agent training (all returned by agent)
@@ -508,17 +509,11 @@ Thought:{agent_scratchpad}""")
                 current_explainer[0] = None
                 explainer_status = f"⚠️ SHAP explainer failed: {str(e)}"
             
-            # Update agent with new pipeline if agent exists
+            # Save the agent (already updated by training methods train_xgboost/train_random_forest)
             if current_agent[0] is not None:
                 try:
-                    from ppd_agent import create_agent_from_training
-                    updated_agent = create_agent_from_training(
-                        new_pipeline, X_train_split, cat_cols, list(X_train_split.columns)
-                    )
-                    current_agent[0] = updated_agent
-                    explainer_status += "\n✅ PPD Agent updated with new model"
-                    
-                    # Save the updated agent with algorithm-specific filename
+                    # Agent's pipeline and explainer are already updated by train_xgboost/train_random_forest
+                    # Just save the existing agent
                     import os
                     os.makedirs("output/agents", exist_ok=True)
                     # Determine algorithm type from pipeline
@@ -531,10 +526,11 @@ Thought:{agent_scratchpad}""")
                         algo_suffix = "unknown"
                     
                     agent_path = f"output/agents/ppd_agent_{algo_suffix}.pkl"
-                    updated_agent.save(agent_path)
+                    current_agent[0].save(agent_path)
                     print(f"✅ Agent saved to {agent_path} (Algorithm: {algorithm_name})")
+                    explainer_status += "\n✅ PPD Agent saved with new model"
                 except Exception as e:
-                    print(f"Warning: Could not update/save agent: {e}")
+                    print(f"Warning: Could not save agent: {e}")
             
             # Update visualizations if test data is available
             confusion_html = ""
@@ -635,16 +631,28 @@ The model is now ready for predictions!"""
 
     # Create a wrapper function that includes pipeline and explainer
     def predict_wrapper(
+        patient_name,
+        epds_total_score,
         age,
-        feeling_sad,
-        irritable,
-        trouble_sleeping,
-        concentration,
-        appetite,
-        feeling_anxious,
-        guilt,
-        bonding,
-        suicide_attempt,
+        marital_status,
+        ses,
+        population,
+        employment_category,
+        first_birth,
+        gdm,
+        tsh,
+        nvp,
+        gh,
+        mode_of_birth,
+        depression_history,
+        anxiety_history,
+        depression_or_anxiety_during_pregnancy,
+        use_of_psychiatric_medications,
+        sleep_quality,
+        fatigue,
+        partner_support,
+        family_or_social_support,
+        domestic_violence,
     ):
         # Check if model has been trained
         if current_agent[0] is None and (current_pipeline[0] is None or 
@@ -661,21 +669,45 @@ The model is now ready for predictions!"""
         if current_agent[0] is not None:
             try:
                 # Use agent's predict method (Standalone Python usage pattern)
-                result = current_agent[0].predict(
-                    age=age,
-                    feeling_sad=feeling_sad,
-                    irritable=irritable,
-                    trouble_sleeping=trouble_sleeping,
-                    concentration=concentration,
-                    appetite=appetite,
-                    feeling_anxious=feeling_anxious,
-                    guilt=guilt,
-                    bonding=bonding,
-                    suicide_attempt=suicide_attempt
-                )
+                # Use predict_from_dict with the new feature structure
+                agent_input_dict = {
+                    "Age": str(int(age)) if age is not None and str(age).strip() != "" else "",
+                    "Marital status": marital_status,
+                    "SES": ses,
+                    "Population": population,
+                    "Employment Category": employment_category,
+                    "First birth": first_birth,
+                    "GDM": gdm,
+                    "TSH": tsh,
+                    "NVP": nvp,
+                    "GH": gh,
+                    "Mode of birth": mode_of_birth,
+                    "Depression History": depression_history,
+                    "Anxiety History": anxiety_history,
+                    "Depression or anxiety during pregnancy": depression_or_anxiety_during_pregnancy,
+                    "Use of psychiatric medications": use_of_psychiatric_medications,
+                    "Sleep quality": sleep_quality,
+                    "Fatigue": fatigue,
+                    "Partner support": partner_support,
+                    "Family or social support": family_or_social_support,
+                    "Domestic violence": domestic_violence,
+                }
+                result = current_agent[0].predict_from_dict(agent_input_dict)
                 
                 # Format output to match Gradio interface expectations
-                risk_score = f"PPD Risk Score: {result['risk_percentage']:.2f}%"
+                # Include Name and EPDS Total Score in the display
+                name_display = f"Patient: {patient_name}\n" if patient_name and patient_name.strip() else ""
+                epds_display = f"EPDS Total Score: {int(epds_total_score)}\n" if epds_total_score is not None and epds_total_score != 0 else ""
+                epds_interpretation = ""
+                if epds_total_score is not None and epds_total_score != 0:
+                    if epds_total_score >= 13:
+                        epds_interpretation = " (Likely PPD - Score >= 13)"
+                    elif epds_total_score >= 11:
+                        epds_interpretation = " (Mild depression or dejection - Score 11-12)"
+                    else:
+                        epds_interpretation = " (Low PPD risk - Score <= 10)"
+                
+                risk_score = f"{name_display}{epds_display}{epds_interpretation}\nPPD Risk Score: {result['risk_percentage']:.2f}%"
                 
                 # Format feature importance with detailed SHAP explanation
                 feat_imp_lines = []
@@ -737,8 +769,10 @@ The model is now ready for predictions!"""
         
         # Fallback to original predict_depression if agent not available
         if current_explainer[0] is None:
+            name_display = f"Patient: {patient_name}\n" if patient_name and patient_name.strip() else ""
+            epds_display = f"EPDS Total Score: {int(epds_total_score)}\n" if epds_total_score is not None and epds_total_score != 0 else ""
             return (
-                "SHAP explainer not available",
+                f"{name_display}{epds_display}SHAP explainer not available",
                 "Please train the model first",
                 "Unable to generate explanation.",
                 "SHAP explanation unavailable. Please train the model first.",
@@ -746,22 +780,50 @@ The model is now ready for predictions!"""
             )
         
         # Get results from original predict_depression (returns 5 values)
-        risk_score, feat_imp_str, personalized_explanation, shap_explanation, plot_html = predict_depression(
+        # Pass all form field values as kwargs - map to actual column names (with spaces)
+        prediction_kwargs = {
+            "Age": str(int(age)) if age is not None and str(age).strip() != "" else "",
+            "Marital status": marital_status,
+            "SES": ses,
+            "Population": population,
+            "Employment Category": employment_category,
+            "First birth": first_birth,
+            "GDM": gdm,
+            "TSH": tsh,
+            "NVP": nvp,
+            "GH": gh,
+            "Mode of birth": mode_of_birth,
+            "Depression History": depression_history,
+            "Anxiety History": anxiety_history,
+            "Depression or anxiety during pregnancy": depression_or_anxiety_during_pregnancy,
+            "Use of psychiatric medications": use_of_psychiatric_medications,
+            "Sleep quality": sleep_quality,
+            "Fatigue": fatigue,
+            "Partner support": partner_support,
+            "Family or social support": family_or_social_support,
+            "Domestic violence": domestic_violence,
+        }
+        risk_score_base, feat_imp_str, personalized_explanation, shap_explanation, plot_html = predict_depression(
             current_pipeline[0],
             current_explainer[0],
             feature_columns,
             feature_dtypes,
-            age,
-            feeling_sad,
-            irritable,
-            trouble_sleeping,
-            concentration,
-            appetite,
-            feeling_anxious,
-            guilt,
-            bonding,
-            suicide_attempt,
+            **prediction_kwargs
         )
+        
+        # Add Name and EPDS Total Score to the risk_score display
+        name_display = f"Patient: {patient_name}\n" if patient_name and patient_name.strip() else ""
+        epds_display = f"EPDS Total Score: {int(epds_total_score)}\n" if epds_total_score is not None and epds_total_score != 0 else ""
+        epds_interpretation = ""
+        if epds_total_score is not None and epds_total_score != 0:
+            if epds_total_score >= 13:
+                epds_interpretation = " (Likely PPD - Score >= 13)\n"
+            elif epds_total_score >= 11:
+                epds_interpretation = " (Mild depression or dejection - Score 11-12)\n"
+            else:
+                epds_interpretation = " (Low PPD risk - Score <= 10)\n"
+        
+        risk_score = f"{name_display}{epds_display}{epds_interpretation}{risk_score_base}"
         
         return risk_score, feat_imp_str, personalized_explanation, shap_explanation, plot_html
 
@@ -890,27 +952,62 @@ The model is now ready for predictions!"""
                     'shap_class1': 'shap_summary_class1.png'
                 }
                 
+                # Ensure df has target column and correct structure
+                # Reconstruct df if needed to ensure it has all columns including target
+                viz_df = df.copy() if (df is not None and target in df.columns) else None
+                if viz_df is None:
+                    # Try to reconstruct df from X_train and y_train (combine both train and test for full dataset)
+                    if X_train is not None and y_train is not None:
+                        train_df = X_train.copy()
+                        train_df[target] = y_train.values
+                        if X_test is not None and y_test is not None:
+                            test_df = X_test.copy()
+                            test_df[target] = y_test.values
+                            viz_df = pd.concat([train_df, test_df], ignore_index=True)
+                        else:
+                            viz_df = train_df
+                    elif X_test is not None and y_test is not None:
+                        viz_df = X_test.copy()
+                        viz_df[target] = y_test.values
+                
+                # Ensure cat_cols matches actual categorical columns in viz_df
+                if viz_df is not None:
+                    actual_cat_cols = [c for c in viz_df.columns if c != target and viz_df[c].dtype == "object"]
+                    if len(actual_cat_cols) > 0:
+                        viz_cat_cols = actual_cat_cols
+                    else:
+                        viz_cat_cols = cat_cols if cat_cols else []
+                else:
+                    viz_cat_cols = cat_cols if cat_cols else []
+                
                 # Load target distribution plot
                 plots['target'] = load_plot_if_exists(plot_files['target'], save_path_viz)
                 if plots['target'] is None:
                     try:
-                        plots['target'] = plot_target_distribution(df[target], return_image=True, save_path=save_path_viz)
-                        print(f"✅ Generated {plot_files['target']}")
+                        if viz_df is not None and target in viz_df.columns:
+                            plots['target'] = plot_target_distribution(viz_df[target], title="PPD Composite Target Distribution", return_image=True, save_path=save_path_viz)
+                            print(f"Generated {plot_files['target']}")
+                        else:
+                            plots['target'] = f"<p>Error: Target column '{target}' not found in data. Viz_df: {viz_df is not None}, Target in df: {target in df.columns if df is not None else False}</p>"
                     except Exception as e:
                         plots['target'] = f"<p>Error: {str(e)}</p>"
                 else:
-                    print(f"📂 Loaded existing {plot_files['target']}")
+                    print(f"Loaded existing {plot_files['target']}")
                 
                 # Load feature distributions plot
                 plots['features'] = load_plot_if_exists(plot_files['features'], save_path_viz)
                 if plots['features'] is None:
                     try:
-                        plots['features'] = plot_feature_distributions(df, cat_cols, target, return_image=True, save_path=save_path_viz)
-                        print(f"✅ Generated {plot_files['features']}")
+                        if viz_df is not None and target in viz_df.columns and len(viz_cat_cols) > 0:
+                            # Limit to first 12 features to avoid too many subplots
+                            plots['features'] = plot_feature_distributions(viz_df, viz_cat_cols[:12], target, n_cols=3, return_image=True, save_path=save_path_viz)
+                            print(f"Generated {plot_files['features']} ({len(viz_cat_cols[:12])} features)")
+                        else:
+                            plots['features'] = f"<p>Error: Cannot generate feature distributions. Data: {viz_df is not None}, Target: {target in viz_df.columns if viz_df is not None else False}, Cat cols: {len(viz_cat_cols)}</p>"
                     except Exception as e:
                         plots['features'] = f"<p>Error: {str(e)}</p>"
                 else:
-                    print(f"📂 Loaded existing {plot_files['features']}")
+                    print(f"Loaded existing {plot_files['features']}")
                 
                 # Load confusion matrix plot
                 if viz_y_pred is not None and y_test is not None:
@@ -958,12 +1055,29 @@ The model is now ready for predictions!"""
                 plots['correlation'] = load_plot_if_exists(plot_files['correlation'], save_path_viz)
                 if plots['correlation'] is None:
                     try:
-                        plots['correlation'] = plot_correlation_heatmap(df, target, return_image=True, save_path=save_path_viz)
-                        print(f"✅ Generated {plot_files['correlation']}")
+                        if viz_df is not None and target in viz_df.columns:
+                            print(f"Generating correlation heatmap...")
+                            print(f"  DataFrame shape: {viz_df.shape}")
+                            print(f"  DataFrame columns: {list(viz_df.columns)[:10]}...")
+                            print(f"  Target: {target}")
+                            plots['correlation'] = plot_correlation_heatmap(viz_df, target, return_image=True, save_path=save_path_viz)
+                            if plots['correlation'] is not None:
+                                print(f"Generated {plot_files['correlation']} successfully")
+                            else:
+                                print(f"Warning: plot_correlation_heatmap returned None")
+                                plots['correlation'] = "<p>Error: Correlation heatmap generation returned None</p>"
+                        else:
+                            error_msg = f"Cannot generate correlation heatmap. Data: {viz_df is not None}, Target: {target in viz_df.columns if viz_df is not None else False}"
+                            print(f"ERROR: {error_msg}")
+                            plots['correlation'] = f"<p>Error: {error_msg}</p>"
                     except Exception as e:
-                        plots['correlation'] = f"<p>Error: {str(e)}</p>"
+                        import traceback
+                        error_trace = traceback.format_exc()
+                        print(f"ERROR generating correlation heatmap: {e}")
+                        print(error_trace)
+                        plots['correlation'] = f"<p>Error: {str(e)}<br><pre>{error_trace[:500]}</pre></p>"
                 else:
-                    print(f"📂 Loaded existing {plot_files['correlation']}")
+                    print(f"Loaded existing {plot_files['correlation']}")
                 
                 # Load SHAP summary plot
                 if viz_pipeline is not None and X_test is not None:
@@ -1008,60 +1122,146 @@ The model is now ready for predictions!"""
             elem_classes=["warning-message"]
         )
 
+        gr.Markdown("### Patient Information")
         with gr.Row():
             with gr.Column():
-                age = gr.Radio(
-                    label="Age",
-                    choices=["25-30", "30-35", "35-40", "40-45", "45-50"],
-                    value="30-35",
+                patient_name = gr.Textbox(
+                    label="Name",
+                    value="",
+                    placeholder="Enter patient name",
+                    info="Patient name"
                 )
-                feeling_sad = gr.Radio(
-                    label="Feeling sad or Tearful",
-                    choices=["Yes", "No", "Sometimes"],
-                    value="No",
+                epds_total_score = gr.Number(
+                    label="EPDS Total Score",
+                    value=None,
+                    minimum=0,
+                    maximum=30,
+                    step=1,
+                    info="EPDS Total Score (0-30). Score >= 13: Likely PPD, Score 11-12: Mild depression or dejection, Score <= 10: Low PPD risk. Leave empty if not available."
                 )
-                irritable = gr.Radio(
-                    label="Irritable towards baby & partner",
-                    choices=["Yes", "No", "Sometimes"],
-                    value="No",
-                )
-                trouble_sleeping = gr.Radio(
-                    label="Trouble sleeping at night",
-                    choices=["Two or more days a week", "Yes", "No"],
-                    value="No",
-                )
-                concentration = gr.Radio(
-                    label="Problems concentrating or making decision",
-                    choices=["Yes", "No", "Often"],
-                    value="No",
-                )
-
+        
+        gr.Markdown("### Demographics")
+        with gr.Row():
             with gr.Column():
-                appetite = gr.Radio(
-                    label="Overeating or loss of appetite",
-                    choices=["Yes", "No", "Not at all"],
-                    value="No",
+                age = gr.Number(
+                    label="Age",
+                    value=30,
+                    minimum=18,
+                    maximum=50,
+                    step=1,
+                    info="Enter the actual age (numeric value from Demographics.csv)"
                 )
-                feeling_anxious = gr.Radio(
-                    label="Feeling anxious",
+                marital_status = gr.Radio(
+                    label="Marital status",
+                    choices=["Married", "Single", "Divorced", "Widowed"],
+                    value="Married",
+                )
+                ses = gr.Radio(
+                    label="SES (Socioeconomic Status)",
+                    choices=["High", "Low", "Medium"],
+                    value="High",
+                )
+            with gr.Column():
+                population = gr.Dropdown(
+                    label="Population",
+                    choices=["Secular", "Peripheral Jewish towns", "Religious", "Other"],
+                    value="Secular",
+                )
+                employment_category = gr.Dropdown(
+                    label="Employment Category",
+                    choices=["Employed (Full-Time)", "Self-Employed", "Unemployed", "Part-Time", "Student"],
+                    value="Employed (Full-Time)",
+                )
+        
+        gr.Markdown("### Clinical Data")
+        with gr.Row():
+            with gr.Column():
+                first_birth = gr.Radio(
+                    label="First birth",
                     choices=["Yes", "No"],
                     value="No",
                 )
-                guilt = gr.Radio(
-                    label="Feeling of guilt",
-                    choices=["No", "Yes", "Maybe"],
+                gdm = gr.Radio(
+                    label="GDM (Gestational Diabetes Mellitus)",
+                    choices=["Yes", "No"],
                     value="No",
                 )
-                bonding = gr.Radio(
-                    label="Problems of bonding with baby",
-                    choices=["Yes", "Sometimes", "No"],
+                tsh = gr.Radio(
+                    label="TSH",
+                    choices=["Normal", "Abnormal"],
+                    value="Normal",
+                )
+            with gr.Column():
+                nvp = gr.Radio(
+                    label="NVP (Nausea and Vomiting of Pregnancy)",
+                    choices=["Yes", "No"],
                     value="No",
                 )
-                suicide_attempt = gr.Radio(
-                    label="Suicide attempt",
-                    choices=["Yes", "No", "Not interested to say"],
+                gh = gr.Radio(
+                    label="GH (Gestational Hypertension)",
+                    choices=["Yes", "No"],
                     value="No",
-        )
+                )
+                mode_of_birth = gr.Dropdown(
+                    label="Mode of birth",
+                    choices=["Spontaneous Vaginal", "Cesarean", "Assisted Vaginal", "Other"],
+                    value="Spontaneous Vaginal",
+                )
+        
+        gr.Markdown("### Psychiatric Data")
+        with gr.Row():
+            with gr.Column():
+                depression_history = gr.Dropdown(
+                    label="Depression History",
+                    choices=["Not documented", "Yes", "No"],
+                    value="Not documented",
+                )
+                anxiety_history = gr.Dropdown(
+                    label="Anxiety History",
+                    choices=["Not documented", "Yes", "No"],
+                    value="Not documented",
+                )
+            with gr.Column():
+                depression_or_anxiety_during_pregnancy = gr.Radio(
+                    label="Depression or anxiety during pregnancy",
+                    choices=["Yes", "No"],
+                    value="No",
+                )
+                use_of_psychiatric_medications = gr.Radio(
+                    label="Use of psychiatric medications",
+                    choices=["Yes", "No"],
+                    value="No",
+                )
+        
+        gr.Markdown("### Functional/Psychosocial Data")
+        with gr.Row():
+            with gr.Column():
+                sleep_quality = gr.Dropdown(
+                    label="Sleep quality",
+                    choices=["Normal", "Insomnia", "RLS"],
+                    value="Normal",
+                )
+                fatigue = gr.Radio(
+                    label="Fatigue",
+                    choices=["Yes", "No"],
+                    value="No",
+                )
+                partner_support = gr.Dropdown(
+                    label="Partner support",
+                    choices=["High", "Moderate", "Interrupted", "Low"],
+                    value="High",
+                )
+            with gr.Column():
+                family_or_social_support = gr.Dropdown(
+                    label="Family or social support",
+                    choices=["High", "Moderate", "Low"],
+                    value="High",
+                )
+                domestic_violence = gr.Dropdown(
+                    label="Domestic violence",
+                    choices=["No", "Physical", "Sexual", "Emotional"],
+                    value="No",
+                )
 
         # Add examples
         gr.Markdown("### 📋 Example Cases")
@@ -1069,83 +1269,51 @@ The model is now ready for predictions!"""
 
         gr.Examples(
             examples=[
-                # High risk case: many severe symptoms
+                # High risk case
                 [
-                    "30-35",
-                    "Yes",
-                    "Yes",
-                    "Two or more days a week",
-                    "Yes",
-                    "Yes",
-                    "Yes",
-                    "Yes",
-                    "Yes",
-                    "No",
+                    "יעל חמו", 14, 30, "Married", "High", "Secular", "Self-Employed",
+                    "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
+                    "Not documented", "Not documented", "Yes", "No",
+                    "Insomnia", "Yes", "Interrupted", "Moderate", "No"
                 ],
-                # Low risk case: mostly no symptoms
+                # Low risk case
                 [
-                    "35-40",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
+                    "ענת גרוס", 2, 35, "Married", "High", "Secular", "Employed (Full-Time)",
+                    "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
+                    "Not documented", "Not documented", "No", "No",
+                    "Normal", "No", "High", "High", "No"
                 ],
-                # Moderate risk case: some symptoms
+                # Moderate risk case
                 [
-                    "25-30",
-                    "Sometimes",
-                    "No",
-                    "Yes",
-                    "No",
-                    "Yes",
-                    "Yes",
-                    "No",
-                    "Sometimes",
-                    "No",
-                ],
-                # Very high risk case: all severe
-                [
-                    "40-45",
-                    "Yes",
-                    "Yes",
-                    "Two or more days a week",
-                    "Often",
-                    "Yes",
-                    "Yes",
-                    "Yes",
-                    "Yes",
-                    "Yes",
-                ],
-                # Low-moderate risk: sleep issues only
-                [
-                    "30-35",
-                    "No",
-                    "No",
-                    "Two or more days a week",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
-                    "No",
+                    "יעלה שביט", 1, 27, "Married", "Low", "Peripheral Jewish towns", "Employed (Full-Time)",
+                    "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
+                    "Not documented", "Not documented", "No", "No",
+                    "RLS", "Yes", "High", "High", "No"
                 ],
             ],
             inputs=[
+                patient_name,
+                epds_total_score,
                 age,
-                feeling_sad,
-                irritable,
-                trouble_sleeping,
-                concentration,
-                appetite,
-                feeling_anxious,
-                guilt,
-                bonding,
-                suicide_attempt,
+                marital_status,
+                ses,
+                population,
+                employment_category,
+                first_birth,
+                gdm,
+                tsh,
+                nvp,
+                gh,
+                mode_of_birth,
+                depression_history,
+                anxiety_history,
+                depression_or_anxiety_during_pregnancy,
+                use_of_psychiatric_medications,
+                sleep_quality,
+                fatigue,
+                partner_support,
+                family_or_social_support,
+                domestic_violence,
             ],
             label="Example Cases",
         )
@@ -1157,7 +1325,12 @@ The model is now ready for predictions!"""
         )
 
         with gr.Row():
-            risk_output = gr.Textbox(label="Risk Assessment", interactive=False)
+            risk_output = gr.Textbox(
+                label="Risk Assessment",
+                interactive=False,
+                lines=5,
+                info="Shows patient name, EPDS Total Score, and PPD risk assessment"
+            )
             personalized_explanation = gr.Textbox(
                 label="Personalized Explanation",
                 interactive=False,
@@ -1176,7 +1349,10 @@ The model is now ready for predictions!"""
             )
         
         with gr.Row():
-            shap_plot = gr.HTML(label="SHAP Visualization (Bar Plot & Waterfall)")
+            shap_plot = gr.HTML(
+                label="SHAP Visualization (Bar Plot & Waterfall)",
+                elem_classes=["shap-visualization"]
+            )
 
         # Connect training button
         # If visualizations are available, update them when training
@@ -1210,16 +1386,28 @@ The model is now ready for predictions!"""
         predict_btn.click(
             fn=predict_wrapper,
             inputs=[
+                patient_name,
+                epds_total_score,
                 age,
-                feeling_sad,
-                irritable,
-                trouble_sleeping,
-                concentration,
-                appetite,
-                feeling_anxious,
-                guilt,
-                bonding,
-                suicide_attempt,
+                marital_status,
+                ses,
+                population,
+                employment_category,
+                first_birth,
+                gdm,
+                tsh,
+                nvp,
+                gh,
+                mode_of_birth,
+                depression_history,
+                anxiety_history,
+                depression_or_anxiety_during_pregnancy,
+                use_of_psychiatric_medications,
+                sleep_quality,
+                fatigue,
+                partner_support,
+                family_or_social_support,
+                domestic_violence,
             ],
             outputs=[risk_output, feature_importance, personalized_explanation, shap_explanation, shap_plot],
         )
@@ -1276,7 +1464,9 @@ The model is now ready for predictions!"""
                     # Update agent connection before starting
                     update_epds_agent()
                     epds_agent = epds_agent_instance[0]
-                    response = epds_agent.start_conversation(name)
+                    # Ensure name is properly handled (None -> empty string, strip whitespace)
+                    name_clean = name.strip() if name and isinstance(name, str) else ""
+                    response = epds_agent.start_conversation(name_clean)
                     history = [{"role": "assistant", "content": response}]
                     return history, "הזיני תשובה או טקסט חופשי:", "הערכה בתהליך... שאלה 1/10"
                 except Exception as e:

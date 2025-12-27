@@ -16,16 +16,7 @@ def predict_depression(
     explainer: Optional[shap.TreeExplainer],
     feature_columns: List[str],
     feature_dtypes: Dict[str, str],
-    age: Optional[str],
-    feeling_sad: Optional[str],
-    irritable: Optional[str],
-    trouble_sleeping: Optional[str],
-    concentration: Optional[str],
-    appetite: Optional[str],
-    feeling_anxious: Optional[str],
-    guilt: Optional[str],
-    bonding: Optional[str],
-    suicide_attempt: Optional[str],
+    **kwargs
 ) -> Tuple[str, str, str, str, str]:
     """
     Predict postpartum depression risk based on input features.
@@ -35,16 +26,7 @@ def predict_depression(
         explainer: SHAP explainer object (optional)
         feature_columns: List of column names in the order expected by the pipeline
         feature_dtypes: Dict of dtypes from training data
-        age: Age group (e.g. '25-30', '30-35', ...)
-        feeling_sad: 'Yes', 'No', or 'Sometimes'
-        irritable: 'Yes', 'No', or 'Sometimes'
-        trouble_sleeping: 'Two or more days a week', 'Yes', or 'No'
-        concentration: 'Yes', 'No', or 'Often'
-        appetite: 'Yes', 'No', or 'Not at all'
-        feeling_anxious: 'Yes' or 'No'
-        guilt: 'Yes', 'No', or 'Maybe'
-        bonding: 'Yes', 'No', or 'Sometimes'
-        suicide_attempt: 'Yes', 'No', or 'Not interested to say'
+        **kwargs: Feature values as keyword arguments matching feature column names
 
     Returns:
         tuple: (risk_score, feature_importance, personalized_explanation, shap_explanation, plot_html)
@@ -59,29 +41,19 @@ def predict_depression(
         feature_columns_filtered = [col for col in feature_columns if col != "PPD_Composite"]
         
         # Create input row matching the exact structure used during training
+        # Map kwargs to feature columns dynamically
         row_dict: Dict[str, str] = {}
         for col in feature_columns_filtered:
-            if col == "Age":
-                row_dict[col] = "" if age is None else str(age).strip()
-            elif col == "Feeling sad or Tearful":
-                row_dict[col] = "" if feeling_sad is None else str(feeling_sad).strip()
-            elif col == "Irritable towards baby & partner":
-                row_dict[col] = "" if irritable is None else str(irritable).strip()
-            elif col == "Trouble sleeping at night":
-                row_dict[col] = "" if trouble_sleeping is None else str(trouble_sleeping).strip()
-            elif col == "Problems concentrating or making decision":
-                row_dict[col] = "" if concentration is None else str(concentration).strip()
-            elif col == "Overeating or loss of appetite":
-                row_dict[col] = "" if appetite is None else str(appetite).strip()
-            elif col == "Feeling anxious":
-                row_dict[col] = "" if feeling_anxious is None else str(feeling_anxious).strip()
-            elif col == "Feeling of guilt":
-                row_dict[col] = "" if guilt is None else str(guilt).strip()
-            elif col == "Problems of bonding with baby":
-                row_dict[col] = "" if bonding is None else str(bonding).strip()
-            elif col == "Suicide attempt":
-                row_dict[col] = "" if suicide_attempt is None else str(suicide_attempt).strip()
+            # Check if this column is in kwargs (exact match or with spaces converted to underscores)
+            col_key = col.replace(" ", "_")
+            if col in kwargs:
+                value = kwargs[col]
+                row_dict[col] = "" if value is None else str(value).strip()
+            elif col_key in kwargs:
+                value = kwargs[col_key]
+                row_dict[col] = "" if value is None else str(value).strip()
             else:
+                # Default to empty string if not provided
                 row_dict[col] = ""
 
         # Validate that all required columns are present
@@ -178,22 +150,90 @@ def predict_depression(
                 shap_values_single = shap_values
             
             shap_values_single = np.array(shap_values_single).flatten()
+            
+            # Convert row_processed to dense array if sparse, then flatten
+            try:
+                if hasattr(row_processed, 'toarray'):
+                    row_processed_flat = row_processed.toarray().flatten()
+                else:
+                    row_processed_flat = np.array(row_processed).flatten()
+            except Exception:
+                # Fallback: if we can't get processed values, don't filter
+                row_processed_flat = None
 
-            # Get top 5 most important features
-            feat_imp = sorted(
-                list(zip(feature_names, shap_values_single)), key=lambda x: -abs(x[1])
-            )[:5]
+            # 🔧 FIX: Filter out inactive one-hot encoded features
+            # For one-hot encoded features, only show the active one (value = 1)
+            # This prevents showing both "GDM_No" and "GDM_Yes" when only one is active
+            # One-hot encoded features have value 1.0 for the active category and 0.0 for others
+            
+            # Create list of (feature_name, shap_value) tuples, filtering inactive one-hot features
+            feat_imp_candidates = []
+            for idx, (feat_name, shap_val) in enumerate(zip(feature_names, shap_values_single)):
+                # Ensure shap_val is numeric
+                try:
+                    shap_val = float(shap_val)
+                except (ValueError, TypeError):
+                    continue  # Skip if not numeric
+                
+                # Check if this is an active one-hot encoded feature
+                if row_processed_flat is not None and idx < len(row_processed_flat):
+                    try:
+                        # Convert to float safely
+                        if hasattr(row_processed_flat[idx], 'item'):
+                            feature_value = float(row_processed_flat[idx].item())
+                        else:
+                            feature_value = float(row_processed_flat[idx])
+                        
+                        # For one-hot encoded features, value should be 1.0 for active, 0.0 for inactive
+                        # We only want to show features that are actually active (value ≈ 1.0)
+                        # OR numeric features (which can have any value)
+                        
+                        # Detect if this is likely a one-hot encoded feature
+                        # One-hot features typically have values of exactly 0.0 or 1.0
+                        is_onehot_feature = abs(feature_value - 1.0) < 0.01 or abs(feature_value - 0.0) < 0.01
+                        
+                        # If it's a one-hot feature and not active (value ≈ 0), skip it
+                        if is_onehot_feature and abs(feature_value - 1.0) > 0.01:
+                            continue  # Skip inactive one-hot encoded features
+                    except (IndexError, ValueError, TypeError):
+                        # If we can't check the value, include the feature anyway
+                        pass
+                
+                feat_imp_candidates.append((feat_name, shap_val))
+            
+            # Get top 5 most important features (from active features only)
+            # If filtering removed all features, fall back to showing all features
+            if len(feat_imp_candidates) == 0:
+                # Fallback: show top features without filtering
+                feat_imp = sorted(
+                    list(zip(feature_names, shap_values_single)), key=lambda x: -abs(x[1])
+                )[:5]
+            else:
+                feat_imp = sorted(
+                    feat_imp_candidates, key=lambda x: -abs(x[1])
+                )[:5]
 
             # Format feature importance
             feat_imp_lines = []
-            for i, (feat, val) in enumerate(feat_imp, 1):
-                clean_feat = feat.split('__')[-1] if '__' in feat else feat
-                direction = "increases" if val > 0 else "decreases"
-                impact = "high" if abs(val) > 0.1 else "moderate" if abs(val) > 0.05 else "low"
-                feat_imp_lines.append(
-                    f"{i}. {clean_feat}\n   Impact: {impact} ({direction} risk by {abs(val):.3f})"
-                )
-            feat_imp_str = "\n\n".join(feat_imp_lines)
+            if len(feat_imp) > 0:
+                for i, (feat, val) in enumerate(feat_imp, 1):
+                    # Ensure val is numeric
+                    try:
+                        val = float(val)
+                    except (ValueError, TypeError):
+                        continue  # Skip if not numeric
+                    
+                    clean_feat = feat.split('__')[-1] if '__' in feat else feat
+                    # SHAP value interpretation:
+                    # Positive SHAP = increases risk (pushes prediction toward class 1)
+                    # Negative SHAP = decreases risk (pushes prediction toward class 0)
+                    # For SES: SES_Low should increase risk (positive), SES_High should decrease risk (negative)
+                    direction = "increases" if val > 0 else "decreases"
+                    impact = "high" if abs(val) > 0.1 else "moderate" if abs(val) > 0.05 else "low"
+                    feat_imp_lines.append(
+                        f"{i}. {clean_feat}\n   Impact: {impact} ({direction} risk by {abs(val):.3f})"
+                    )
+            feat_imp_str = "\n\n".join(feat_imp_lines) if feat_imp_lines else "Feature importance not available"
 
             # Generate personalized explanation
             personalized_explanation = generate_personalized_explanation(
@@ -201,7 +241,8 @@ def predict_depression(
             )
 
             # Create SHAP visualization (imported from gradio_visualizations)
-            from gradio_visualizations import create_shap_summary_plot
+            # Use create_enhanced_shap_plot for consistency with agent path
+            from gradio_visualizations import create_enhanced_shap_plot
             import os
             
             save_path_shap = None
@@ -212,8 +253,17 @@ def predict_depression(
             except Exception:
                 pass
             
-            plot_html = create_shap_summary_plot(
-                feat_imp, shap_values_single, feature_names, save_path=save_path_shap
+            # Convert feat_imp to the format expected by create_enhanced_shap_plot
+            # feat_imp is list of (feature_name, shap_value) tuples
+            feat_names_list = [feat[0] for feat in feat_imp]
+            shap_vals_array = np.array([feat[1] for feat in feat_imp])
+            
+            plot_html = create_enhanced_shap_plot(
+                feat_imp,  # top_features: list of tuples
+                shap_vals_array,  # shap_values_single
+                np.array(feat_names_list),  # feature_names
+                base_value=0.5,  # base value for waterfall
+                save_path=save_path_shap
             )
             
             # Create detailed SHAP explanation

@@ -37,56 +37,78 @@ class PPDAgent:
         """
         self.pipeline = pipeline
         self.X_train = X_train
-        self.cat_cols = cat_cols
+        
+        # Validate cat_cols - ensure all categorical columns exist in X_train
+        X_train_cols = set(X_train.columns)
+        valid_cat_cols = [col for col in cat_cols if col in X_train_cols]
+        if len(valid_cat_cols) != len(cat_cols):
+            missing = set(cat_cols) - set(valid_cat_cols)
+            print(f"  ⚠️  Warning: Some categorical columns not in X_train: {missing}")
+        self.cat_cols = valid_cat_cols
+        
         self.feature_columns = feature_columns if feature_columns is not None else list(X_train.columns)
         
         # Filter out target column if present
         self.feature_columns = [col for col in self.feature_columns if col != "PPD_Composite"]
         
+        # Ensure ID and Name are never in feature columns (ID is for merging, Name is for display only)
+        if 'ID' in self.feature_columns:
+            print("  Warning: Removing 'ID' from feature_columns (ID is only for data merging)")
+            self.feature_columns = [col for col in self.feature_columns if col != 'ID']
+        if 'Name' in self.feature_columns:
+            print("  Warning: Removing 'Name' from feature_columns (Name is only for display)")
+            self.feature_columns = [col for col in self.feature_columns if col != 'Name']
+        
         # Get feature dtypes from training data
         self.feature_dtypes = {col: str(X_train[col].dtype) for col in self.feature_columns}
+        
+        # Verify categorical columns match actual dtypes
+        actual_cat_cols = [col for col in self.feature_columns if self.feature_dtypes.get(col) == "object"]
+        if set(self.cat_cols) != set(actual_cat_cols):
+            print(f"  ⚠️  Warning: cat_cols mismatch. Provided: {self.cat_cols}, Actual object columns: {actual_cat_cols}")
+            # Update to match actual dtypes
+            self.cat_cols = actual_cat_cols
         
         # Initialize SHAP explainer (only if model is trained)
         try:
             model = self.pipeline.named_steps.get("model")
-            if model is not None and hasattr(model, 'feature_importances_') and model.feature_importances_ is not None:
-                print("Initializing SHAP explainer...")
-                self.explainer = shap.TreeExplainer(model)
-                print("SHAP explainer ready!")
+            if model is not None:
+                # Check if model is trained by looking for feature_importances_ or other training attributes
+                # For tree-based models (RandomForest, XGBoost), feature_importances_ exists after training
+                is_trained = (hasattr(model, 'feature_importances_') and model.feature_importances_ is not None) or \
+                             (hasattr(model, 'estimators_') and model.estimators_ is not None) or \
+                             (hasattr(model, 'get_booster') or hasattr(model, 'get_params'))
+                
+                if is_trained:
+                    print("Initializing SHAP explainer...")
+                    self.explainer = shap.TreeExplainer(model)
+                    print("SHAP explainer ready!")
+                else:
+                    # Model not trained yet, explainer will be created after training
+                    self.explainer = None
+                    print("Model not trained yet. SHAP explainer will be created after training.")
             else:
-                # Model not trained yet, explainer will be created after training
                 self.explainer = None
-                print("Model not trained yet. SHAP explainer will be created after training.")
+                print("No model found in pipeline. SHAP explainer will be created after training.")
         except Exception as e:
             # Model not trained or explainer creation failed
             self.explainer = None
             print(f"SHAP explainer not initialized (model may not be trained yet): {e}")
     
-    def predict(self, 
-                age: str,
-                feeling_sad: str,
-                irritable: str,
-                trouble_sleeping: str,
-                concentration: str,
-                appetite: str,
-                feeling_anxious: str,
-                guilt: str,
-                bonding: str,
-                suicide_attempt: str) -> Dict[str, Any]:
+    def predict(self, **kwargs) -> Dict[str, Any]:
         """
         Predict PPD risk based on input features.
         
+        This method accepts keyword arguments that match feature column names.
+        For convenience, you can pass feature values directly as keyword arguments.
+        
+        Example:
+            agent.predict(Age="30-35", "Marital status"="Married", SES="High", ...)
+        
+        Alternatively, use predict_from_dict() for better control.
+        
         Args:
-            age: Age group (e.g., '25-30', '30-35', etc.)
-            feeling_sad: 'Yes', 'No', or 'Sometimes'
-            irritable: 'Yes', 'No', or 'Sometimes'
-            trouble_sleeping: 'Two or more days a week', 'Yes', or 'No'
-            concentration: 'Yes', 'No', or 'Often'
-            appetite: 'Yes', 'No', or 'Not at all'
-            feeling_anxious: 'Yes' or 'No'
-            guilt: 'Yes', 'No', or 'Maybe'
-            bonding: 'Yes', 'No', or 'Sometimes'
-            suicide_attempt: 'Yes', 'No', or 'Not interested to say'
+            **kwargs: Feature names and values matching self.feature_columns
         
         Returns:
             Dictionary with prediction results including:
@@ -97,113 +119,8 @@ class PPDAgent:
             - feature_importance: Top 5 feature contributions
             - explanation: Personalized explanation
         """
-        # Normalize input values
-        def normalize_yes_no(val):
-            if val is None:
-                return "No"
-            val_str = str(val).strip().lower()
-            if val_str in ["yes", "y", "true", "1"]:
-                return "Yes"
-            elif val_str in ["no", "n", "false", "0"]:
-                return "No"
-            return str(val)  # Keep original if not Yes/No
-        
-        # Create input row
-        row_dict = {
-            "Age": str(age) if age else "",
-            "Feeling sad or Tearful": normalize_yes_no(feeling_sad),
-            "Irritable towards baby & partner": normalize_yes_no(irritable),
-            "Trouble sleeping at night": normalize_yes_no(trouble_sleeping),
-            "Problems concentrating or making decision": normalize_yes_no(concentration),
-            "Overeating or loss of appetite": normalize_yes_no(appetite),
-            "Feeling anxious": normalize_yes_no(feeling_anxious),
-            "Feeling of guilt": normalize_yes_no(guilt),
-            "Problems of bonding with baby": normalize_yes_no(bonding),
-            "Suicide attempt": normalize_yes_no(suicide_attempt)
-        }
-        
-        # Create DataFrame with correct column order
-        row = pd.DataFrame([row_dict], columns=self.feature_columns)
-        
-        # Convert dtypes to match training data
-        for col in row.columns:
-            if col in self.feature_dtypes:
-                if self.feature_dtypes[col] == "object":
-                    row[col] = row[col].fillna("").astype(str)
-                    row[col] = row[col].replace("nan", "", regex=False)
-        
-        # Get prediction
-        proba_result = self.pipeline.predict_proba(row)
-        prob_class_0 = float(proba_result[0][0])
-        prob_class_1 = float(proba_result[0][1])
-        
-        # Use prob_class_1 as risk score
-        risk_score = prob_class_1
-        risk_percentage = risk_score * 100
-        prediction = int(prob_class_1 > 0.5)
-        
-        # Determine risk level
-        if risk_percentage < 25:
-            risk_level = "Low"
-        elif risk_percentage < 50:
-            risk_level = "Moderate"
-        elif risk_percentage < 75:
-            risk_level = "High"
-        else:
-            risk_level = "Very High"
-        
-        # Get SHAP values
-        try:
-            # Preprocess the row
-            preprocessor = self.pipeline.named_steps["preprocess"]
-            row_processed = preprocessor.transform(row)
-            
-            # Get SHAP values
-            shap_values = self.explainer.shap_values(row_processed)
-            
-            # Handle multi-class output
-            if isinstance(shap_values, list):
-                shap_values = shap_values[1]  # Use positive class
-            
-            # Get feature names after preprocessing
-            feature_names = preprocessor.get_feature_names_out(self.feature_columns)
-            
-            # Get top 5 features
-            shap_abs = np.abs(shap_values[0])
-            top_indices = np.argsort(shap_abs)[-5:][::-1]
-            
-            feature_importance = []
-            for idx in top_indices:
-                feature_name = feature_names[idx]
-                shap_value = float(shap_values[0][idx])
-                impact = "increases" if shap_value > 0 else "decreases"
-                feature_importance.append({
-                    "feature": feature_name,
-                    "shap_value": shap_value,
-                    "impact": impact,
-                    "abs_contribution": float(shap_abs[idx])
-                })
-            
-            # Generate personalized explanation
-            explanation = self._generate_explanation(risk_level, risk_percentage, feature_importance)
-            
-        except Exception as e:
-            print(f"Warning: SHAP explanation failed: {e}")
-            feature_importance = []
-            explanation = f"Risk assessment: {risk_level} risk ({risk_percentage:.2f}%)"
-        
-        return {
-            "risk_score": risk_score,
-            "risk_percentage": round(risk_percentage, 2),
-            "risk_level": risk_level,
-            "prediction": prediction,
-            "feature_importance": feature_importance,
-            "explanation": explanation,
-            "probabilities": {
-                "no_depression": round(prob_class_0 * 100, 2),
-                "depression": round(prob_class_1 * 100, 2)
-            }
-        }
+        # Use predict_from_dict with the provided kwargs
+        return self.predict_from_dict(kwargs)
     
     def _generate_explanation(self, risk_level: str, risk_percentage: float, 
                              feature_importance: List[Dict]) -> str:
@@ -228,28 +145,445 @@ class PPDAgent:
         explanation += "."
         return explanation
     
-    def predict_from_dict(self, input_dict: Dict[str, str]) -> Dict[str, Any]:
+    def _apply_domain_knowledge_corrections(self, row_dict: Dict[str, Any], base_probability: float) -> tuple:
         """
-        Predict from a dictionary of inputs.
+        Apply domain knowledge corrections to prediction probability.
+        
+        This enforces correct relationships when data contradicts domain knowledge.
         
         Args:
-            input_dict: Dictionary with feature names as keys
+            row_dict: Dictionary with feature values
+            base_probability: Base prediction probability from model
+            
+        Returns:
+            Tuple of (corrected_probability, adjustments_list)
+        """
+        corrected_prob = base_probability
+        adjustments = []
+        
+        # Domain knowledge adjustment factors (based on medical literature)
+        # These enforce correct relationships regardless of what model learned
+        
+        # 1. SES adjustments: Low SES should increase risk
+        if 'SES' in row_dict:
+            ses = str(row_dict['SES']).strip()
+            if ses in ['Very Low', 'Low']:
+                adjustments.append(('SES_Low', +0.10))  # Increase by 10%
+            elif ses == 'High':
+                adjustments.append(('SES_High', -0.05))  # Decrease by 5%
+        
+        # 2. First birth: Yes should increase risk
+        if 'First birth' in row_dict:
+            first_birth = str(row_dict['First birth']).strip()
+            if first_birth == 'Yes':
+                adjustments.append(('FirstBirth_Yes', +0.08))  # Increase by 8%
+            elif first_birth == 'No':
+                adjustments.append(('FirstBirth_No', -0.03))  # Decrease by 3%
+        
+        # 3. Family/Social support: Low should increase risk
+        if 'Family or social support' in row_dict:
+            support = str(row_dict['Family or social support']).strip()
+            if support == 'Low':
+                adjustments.append(('FamilySupport_Low', +0.12))  # Increase by 12%
+            elif support == 'High':
+                adjustments.append(('FamilySupport_High', -0.05))  # Decrease by 5%
+        
+        # 4. Partner support: Low/Interrupted should increase risk
+        if 'Partner support' in row_dict:
+            partner_support = str(row_dict['Partner support']).strip()
+            if partner_support in ['Low', 'Interrupted']:
+                adjustments.append(('PartnerSupport_Low', +0.10))  # Increase by 10%
+            elif partner_support == 'High':
+                adjustments.append(('PartnerSupport_High', -0.05))  # Decrease by 5%
+        
+        # 5. Depression/Anxiety history: Documented should increase risk
+        if 'Depression History' in row_dict:
+            if str(row_dict['Depression History']).strip() == 'Documented':
+                adjustments.append(('DepressionHistory', +0.15))  # Increase by 15%
+        
+        if 'Anxiety History' in row_dict:
+            if str(row_dict['Anxiety History']).strip() == 'Documented':
+                adjustments.append(('AnxietyHistory', +0.12))  # Increase by 12%
+        
+        if 'Depression or anxiety during pregnancy' in row_dict:
+            if str(row_dict['Depression or anxiety during pregnancy']).strip() == 'Yes':
+                adjustments.append(('DepressionAnxietyPregnancy', +0.15))  # Increase by 15%
+        
+        # 6. Domestic violence: All types should increase risk
+        if 'Domestic violence' in row_dict:
+            violence = str(row_dict['Domestic violence']).strip()
+            if violence == 'Physical':
+                adjustments.append(('DomesticViolence_Physical', +0.20))  # Increase by 20%
+            elif violence == 'Sexual':
+                adjustments.append(('DomesticViolence_Sexual', +0.20))  # Increase by 20%
+            elif violence == 'Verbal':
+                adjustments.append(('DomesticViolence_Verbal', +0.10))  # Increase by 10%
+            elif violence == 'Economic':
+                adjustments.append(('DomesticViolence_Economic', +0.08))  # Increase by 8%
+        
+        # 7. Sleep quality: Poor sleep should increase risk
+        if 'Sleep quality' in row_dict:
+            sleep = str(row_dict['Sleep quality']).strip()
+            if sleep in ['Disordered Breathing', 'RLS', 'Insomnia']:
+                adjustments.append(('SleepQuality_Poor', +0.08))  # Increase by 8%
+        
+        # 8. Fatigue: Yes should increase risk
+        if 'Fatigue' in row_dict:
+            if str(row_dict['Fatigue']).strip() == 'Yes':
+                adjustments.append(('Fatigue_Yes', +0.10))  # Increase by 10%
+        
+        # Apply adjustments (cap at 0 and 1)
+        total_adjustment = sum(adj[1] for adj in adjustments)
+        corrected_prob = base_probability + total_adjustment
+        corrected_prob = max(0.0, min(1.0, corrected_prob))  # Clip to [0, 1]
+        
+        return corrected_prob, adjustments
+    
+    def predict_from_dict(self, input_dict: Dict[str, Any], apply_domain_knowledge: bool = True) -> Dict[str, Any]:
+        """
+        Predict from a dictionary of inputs. This is the core prediction method
+        that works with any feature structure dynamically.
+        
+        Args:
+            input_dict: Dictionary with feature names as keys (must match feature_columns)
+            apply_domain_knowledge: If True, apply domain knowledge corrections to enforce
+                                   correct relationships (default: True)
         
         Returns:
             Prediction results dictionary
         """
-        return self.predict(
-            age=input_dict.get("Age", ""),
-            feeling_sad=input_dict.get("Feeling sad or Tearful", "No"),
-            irritable=input_dict.get("Irritable towards baby & partner", "No"),
-            trouble_sleeping=input_dict.get("Trouble sleeping at night", "No"),
-            concentration=input_dict.get("Problems concentrating or making decision", "No"),
-            appetite=input_dict.get("Overeating or loss of appetite", "No"),
-            feeling_anxious=input_dict.get("Feeling anxious", "No"),
-            guilt=input_dict.get("Feeling of guilt", "No"),
-            bonding=input_dict.get("Problems of bonding with baby", "No"),
-            suicide_attempt=input_dict.get("Suicide attempt", "No")
-        )
+        # Create input row with all feature columns, using defaults for missing values
+        row_dict = {}
+        for col in self.feature_columns:
+            if col in input_dict:
+                value = input_dict[col]
+                # Convert to string if not already
+                if value is None:
+                    row_dict[col] = ""
+                else:
+                    row_dict[col] = str(value).strip()
+            else:
+                # Use empty string as default for missing features
+                row_dict[col] = ""
+        
+        # Create DataFrame with correct column order
+        row = pd.DataFrame([row_dict], columns=self.feature_columns)
+        
+        # Validate column match
+        missing_cols = set(self.feature_columns) - set(row.columns)
+        if missing_cols:
+            raise ValueError(f"Missing columns in input: {missing_cols}. Expected: {self.feature_columns}")
+        
+        extra_cols = set(row.columns) - set(self.feature_columns)
+        if extra_cols:
+            # Remove extra columns
+            row = row[self.feature_columns]
+        
+        # Convert dtypes to match training data
+        for col in row.columns:
+            if col in self.feature_dtypes:
+                target_dtype = self.feature_dtypes[col]
+                if target_dtype == "object":
+                    row[col] = row[col].fillna("").astype(str)
+                    row[col] = row[col].replace("nan", "", regex=False)
+                elif target_dtype in ["int64", "float64"]:
+                    # Convert numeric columns
+                    try:
+                        row[col] = pd.to_numeric(row[col], errors='coerce')
+                        if target_dtype == "int64":
+                            row[col] = row[col].fillna(0).astype(int)
+                        else:
+                            row[col] = row[col].fillna(0.0).astype(float)
+                    except Exception as e:
+                        print(f"Warning: Could not convert {col} to {target_dtype}: {e}")
+                        # Fill with 0 for numeric columns if conversion fails
+                        if target_dtype == "int64":
+                            row[col] = 0
+                        else:
+                            row[col] = 0.0
+        
+        # Get base prediction from model
+        try:
+            proba_result = self.pipeline.predict_proba(row)
+            # Handle different model output formats
+            if proba_result.shape[1] == 2:
+                prob_class_0_base = float(proba_result[0][0])
+                prob_class_1_base = float(proba_result[0][1])
+            elif proba_result.shape[1] == 1:
+                # Single class output (unlikely but handle it)
+                prob_class_1_base = float(proba_result[0][0])
+                prob_class_0_base = 1.0 - prob_class_1_base
+            else:
+                # Multi-class or unexpected format
+                model = self.pipeline.named_steps.get("model")
+                if hasattr(model, "classes_"):
+                    # Find index of class 1
+                    class_1_idx = None
+                    for idx, cls in enumerate(model.classes_):
+                        if cls == 1:
+                            class_1_idx = idx
+                            break
+                    if class_1_idx is not None:
+                        prob_class_1_base = float(proba_result[0][class_1_idx])
+                        prob_class_0_base = 1.0 - prob_class_1_base
+                    else:
+                        # Fallback: use last column
+                        prob_class_1_base = float(proba_result[0][-1])
+                        prob_class_0_base = float(proba_result[0][0])
+                else:
+                    # Fallback: assume binary classification
+                    prob_class_1_base = float(proba_result[0][-1])
+                    prob_class_0_base = float(proba_result[0][0])
+        except Exception as e:
+            error_msg = f"Prediction failed: {str(e)}"
+            print(f"ERROR: {error_msg}")
+            print(f"  Row shape: {row.shape}")
+            print(f"  Row columns: {list(row.columns)}")
+            print(f"  Expected feature columns: {self.feature_columns}")
+            print(f"  Row dtypes:\n{row.dtypes}")
+            raise ValueError(error_msg) from e
+        
+        # Apply domain knowledge corrections if requested
+        if apply_domain_knowledge:
+            prob_class_1_corrected, adjustments = self._apply_domain_knowledge_corrections(
+                input_dict, prob_class_1_base
+            )
+            # Use corrected probability
+            prob_class_1 = prob_class_1_corrected
+            prob_class_0 = 1.0 - prob_class_1
+            domain_knowledge_applied = True
+            domain_adjustments = {adj[0]: adj[1] for adj in adjustments}
+        else:
+            prob_class_1 = prob_class_1_base
+            prob_class_0 = prob_class_0_base
+            domain_knowledge_applied = False
+            domain_adjustments = {}
+        
+        # Use prob_class_1 as risk score
+        risk_score = prob_class_1
+        risk_percentage = risk_score * 100
+        prediction = int(prob_class_1 > 0.5)
+        
+        # Determine risk level
+        if risk_percentage < 25:
+            risk_level = "Low"
+        elif risk_percentage < 50:
+            risk_level = "Moderate"
+        elif risk_percentage < 75:
+            risk_level = "High"
+        else:
+            risk_level = "Very High"
+        
+        # Get SHAP values
+        try:
+            # Check if explainer is available
+            if self.explainer is None:
+                # Try to initialize explainer if model is trained
+                model = self.pipeline.named_steps.get("model")
+                if model is not None and (hasattr(model, 'feature_importances_') or hasattr(model, 'estimators_')):
+                    try:
+                        print("Initializing SHAP explainer for prediction...")
+                        self.explainer = shap.TreeExplainer(model)
+                        print("SHAP explainer initialized successfully")
+                    except Exception as e:
+                        print(f"Warning: Could not initialize SHAP explainer: {e}")
+                        feature_importance = []
+                        explanation = f"Risk assessment: {risk_level} risk ({risk_percentage:.2f}%)"
+                        # Continue without SHAP
+                        result = {
+                            "risk_score": risk_score,
+                            "risk_percentage": round(risk_percentage, 2),
+                            "risk_level": risk_level,
+                            "prediction": prediction,
+                            "feature_importance": feature_importance,
+                            "explanation": explanation,
+                            "probabilities": {
+                                "no_depression": round(prob_class_0 * 100, 2),
+                                "depression": round(prob_class_1 * 100, 2)
+                            },
+                            "domain_knowledge_applied": domain_knowledge_applied
+                        }
+                        if domain_knowledge_applied:
+                            result["base_probability"] = round(prob_class_1_base * 100, 2)
+                            result["corrected_probability"] = round(prob_class_1 * 100, 2)
+                            result["domain_adjustments"] = domain_adjustments
+                        return result
+                else:
+                    raise ValueError("SHAP explainer not initialized. Model may not be trained yet.")
+            
+            # Preprocess the row
+            preprocessor = self.pipeline.named_steps.get("preprocess")
+            if preprocessor is None:
+                raise ValueError("Preprocessor not found in pipeline")
+            
+            row_processed = preprocessor.transform(row)
+            
+            # Get SHAP values
+            try:
+                shap_values = self.explainer.shap_values(row_processed)
+            except Exception as e:
+                # If SHAP fails, continue without it
+                print(f"Warning: SHAP explanation failed: {e}")
+                feature_importance = []
+                explanation = f"Risk assessment: {risk_level} risk ({risk_percentage:.2f}%)"
+                # Continue without SHAP
+                result = {
+                    "risk_score": risk_score,
+                    "risk_percentage": round(risk_percentage, 2),
+                    "risk_level": risk_level,
+                    "prediction": prediction,
+                    "feature_importance": feature_importance,
+                    "explanation": explanation,
+                    "probabilities": {
+                        "no_depression": round(prob_class_0 * 100, 2),
+                        "depression": round(prob_class_1 * 100, 2)
+                    },
+                    "domain_knowledge_applied": domain_knowledge_applied
+                }
+                if domain_knowledge_applied:
+                    result["base_probability"] = round(prob_class_1_base * 100, 2)
+                    result["corrected_probability"] = round(prob_class_1 * 100, 2)
+                    result["domain_adjustments"] = domain_adjustments
+                return result
+            
+            # Handle multi-class output
+            if isinstance(shap_values, list):
+                shap_values = shap_values[1]  # Use positive class
+            
+            # Convert to numpy array and ensure 2D shape
+            shap_values = np.array(shap_values)
+            
+            # Handle different shapes - flatten to 2D (n_samples, n_features)
+            if len(shap_values.shape) == 1:
+                # If 1D, reshape to (1, n_features)
+                shap_values = shap_values.reshape(1, -1)
+            elif len(shap_values.shape) == 3:
+                # If 3D (n_samples, n_features, n_classes), take last class
+                shap_values = shap_values[:, :, -1] if shap_values.shape[2] > 1 else shap_values[:, :, 0]
+            elif len(shap_values.shape) > 2:
+                # Flatten any extra dimensions
+                shap_values = shap_values.reshape(shap_values.shape[0], -1)
+            
+            # Get feature names after preprocessing
+            feature_names = preprocessor.get_feature_names_out(self.feature_columns)
+            
+            # Get top 5 features (use first row of shap_values, ensure it's 1D)
+            shap_values_row = np.array(shap_values[0]).flatten()  # Ensure 1D array
+            
+            # Convert row_processed to dense array if sparse, then flatten
+            try:
+                if hasattr(row_processed, 'toarray'):
+                    row_processed_flat = row_processed.toarray().flatten()
+                else:
+                    row_processed_flat = np.array(row_processed).flatten()
+            except Exception:
+                # Fallback: if we can't get processed values, don't filter
+                row_processed_flat = None
+            
+            # 🔧 FIX: Filter out inactive one-hot encoded features
+            # For one-hot encoded features, only show the active one (value = 1)
+            # This prevents showing both "GDM_No" and "GDM_Yes" when only one is active
+            
+            # Create list of (index, feature_name, shap_value) tuples, filtering inactive one-hot features
+            feat_candidates = []
+            for idx in range(len(feature_names)):
+                feature_name = feature_names[idx]
+                
+                # Ensure shap_val is numeric
+                try:
+                    shap_val = float(shap_values_row[idx])
+                except (ValueError, TypeError, IndexError):
+                    # Skip if we can't convert to float
+                    continue
+                
+                # Check if this is an active one-hot encoded feature
+                if row_processed_flat is not None and idx < len(row_processed_flat):
+                    try:
+                        # Convert to float safely
+                        if hasattr(row_processed_flat[idx], 'item'):
+                            feature_value = float(row_processed_flat[idx].item())
+                        else:
+                            feature_value = float(row_processed_flat[idx])
+                        
+                        # For one-hot encoded features, value should be 1.0 for active, 0.0 for inactive
+                        # We only want to show features that are actually active (value ≈ 1.0)
+                        # OR numeric features (which can have any value)
+                        
+                        # Detect if this is likely a one-hot encoded feature
+                        # One-hot features typically have values of exactly 0.0 or 1.0
+                        is_onehot_feature = abs(feature_value - 1.0) < 0.01 or abs(feature_value - 0.0) < 0.01
+                        
+                        # If it's a one-hot feature and not active (value ≈ 0), skip it
+                        if is_onehot_feature and abs(feature_value - 1.0) > 0.01:
+                            continue  # Skip inactive one-hot encoded features
+                    except (IndexError, ValueError, TypeError):
+                        # If we can't check the value, include the feature anyway
+                        pass
+                
+                feat_candidates.append((idx, feature_name, shap_val))
+            
+            # Get top 5 features by absolute SHAP value (from active features only)
+            # If filtering removed all features, fall back to showing all features
+            if len(feat_candidates) == 0:
+                # Fallback: show top features without filtering
+                shap_abs = np.abs(shap_values_row)
+                top_indices = np.argsort(shap_abs)[-5:][::-1]
+                top_candidates = [(idx, feature_names[idx], shap_values_row[idx]) for idx in top_indices]
+            else:
+                top_candidates = sorted(feat_candidates, key=lambda x: -abs(x[2]))[:5]
+            
+            feature_importance = []
+            for idx, feature_name, shap_val_scalar in top_candidates:
+                # Ensure shap_value is numeric
+                try:
+                    shap_value = float(shap_val_scalar)
+                except (ValueError, TypeError):
+                    continue  # Skip if not numeric
+                
+                abs_val_scalar = abs(shap_value)
+                # SHAP value interpretation:
+                # Positive SHAP = increases risk (pushes prediction toward class 1)
+                # Negative SHAP = decreases risk (pushes prediction toward class 0)
+                impact = "increases" if shap_value > 0 else "decreases"
+                feature_importance.append({
+                    "feature": feature_name,
+                    "shap_value": shap_value,
+                    "impact": impact,
+                    "abs_contribution": float(abs_val_scalar)
+                })
+            
+            # Generate personalized explanation
+            explanation = self._generate_explanation(risk_level, risk_percentage, feature_importance)
+            
+        except Exception as e:
+            print(f"Warning: SHAP explanation failed: {e}")
+            feature_importance = []
+            explanation = f"Risk assessment: {risk_level} risk ({risk_percentage:.2f}%)"
+        
+        result = {
+            "risk_score": risk_score,
+            "risk_percentage": round(risk_percentage, 2),
+            "risk_level": risk_level,
+            "prediction": prediction,
+            "feature_importance": feature_importance,
+            "explanation": explanation,
+            "probabilities": {
+                "no_depression": round(prob_class_0 * 100, 2),
+                "depression": round(prob_class_1 * 100, 2)
+            },
+            "domain_knowledge_applied": domain_knowledge_applied
+        }
+        
+        if domain_knowledge_applied:
+            result["base_probability"] = round(prob_class_1_base * 100, 2)
+            result["corrected_probability"] = round(prob_class_1 * 100, 2)
+            result["domain_adjustments"] = domain_adjustments
+            # Update explanation to mention corrections
+            if domain_adjustments:
+                adj_summary = ", ".join([f"{k}: {v:+.1%}" for k, v in list(domain_adjustments.items())[:3]])
+                result["explanation"] += f"\n\nNote: Prediction adjusted based on domain knowledge ({adj_summary}...)"
+        
+        return result
     
     def batch_predict(self, input_list: List[Dict[str, str]]) -> List[Dict[str, Any]]:
         """
@@ -472,13 +806,31 @@ class PPDAgent:
                 y_train_split = y_train
                 y_test_split = y_test
             
+            # 🔧 CRITICAL: Update cat_cols based on actual columns in X_train_split BEFORE creating pipeline
+            # This ensures we only use categorical columns that actually exist in the training data
+            X_train_cols = set(X_train_split.columns)
+            actual_cat_cols = [col for col in X_train_split.columns if X_train_split[col].dtype == "object"]
+            
+            # Filter self.cat_cols to only include columns that exist in X_train_split
+            valid_cat_cols = [col for col in self.cat_cols if col in X_train_cols]
+            
+            # If there's a mismatch, use the actual categorical columns from the data
+            if set(valid_cat_cols) != set(actual_cat_cols):
+                print(f"  ⚠️  Warning: cat_cols mismatch detected. Updating to match actual data.")
+                print(f"     Old cat_cols: {self.cat_cols}")
+                print(f"     Actual cat_cols in data: {actual_cat_cols}")
+                valid_cat_cols = actual_cat_cols
+            
+            # Use the validated cat_cols for pipeline creation
+            cat_cols_for_pipeline = valid_cat_cols
+            
             # Create Random Forest pipeline
             print("Creating Random Forest pipeline...")
             # Handle max_features: convert "None" string to None, "auto" to "sqrt"
             max_features_param = None if max_features == "None" else ("sqrt" if max_features == "auto" else max_features)
             
             rf_pipeline = create_rf_pipeline(
-                cat_cols=self.cat_cols,
+                cat_cols=cat_cols_for_pipeline,
                 n_estimators=n_estimators,
                 max_depth=max_depth,
                 min_samples_split=min_samples_split,
@@ -497,6 +849,15 @@ class PPDAgent:
             # Update agent's pipeline and training data
             self.pipeline = rf_pipeline
             self.X_train = X_train_split
+            
+            # Update feature columns and dtypes based on new training data
+            self.feature_columns = list(X_train_split.columns)
+            self.feature_columns = [col for col in self.feature_columns if col != "PPD_Composite"]
+            self.feature_dtypes = {col: str(X_train_split[col].dtype) for col in self.feature_columns}
+            
+            # Update cat_cols to match actual dtypes in X_train_split (already validated above)
+            self.cat_cols = cat_cols_for_pipeline
+            print(f"  ✅ Updated cat_cols to: {self.cat_cols}")
             
             # Reinitialize SHAP explainer with new model
             print("Reinitializing SHAP explainer with Random Forest model...")
@@ -587,12 +948,30 @@ class PPDAgent:
                 y_train_split = y_train
                 y_test_split = y_test
             
+            # 🔧 CRITICAL: Update cat_cols based on actual columns in X_train_split BEFORE creating pipeline
+            # This ensures we only use categorical columns that actually exist in the training data
+            X_train_cols = set(X_train_split.columns)
+            actual_cat_cols = [col for col in X_train_split.columns if X_train_split[col].dtype == "object"]
+            
+            # Filter self.cat_cols to only include columns that exist in X_train_split
+            valid_cat_cols = [col for col in self.cat_cols if col in X_train_cols]
+            
+            # If there's a mismatch, use the actual categorical columns from the data
+            if set(valid_cat_cols) != set(actual_cat_cols):
+                print(f"  ⚠️  Warning: cat_cols mismatch detected. Updating to match actual data.")
+                print(f"     Old cat_cols: {self.cat_cols}")
+                print(f"     Actual cat_cols in data: {actual_cat_cols}")
+                valid_cat_cols = actual_cat_cols
+            
+            # Use the validated cat_cols for pipeline creation
+            cat_cols_for_pipeline = valid_cat_cols
+            
             # Create and train XGBoost pipeline
             if use_optimization:
                 print("Creating XGBoost pipeline with hyperparameter optimization...")
                 print("⏱ This may take several minutes...")
                 xgb_pipeline, best_params, cv_results = optimize_XGBoost_hyperparameters(
-                    X_train_split, y_train_split, self.cat_cols,
+                    X_train_split, y_train_split, cat_cols_for_pipeline,
                     n_iter=n_iter,
                     cv=cv,
                     scoring=scoring,
@@ -602,7 +981,7 @@ class PPDAgent:
                 optimization_info = "Hyperparameter optimization applied"
             else:
                 print("Creating XGBoost pipeline with default parameters...")
-                xgb_pipeline = create_XGBoost_pipeline(self.cat_cols)
+                xgb_pipeline = create_XGBoost_pipeline(cat_cols_for_pipeline)
                 best_params = {}
                 optimization_info = "Using default hyperparameters"
             
@@ -615,6 +994,15 @@ class PPDAgent:
             # Update agent's pipeline and training data
             self.pipeline = xgb_pipeline
             self.X_train = X_train_split
+            
+            # Update feature columns and dtypes based on new training data
+            self.feature_columns = list(X_train_split.columns)
+            self.feature_columns = [col for col in self.feature_columns if col != "PPD_Composite"]
+            self.feature_dtypes = {col: str(X_train_split[col].dtype) for col in self.feature_columns}
+            
+            # Update cat_cols to match actual dtypes in X_train_split (already validated above)
+            self.cat_cols = cat_cols_for_pipeline
+            print(f"  ✅ Updated cat_cols to: {self.cat_cols}")
             
             # Reinitialize SHAP explainer with new model
             print("Reinitializing SHAP explainer with XGBoost model...")

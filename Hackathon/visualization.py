@@ -55,14 +55,52 @@ def plot_target_distribution(y, title="Target Distribution", return_image=False,
 
 def plot_feature_distributions(df, cat_cols, target, n_cols=3, return_image=False, save_path=None):
     """Plot distributions of categorical features by target."""
-    n_features = len(cat_cols)
+    # Exclude Name and ID from feature distributions (Name is for display only, ID is for merging only)
+    excluded_cols = ['Name', 'ID']
+    filtered_cat_cols = [col for col in cat_cols if col not in excluded_cols]
+    
+    # Additional safety check: ensure Name and ID are not in the dataframe columns we're using
+    # Also verify the column exists in df before plotting
+    valid_cat_cols = []
+    for col in filtered_cat_cols:
+        if col in df.columns and col not in excluded_cols:
+            valid_cat_cols.append(col)
+        elif col in excluded_cols:
+            # Skip if somehow excluded columns made it through
+            continue
+    
+    n_features = len(valid_cat_cols)
+    if n_features == 0:
+        print("Warning: No valid categorical features to plot after filtering out Name and ID")
+        # Create an empty plot with a message
+        plt.figure(figsize=(8, 6))
+        plt.text(0.5, 0.5, 'No categorical features available\n(Name and ID excluded)', 
+                ha='center', va='center', fontsize=14, 
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        plt.axis('off')
+        plt.title('Feature Distributions', fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        if return_image:
+            return _fig_to_base64(save_path=save_path, filename="feature_distributions.png")
+        if matplotlib.get_backend().lower() == 'agg':
+            plt.close()
+        else:
+            try:
+                plt.show()
+            except Exception:
+                plt.close()
+        return
+    
     n_rows = (n_features + n_cols - 1) // n_cols
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows))
     axes = axes.flatten() if n_features > 1 else [axes]
     
-    for idx, col in enumerate(cat_cols[:n_features]):
+    for idx, col in enumerate(valid_cat_cols[:n_features]):
         ax = axes[idx]
+        # Double-check that Name and ID are not being plotted
+        if col in excluded_cols:
+            continue
         crosstab = pd.crosstab(df[col], df[target])
         crosstab.plot(kind='bar', ax=ax, color=['#2ecc71', '#e74c3c'])
         ax.set_title(f'{col}', fontweight='bold')
@@ -278,79 +316,135 @@ def plot_shap_summary(pipeline, X_test, cat_cols, max_display=10, save_path=None
 
 def plot_correlation_heatmap(df, target, return_image=False, save_path=None):
     """Plot correlation heatmap for features (handles both numerical and categorical)."""
-    # Create a copy of dataframe for encoding
-    df_encoded = df.copy()
-    
-    # Encode categorical columns to numerical for correlation calculation
-    from sklearn.preprocessing import LabelEncoder
-    le = LabelEncoder()
-    
-    # Get all feature columns (exclude target if it exists)
-    feature_cols = [col for col in df_encoded.columns if col != target]
-    
-    # Encode categorical columns
-    for col in feature_cols:
-        if df_encoded[col].dtype == 'object':
-            try:
-                df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))
-            except Exception:
-                # If encoding fails, try to convert to numeric directly
+    try:
+        # Create a copy of dataframe for encoding
+        df_encoded = df.copy()
+        
+        # Exclude ID and Name from correlation heatmap (ID is for merging only, Name is for display only)
+        excluded_cols = ['ID', 'Name']
+        
+        # Get all feature columns (exclude target, ID, and Name)
+        feature_cols = [col for col in df_encoded.columns if col != target and col not in excluded_cols]
+        
+        if len(feature_cols) == 0:
+            # No features to plot
+            plt.figure(figsize=(8, 6))
+            plt.text(0.5, 0.5, 'No features available\nfor correlation analysis', 
+                    ha='center', va='center', fontsize=14, 
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+            plt.axis('off')
+            plt.title('Correlation Heatmap', fontsize=14, fontweight='bold')
+            plt.tight_layout()
+            if return_image:
+                return _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
+            if matplotlib.get_backend().lower() == 'agg':
+                plt.close()
+            else:
                 try:
-                    df_encoded[col] = pd.to_numeric(df_encoded[col], errors='coerce')
+                    plt.show()
                 except Exception:
-                    pass
-    
-    # Select columns that are now numerical (after encoding)
-    numerical_cols = df_encoded.select_dtypes(include=[np.number]).columns.tolist()
-    
-    # Remove target from numerical_cols if it's there
-    if target in numerical_cols:
-        numerical_cols.remove(target)
-    
-    if len(numerical_cols) > 1:
-        plt.figure(figsize=(12, 10))
-        corr_matrix = df_encoded[numerical_cols].corr()
+                    plt.close()
+            return
         
-        # Create heatmap
-        sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
-                   center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8},
-                   xticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols],
-                   yticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols])
-        plt.title('Correlation Heatmap (Categorical Features Encoded)', fontsize=14, fontweight='bold')
-        plt.xticks(rotation=45, ha='right')
-        plt.yticks(rotation=0)
-        plt.tight_layout()
+        # Encode categorical columns to numerical for correlation calculation
+        # IMPORTANT: Create a new LabelEncoder for each column to avoid conflicts
+        from sklearn.preprocessing import LabelEncoder
         
-        if return_image:
-            return _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
-        # Close figure instead of showing when using non-interactive backend
-        if matplotlib.get_backend().lower() == 'agg':
-            plt.close()
+        # Encode categorical columns (each column gets its own encoder)
+        for col in feature_cols:
+            if df_encoded[col].dtype == 'object':
+                try:
+                    le = LabelEncoder()  # New encoder for each column
+                    df_encoded[col] = le.fit_transform(df_encoded[col].astype(str).fillna(''))
+                except Exception as e:
+                    # If encoding fails, try to convert to numeric directly
+                    try:
+                        df_encoded[col] = pd.to_numeric(df_encoded[col], errors='coerce')
+                    except Exception:
+                        # If all else fails, drop the column
+                        print(f"Warning: Could not encode column {col} for correlation heatmap: {e}")
+                        if col in df_encoded.columns:
+                            df_encoded = df_encoded.drop(columns=[col])
+        
+        # Select columns that are now numerical (after encoding)
+        numerical_cols = df_encoded.select_dtypes(include=[np.number]).columns.tolist()
+        
+        # Remove target, ID, and Name from numerical_cols if they're there
+        for col_to_remove in [target] + excluded_cols:
+            if col_to_remove in numerical_cols:
+                numerical_cols.remove(col_to_remove)
+        
+        if len(numerical_cols) > 1:
+            plt.figure(figsize=(12, 10))
+            corr_matrix = df_encoded[numerical_cols].corr()
+            
+            # Create heatmap
+            sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
+                       center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8},
+                       xticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols],
+                       yticklabels=[col[:20] + '...' if len(col) > 20 else col for col in numerical_cols])
+            plt.title('Correlation Heatmap (Categorical Features Encoded)', fontsize=14, fontweight='bold')
+            plt.xticks(rotation=45, ha='right')
+            plt.yticks(rotation=0)
+            plt.tight_layout()
+            
+            if return_image:
+                result = _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
+                return result
+            # Close figure instead of showing when using non-interactive backend
+            if matplotlib.get_backend().lower() == 'agg':
+                plt.close()
+            else:
+                try:
+                    plt.show()
+                except Exception:
+                    plt.close()  # Fallback to close if show fails
         else:
-            try:
-                plt.show()
-            except Exception:
-                plt.close()  # Fallback to close if show fails
-    else:
-        # If no numerical columns, create a message plot
+            # If no numerical columns, create a message plot
+            plt.figure(figsize=(8, 6))
+            plt.text(0.5, 0.5, f'Insufficient numerical features for correlation analysis\n(Found {len(numerical_cols)} numerical columns, need at least 2)', 
+                    ha='center', va='center', fontsize=14, 
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+            plt.axis('off')
+            plt.title('Correlation Heatmap', fontsize=14, fontweight='bold')
+            plt.tight_layout()
+            
+            if return_image:
+                result = _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
+                return result
+            # Close figure instead of showing when using non-interactive backend
+            if matplotlib.get_backend().lower() == 'agg':
+                plt.close()
+            else:
+                try:
+                    plt.show()
+                except Exception:
+                    plt.close()  # Fallback to close if show fails
+    except Exception as e:
+        # Error handling: create error message plot
+        import traceback
+        error_msg = f"Error generating correlation heatmap: {str(e)}"
+        print(f"ERROR in plot_correlation_heatmap: {error_msg}")
+        print(traceback.format_exc())
+        
         plt.figure(figsize=(8, 6))
-        plt.text(0.5, 0.5, 'No numerical features available\nfor correlation analysis', 
-                ha='center', va='center', fontsize=14, 
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        plt.text(0.5, 0.5, f'Error generating correlation heatmap:\n{str(e)[:100]}', 
+                ha='center', va='center', fontsize=12, 
+                bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.5))
         plt.axis('off')
-        plt.title('Correlation Heatmap', fontsize=14, fontweight='bold')
+        plt.title('Correlation Heatmap - Error', fontsize=14, fontweight='bold')
         plt.tight_layout()
         
         if return_image:
-            return _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
-        # Close figure instead of showing when using non-interactive backend
+            result = _fig_to_base64(save_path=save_path, filename="correlation_heatmap.png")
+            return result
         if matplotlib.get_backend().lower() == 'agg':
             plt.close()
         else:
             try:
                 plt.show()
             except Exception:
-                plt.close()  # Fallback to close if show fails
+                plt.close()
 
 
 def plot_prediction_distribution(y_proba, title="Prediction Probability Distribution", return_image=False, save_path=None):
@@ -404,7 +498,7 @@ def create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc,
     if save_plots:
         save_path = os.path.join("output", "plots", algorithm_name)
         os.makedirs(save_path, exist_ok=True)
-        print(f"\n📁 Saving plots to: {save_path}/")
+        print(f"\nSaving plots to: {save_path}/")
     
     # 1. Target distribution
     print("\n1. Plotting target distribution...")
@@ -435,9 +529,9 @@ def create_all_visualizations(df, X_test, y_test, y_pred, y_proba, roc_auc,
     print("\n7. Creating SHAP visualizations...")
     plot_shap_summary(pipeline, X_test, cat_cols, save_path=save_path)
     
-    print("\n✅ All visualizations completed!")
+    print("\nAll visualizations completed!")
     if save_path:
-        print(f"📁 All plots saved to: {save_path}/")
+        print(f"All plots saved to: {save_path}/")
 
 
 def _fig_to_base64(save_path=None, filename=None):
@@ -459,7 +553,7 @@ def _fig_to_base64(save_path=None, filename=None):
             filename = f"plot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
         filepath = os.path.join(save_path, filename)
         plt.savefig(filepath, format='png', dpi=100, bbox_inches='tight')
-        print(f"   💾 Saved: {filepath}")
+        print(f"   Saved: {filepath}")
     
     # Convert to base64 for HTML
     buf = io.BytesIO()

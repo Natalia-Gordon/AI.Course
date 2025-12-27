@@ -331,10 +331,14 @@ def save_epds_assessment(state: EPDSState, sentiment_score: float, keywords: Lis
         answers.append(0)
     
     # Create row data
+    # Use patient name if available, otherwise use ID-based name (not UUID)
+    # Only use Patient_ID format if name is truly empty
+    patient_name_to_save = state.patient_name.strip() if state.patient_name and state.patient_name.strip() else f"Patient_{next_id}"
+    
     row_data = {
         "ID": [next_id],
         "Timestamp": [timestamp],
-        "Name": [state.patient_name if state.patient_name else f"Patient_{next_id}"],
+        "Name": [patient_name_to_save],
         "Total Scores": [total_score]
     }
     
@@ -402,6 +406,8 @@ class EPDSAgent:
         """Initialize LangChain components."""
         try:
             openai_api_key = os.getenv("OPENAI_API_KEY")
+            if openai_api_key:
+                openai_api_key = openai_api_key.strip()  # Remove any whitespace/newlines
             if not openai_api_key:
                 print("⚠️ OPENAI_API_KEY not found. EPDS agent will work in basic mode.")
                 return
@@ -437,6 +443,7 @@ class EPDSAgent:
 3. אם המטופלת משתפת רגשות, השתמש בכלי analyze_sentiment לניתוח
 4. אסוף טקסט חופשי על רגשות בסוף
 5. לאחר השלמת EPDS, הצע חיבור למודל XGBoost להערכת סיכון
+6. **חשוב מאוד: השתמש רק בעברית! אל תוסיף מילים באנגלית כמו "sadness", "depression", "anxiety" וכו'. השתמש רק במילים עבריות.**
 
 שאלות EPDS:
 {epds_questions}
@@ -459,7 +466,7 @@ class EPDSAgent:
                 self.langchain_agent = create_agent(
                     model=self.llm,
                     tools=tools,
-                    system_prompt="אתה סוכן EPDS מקצועי שמנהל שיחות רגישות עם נשים לאחר לידה."
+                    system_prompt="אתה סוכן EPDS מקצועי שמנהל שיחות רגישות עם נשים לאחר לידה. **חשוב מאוד: השתמש רק בעברית! אל תוסיף מילים באנגלית כמו 'sadness', 'depression', 'anxiety' וכו'. השתמש רק במילים עבריות כמו 'עצב', 'דיכאון', 'חרדה'.**"
                 )
                 agent_created = True
             except (ImportError, AttributeError, Exception) as e:
@@ -510,11 +517,12 @@ class EPDSAgent:
 השאלה המקורית (EPDS): {epds_question}
 
 תפקידך: להמיר את השאלה לשפה טבעית ושיחה, כאילו אתה שואל חברה או מכרה. 
-- הסר את המילה "בשבוע האחרון" אם היא בתחילת השאלה (תוכל להזכיר אותה באופן טבעי)
+- הסר את המילה "בשבוע האחרון" אם היא בתחילת השאלה (אל תוסיף מילים כמו "lately" או "לאחרונה" - פשוט הסר את ההתייחסות לזמן)
 - שנה את הניסוח לניסוח טבעי ושיחה
 - שמור על המשמעות המקורית
 - השתמש בשפה חמה ואמפתית
 - אל תדבר על "שאלה מספר X" או "שאלה 1" - רק שאל את השאלה באופן טבעי
+- חשוב: השתמש רק בעברית, אל תוסיף מילים באנגלית כמו "lately"
 
 דוגמה:
 מקור: "בשבוע האחרון, הצלחתי לצחוק ולראות את הצד המצחיק של דברים"
@@ -523,10 +531,53 @@ class EPDSAgent:
 חזור רק עם השאלה המתורגמת, ללא הסברים נוספים."""
             
             conversational_question = self.llm.invoke(conversion_prompt).content.strip()
+            # Remove English words that might appear
+            conversational_question = self._remove_english_words(conversational_question)
             return conversational_question
         except Exception:
             # Fallback if LLM fails
             return epds_question.replace("בשבוע האחרון, ", "")
+    
+    def _remove_english_words(self, text: str) -> str:
+        """Remove common English words that might appear in Hebrew conversations."""
+        # Common English emotional/medical words that should be in Hebrew
+        english_words = [
+            "sadness", "Sadness", "SADNESS",
+            "depression", "Depression", "DEPRESSION",
+            "anxiety", "Anxiety", "ANXIETY",
+            "lately", "Lately", "LATELY",
+            "stress", "Stress", "STRESS",
+            "feeling", "Feeling", "FEELING",
+            "emotions", "Emotions", "EMOTIONS",
+            "happy", "Happy", "HAPPY",
+            "sad", "Sad", "SAD",
+            "worried", "Worried", "WORRIED",
+            "tired", "Tired", "TIRED",
+            "exhausted", "Exhausted", "EXHAUSTED"
+        ]
+        
+        result = text
+        for word in english_words:
+            # Remove word with spaces around it
+            result = result.replace(f" {word} ", " ")
+            result = result.replace(f" {word},", ",")
+            result = result.replace(f" {word}.", ".")
+            result = result.replace(f" {word}?", "?")
+            result = result.replace(f" {word}!", "!")
+            result = result.replace(f" {word}\n", "\n")
+            # Remove at start
+            if result.startswith(f"{word} "):
+                result = result[len(word)+1:]
+            # Remove at end
+            if result.endswith(f" {word}"):
+                result = result[:-len(word)-1]
+        
+        # Clean up double spaces and extra whitespace
+        while "  " in result:
+            result = result.replace("  ", " ")
+        result = result.strip()
+        
+        return result
     
     def _get_natural_transition(self, previous_answer_emotional: bool = False) -> str:
         """Get a natural transition phrase between questions."""
@@ -553,10 +604,20 @@ class EPDSAgent:
     
     def start_conversation(self, patient_name: str = "") -> str:
         """Start a new EPDS conversation with a natural, human-like greeting."""
-        name_part = f" {patient_name}" if patient_name else ""
+        # Strip whitespace and handle None/empty values properly
+        # Only use UUID if name is truly empty (not provided)
+        if patient_name is None:
+            patient_name = ""
+        patient_name_clean = patient_name.strip() if patient_name else ""
+        
+        # Only generate UUID if name is truly empty - otherwise use empty string
+        # This allows the name to be captured later in the conversation if provided
+        final_patient_name = patient_name_clean if patient_name_clean else ""
+        
+        name_part = f" {final_patient_name}" if final_patient_name else ""
         self.state = EPDSState(
             session_id=str(uuid.uuid4()),
-            patient_name=patient_name if patient_name else f"Patient_{uuid.uuid4().hex[:8]}",
+            patient_name=final_patient_name,  # Use empty string instead of UUID - will be updated if name provided later
             needs_epds_question=True,
             needs_free_text=False,
             assessment_complete=False
@@ -584,6 +645,23 @@ class EPDSAgent:
         """Process user message and return agent response."""
         if self.state is None:
             return "אנא התחילי שיחה קודם"
+        
+        # Check if patient_name is still UUID-based and try to update from conversation
+        # This allows capturing the name if user provides it during conversation
+        if self.state.patient_name and self.state.patient_name.startswith("Patient_"):
+            # If this is the first message and it looks like a name (short, no numbers, not an answer)
+            if len(self.state.conversation_history) == 0:
+                words = user_message.strip().split()
+                # Simple heuristic: if message is 1-3 words, doesn't contain digits, and not a common answer
+                if (len(words) <= 3 and 
+                    len(user_message.strip()) > 0 and 
+                    not any(char.isdigit() for char in user_message) and
+                    user_message.strip().lower() not in ['0', '1', '2', '3', 'כן', 'לא', 'yes', 'no']):
+                    # Might be a name - update it
+                    potential_name = user_message.strip()
+                    if potential_name and len(potential_name) > 1:
+                        self.state.patient_name = potential_name
+                        print(f"Updated patient name from first message: {potential_name}")
         
         # Add user message to history
         self.state.conversation_history.append({
@@ -665,10 +743,13 @@ class EPDSAgent:
 3. לנסות לפרש את התשובה לציון 0-3 אם אפשר
 4. אם לא אפשר, להזמין אותה לפרט קצת יותר
 
-חזור עם תגובה קצרה, אמפתית וטבעית בעברית. אם הצלחת לפרש לציון, ציין אותו בסוף בצורה עדינה."""
+**חשוב מאוד: השתמש רק בעברית! אל תוסיף מילים באנגלית כמו "sadness", "depression", "anxiety" וכו'. השתמש רק במילים עבריות כמו "עצב", "דיכאון", "חרדה".**
+
+חזור עם תגובה קצרה, אמפתית וטבעית בעברית בלבד. אם הצלחת לפרש לציון, ציין אותו בסוף בצורה עדינה."""
                         
                         llm_response = self.llm.invoke(llm_context).content.strip()
-                        response = llm_response
+                        # Remove common English words that might appear
+                        response = self._remove_english_words(llm_response)
                         
                         # Try to extract any score the LLM might have inferred
                         extracted_score = extract_answer_score(llm_response)

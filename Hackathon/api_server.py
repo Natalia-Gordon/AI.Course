@@ -67,17 +67,34 @@ app.add_middleware(
 
 # Request/Response models
 class PredictionRequest(BaseModel):
-    """Request model for single prediction."""
-    age: str = Field(..., description="Age group (e.g., '25-30', '30-35')")
-    feeling_sad: str = Field(..., description="Feeling sad or tearful: Yes/No/Sometimes")
-    irritable: str = Field(..., description="Irritable towards baby & partner: Yes/No/Sometimes")
-    trouble_sleeping: str = Field(..., description="Trouble sleeping: Yes/No/Two or more days a week")
-    concentration: str = Field(..., description="Problems concentrating: Yes/No/Often")
-    appetite: str = Field(..., description="Overeating or loss of appetite: Yes/No/Not at all")
-    feeling_anxious: str = Field(..., description="Feeling anxious: Yes/No")
-    guilt: str = Field(..., description="Feeling of guilt: Yes/No/Maybe")
-    bonding: str = Field(..., description="Problems of bonding with baby: Yes/No/Sometimes")
-    suicide_attempt: str = Field(..., description="Suicide attempt: Yes/No/Not interested to say")
+    """Request model for single prediction with new feature structure."""
+    # Demographics
+    Age: Optional[str] = Field(default="", description="Actual age as numeric value (e.g., '30', '35', '27')")
+    Marital_status: Optional[str] = Field(default="", description="Marital status (e.g., 'Married', 'Single')")
+    SES: Optional[str] = Field(default="", description="Socioeconomic status (e.g., 'High', 'Low', 'Medium')")
+    Population: Optional[str] = Field(default="", description="Population group")
+    Employment_Category: Optional[str] = Field(default="", description="Employment category")
+    
+    # Clinical data
+    First_birth: Optional[str] = Field(default="", description="First birth: Yes/No")
+    GDM: Optional[str] = Field(default="", description="Gestational Diabetes Mellitus: Yes/No")
+    TSH: Optional[str] = Field(default="", description="TSH level: Normal/Abnormal")
+    NVP: Optional[str] = Field(default="", description="Nausea and Vomiting of Pregnancy: Yes/No")
+    GH: Optional[str] = Field(default="", description="Gestational Hypertension: Yes/No")
+    Mode_of_birth: Optional[str] = Field(default="", description="Mode of birth (e.g., 'Spontaneous Vaginal', 'Cesarean')")
+    
+    # Psychiatric data
+    Depression_History: Optional[str] = Field(default="", description="Depression history")
+    Anxiety_History: Optional[str] = Field(default="", description="Anxiety history")
+    Depression_or_anxiety_during_pregnancy: Optional[str] = Field(default="", description="Depression or anxiety during pregnancy: Yes/No")
+    Use_of_psychiatric_medications: Optional[str] = Field(default="", description="Use of psychiatric medications: Yes/No")
+    
+    # Functional/Psychosocial data
+    Sleep_quality: Optional[str] = Field(default="", description="Sleep quality (e.g., 'Normal', 'Insomnia', 'RLS')")
+    Fatigue: Optional[str] = Field(default="", description="Fatigue: Yes/No")
+    Partner_support: Optional[str] = Field(default="", description="Partner support level (e.g., 'High', 'Moderate', 'Interrupted')")
+    Family_or_social_support: Optional[str] = Field(default="", description="Family or social support level (e.g., 'High', 'Moderate', 'Low')")
+    Domestic_violence: Optional[str] = Field(default="", description="Domestic violence: No/Physical/Sexual/Emotional")
 
 
 class BatchPredictionRequest(BaseModel):
@@ -154,18 +171,31 @@ async def predict(request: PredictionRequest):
         raise HTTPException(status_code=500, detail="Agent not initialized")
     
     try:
-        result = agent.predict(
-            age=request.age,
-            feeling_sad=request.feeling_sad,
-            irritable=request.irritable,
-            trouble_sleeping=request.trouble_sleeping,
-            concentration=request.concentration,
-            appetite=request.appetite,
-            feeling_anxious=request.feeling_anxious,
-            guilt=request.guilt,
-            bonding=request.bonding,
-            suicide_attempt=request.suicide_attempt
-        )
+        # Convert request to dictionary with proper column names
+        input_dict = {
+            "Age": request.Age or "",
+            "Marital status": request.Marital_status or "",
+            "SES": request.SES or "",
+            "Population": request.Population or "",
+            "Employment Category": request.Employment_Category or "",
+            "First birth": request.First_birth or "",
+            "GDM": request.GDM or "",
+            "TSH": request.TSH or "",
+            "NVP": request.NVP or "",
+            "GH": request.GH or "",
+            "Mode of birth": request.Mode_of_birth or "",
+            "Depression History": request.Depression_History or "",
+            "Anxiety History": request.Anxiety_History or "",
+            "Depression or anxiety during pregnancy": request.Depression_or_anxiety_during_pregnancy or "",
+            "Use of psychiatric medications": request.Use_of_psychiatric_medications or "",
+            "Sleep quality": request.Sleep_quality or "",
+            "Fatigue": request.Fatigue or "",
+            "Partner support": request.Partner_support or "",
+            "Family or social support": request.Family_or_social_support or "",
+            "Domestic violence": request.Domestic_violence or "",
+        }
+        
+        result = agent.predict_from_dict(input_dict)
         return PredictionResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction failed: {str(e)}")
@@ -188,16 +218,26 @@ async def predict_batch(request: BatchPredictionRequest):
     try:
         input_list = [
             {
-                "Age": p.age,
-                "Feeling sad or Tearful": p.feeling_sad,
-                "Irritable towards baby & partner": p.irritable,
-                "Trouble sleeping at night": p.trouble_sleeping,
-                "Problems concentrating or making decision": p.concentration,
-                "Overeating or loss of appetite": p.appetite,
-                "Feeling anxious": p.feeling_anxious,
-                "Feeling of guilt": p.guilt,
-                "Problems of bonding with baby": p.bonding,
-                "Suicide attempt": p.suicide_attempt
+                "Age": p.Age or "",
+                "Marital status": p.Marital_status or "",
+                "SES": p.SES or "",
+                "Population": p.Population or "",
+                "Employment Category": p.Employment_Category or "",
+                "First birth": p.First_birth or "",
+                "GDM": p.GDM or "",
+                "TSH": p.TSH or "",
+                "NVP": p.NVP or "",
+                "GH": p.GH or "",
+                "Mode of birth": p.Mode_of_birth or "",
+                "Depression History": p.Depression_History or "",
+                "Anxiety History": p.Anxiety_History or "",
+                "Depression or anxiety during pregnancy": p.Depression_or_anxiety_during_pregnancy or "",
+                "Use of psychiatric medications": p.Use_of_psychiatric_medications or "",
+                "Sleep quality": p.Sleep_quality or "",
+                "Fatigue": p.Fatigue or "",
+                "Partner support": p.Partner_support or "",
+                "Family or social support": p.Family_or_social_support or "",
+                "Domestic violence": p.Domestic_violence or "",
             }
             for p in request.patients
         ]

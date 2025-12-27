@@ -25,43 +25,71 @@ def setup_agent():
     """Setup and return a trained PPD agent."""
     print("Setting up PPD Agent...")
     
-    # Load data
-    df = pd.read_csv("data/postpartum-depression.csv")
-    df.drop(columns=['Timestamp'], axis=1, inplace=True, errors='ignore')
+    # Load data from multiple CSV files
+    from pathlib import Path
+    data_dir = Path("data")
+    
+    # Load Demographics.csv (full)
+    demographics = pd.read_csv(data_dir / "Demographics.csv")
+    
+    # Load EPDS_answers.csv (only Name, Total Scores, מחשבות פגיעה עצמית columns)
+    epds_columns = ["ID", "Name", "Total Scores", "מחשבות פגיעה עצמית"]
+    epds = pd.read_csv(data_dir / "EPDS_answers.csv", usecols=epds_columns)
+    
+    # Load Clinical_data.csv (full)
+    clinical = pd.read_csv(data_dir / "Clinical_data.csv")
+    
+    # Load Psychiatric_data.csv (full)
+    psychiatric = pd.read_csv(data_dir / "Psychiatric_data.csv")
+    
+    # Load Functional_Psychosocial_data.csv (full)
+    functional = pd.read_csv(data_dir / "Functional_Psychosocial_data.csv")
+    
+    # Merge all dataframes on ID (foreign key)
+    # Perform inner joins on ID - keeps only records with matching IDs across all tables
+    df = demographics.copy()
+    df = df.merge(epds, on="ID", how="inner", suffixes=("", "_epds"), validate="one_to_one")
+    df = df.merge(clinical, on="ID", how="inner", validate="one_to_one")
+    df = df.merge(psychiatric, on="ID", how="inner", validate="one_to_one")
+    df = df.merge(functional, on="ID", how="inner", validate="one_to_one")
+    
+    # Handle duplicate Name column
+    if "Name_epds" in df.columns:
+        df.drop(columns=["Name_epds"], inplace=True)
+    
     df = df.dropna()
     
-    # Create target (simplified for example)
-    symptom_cols = [
-        "Feeling sad or Tearful",
-        "Irritable towards baby & partner",
-        "Trouble sleeping at night",
-        "Problems concentrating or making decision",
-        "Overeating or loss of appetite",
-        "Feeling anxious",
-        "Feeling of guilt",
-        "Problems of bonding with baby",
-        "Suicide attempt"
-    ]
-    
-    df['symptom_count'] = df[symptom_cols].apply(
-        lambda x: (x == "Yes").sum(), axis=1
-    )
-    df['no_count'] = df[symptom_cols].apply(
-        lambda x: (x == "No").sum(), axis=1
-    )
-    
+    # Create target based on EPDS Total Scores and self-harm thoughts
     target = "PPD_Composite"
-    df[target] = ((df['symptom_count'] >= 4) | 
-                  (df['no_count'] < 4) | 
-                  (df['Suicide attempt'] != "No")).astype(int)
     
-    df.drop(columns=['symptom_count', 'no_count'], axis=1, inplace=True, errors='ignore')
+    # Convert Total Scores to numeric if it's not already
+    df['Total Scores'] = pd.to_numeric(df['Total Scores'], errors='coerce')
+    df['מחשבות פגיעה עצמית'] = pd.to_numeric(df['מחשבות פגיעה עצמית'], errors='coerce')
+    
+    # Create composite target: PPD = 1 if Total Scores >= 13 (Likely PPD) OR self-harm thoughts > 0
+    # EPDS scoring: >= 13 indicates Likely PPD, 11-12 indicates Mild depression or dejection, <= 10 indicates Low PPD risk
+    epds_threshold = 13
+    df[target] = ((df['Total Scores'] >= epds_threshold) | 
+                  (df['מחשבות פגיעה עצמית'] > 0)).astype(int)
+    
     df = df.dropna()
     
-    cat_cols = [c for c in df.columns if df[c].dtype == "object" and c != target]
+    # Ensure Age is numeric (convert if needed)
+    if 'Age' in df.columns:
+        df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
     
-    X = df.drop(columns=[target])
+    # Drop ID, Name, and EPDS columns used for target creation (not features)
+    # ID is used for data merging only, Name is only for display purposes
+    X = df.drop(columns=[target, 'ID', 'Name', 'Total Scores', 'מחשבות פגיעה עצמית'], errors='ignore')
     y = df[target]
+    
+    # Validate that ID and Name are not in features
+    if 'ID' in X.columns or 'Name' in X.columns:
+        raise ValueError("ERROR: ID or Name columns found in features! They should not be used for model training.")
+    
+    # Identify categorical and numeric features AFTER creating X (to ensure we only use features in X)
+    cat_cols = [c for c in X.columns if X[c].dtype == "object"]
+    numeric_cols = [c for c in X.columns if X[c].dtype in ['int64', 'float64']]
     
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, stratify=y, random_state=42
@@ -87,19 +115,30 @@ def example_1_standalone_usage():
     
     agent = setup_agent()
     
-    # Single prediction
-    result = agent.predict(
-        age="30-35",
-        feeling_sad="Yes",
-        irritable="Yes",
-        trouble_sleeping="Yes",
-        concentration="Yes",
-        appetite="No",
-        feeling_anxious="Yes",
-        guilt="Yes",
-        bonding="Sometimes",
-        suicide_attempt="No"
-    )
+    # Single prediction using new feature structure
+    patient_data = {
+        "Age": "30",
+        "Marital status": "Married",
+        "SES": "High",
+        "Population": "Secular",
+        "Employment Category": "Employed (Full-Time)",
+        "First birth": "No",
+        "GDM": "No",
+        "TSH": "Normal",
+        "NVP": "Yes",
+        "GH": "No",
+        "Mode of birth": "Spontaneous Vaginal",
+        "Depression History": "Not documented",
+        "Anxiety History": "Not documented",
+        "Depression or anxiety during pregnancy": "Yes",
+        "Use of psychiatric medications": "No",
+        "Sleep quality": "Insomnia",
+        "Fatigue": "Yes",
+        "Partner support": "High",
+        "Family or social support": "Moderate",
+        "Domestic violence": "No"
+    }
+    result = agent.predict_from_dict(patient_data)
     
     print("\nPrediction Result:")
     print(f"Risk Score: {result['risk_percentage']}%")
@@ -118,18 +157,28 @@ def example_2_dict_usage():
     
     agent = setup_agent()
     
-    # Predict from dictionary
+    # Predict from dictionary with new feature structure
     patient_data = {
-        "Age": "25-30",
-        "Feeling sad or Tearful": "No",
-        "Irritable towards baby & partner": "No",
-        "Trouble sleeping at night": "No",
-        "Problems concentrating or making decision": "No",
-        "Overeating or loss of appetite": "No",
-        "Feeling anxious": "No",
-        "Feeling of guilt": "No",
-        "Problems of bonding with baby": "No",
-        "Suicide attempt": "No"
+        "Age": "27",
+        "Marital status": "Married",
+        "SES": "Low",
+        "Population": "Peripheral Jewish towns",
+        "Employment Category": "Employed (Full-Time)",
+        "First birth": "No",
+        "GDM": "No",
+        "TSH": "Normal",
+        "NVP": "No",
+        "GH": "No",
+        "Mode of birth": "Spontaneous Vaginal",
+        "Depression History": "Not documented",
+        "Anxiety History": "Not documented",
+        "Depression or anxiety during pregnancy": "No",
+        "Use of psychiatric medications": "No",
+        "Sleep quality": "Normal",
+        "Fatigue": "No",
+        "Partner support": "High",
+        "Family or social support": "High",
+        "Domestic violence": "No"
     }
     
     result = agent.predict_from_dict(patient_data)
@@ -145,31 +194,51 @@ def example_3_batch_prediction():
     
     agent = setup_agent()
     
-    # Multiple patients
+    # Multiple patients with new feature structure
     patients = [
         {
-            "Age": "30-35",
-            "Feeling sad or Tearful": "Yes",
-            "Irritable towards baby & partner": "Yes",
-            "Trouble sleeping at night": "Yes",
-            "Problems concentrating or making decision": "Yes",
-            "Overeating or loss of appetite": "No",
-            "Feeling anxious": "Yes",
-            "Feeling of guilt": "Yes",
-            "Problems of bonding with baby": "Sometimes",
-            "Suicide attempt": "No"
+            "Age": "30",
+            "Marital status": "Married",
+            "SES": "High",
+            "Population": "Secular",
+            "Employment Category": "Self-Employed",
+            "First birth": "No",
+            "GDM": "No",
+            "TSH": "Normal",
+            "NVP": "Yes",
+            "GH": "No",
+            "Mode of birth": "Spontaneous Vaginal",
+            "Depression History": "Not documented",
+            "Anxiety History": "Not documented",
+            "Depression or anxiety during pregnancy": "Yes",
+            "Use of psychiatric medications": "No",
+            "Sleep quality": "Insomnia",
+            "Fatigue": "Yes",
+            "Partner support": "Interrupted",
+            "Family or social support": "Moderate",
+            "Domestic violence": "No"
         },
         {
-            "Age": "25-30",
-            "Feeling sad or Tearful": "No",
-            "Irritable towards baby & partner": "No",
-            "Trouble sleeping at night": "No",
-            "Problems concentrating or making decision": "No",
-            "Overeating or loss of appetite": "No",
-            "Feeling anxious": "No",
-            "Feeling of guilt": "No",
-            "Problems of bonding with baby": "No",
-            "Suicide attempt": "No"
+            "Age": "27",
+            "Marital status": "Married",
+            "SES": "Low",
+            "Population": "Peripheral Jewish towns",
+            "Employment Category": "Employed (Full-Time)",
+            "First birth": "No",
+            "GDM": "No",
+            "TSH": "Normal",
+            "NVP": "No",
+            "GH": "No",
+            "Mode of birth": "Spontaneous Vaginal",
+            "Depression History": "Not documented",
+            "Anxiety History": "Not documented",
+            "Depression or anxiety during pregnancy": "No",
+            "Use of psychiatric medications": "No",
+            "Sleep quality": "Normal",
+            "Fatigue": "No",
+            "Partner support": "High",
+            "Family or social support": "High",
+            "Domestic violence": "No"
         }
     ]
     
@@ -290,19 +359,30 @@ def example_7_save_load():
     # Load agent
     loaded_agent = PPDAgent.load(agent_path)
     
-    # Use loaded agent
-    result = loaded_agent.predict(
-        age="30-35",
-        feeling_sad="Yes",
-        irritable="Yes",
-        trouble_sleeping="Yes",
-        concentration="Yes",
-        appetite="No",
-        feeling_anxious="Yes",
-        guilt="Yes",
-        bonding="Sometimes",
-        suicide_attempt="No"
-    )
+    # Use loaded agent with new feature structure
+    patient_data = {
+        "Age": "30",
+        "Marital status": "Married",
+        "SES": "High",
+        "Population": "Secular",
+        "Employment Category": "Self-Employed",
+        "First birth": "No",
+        "GDM": "No",
+        "TSH": "Normal",
+        "NVP": "Yes",
+        "GH": "No",
+        "Mode of birth": "Spontaneous Vaginal",
+        "Depression History": "Not documented",
+        "Anxiety History": "Not documented",
+        "Depression or anxiety during pregnancy": "Yes",
+        "Use of psychiatric medications": "No",
+        "Sleep quality": "Insomnia",
+        "Fatigue": "Yes",
+        "Partner support": "Interrupted",
+        "Family or social support": "Moderate",
+        "Domestic violence": "No"
+    }
+    result = loaded_agent.predict_from_dict(patient_data)
     
     print(f"\nLoaded agent prediction: {result['risk_percentage']}%")
 

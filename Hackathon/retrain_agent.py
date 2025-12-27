@@ -4,6 +4,7 @@ This fixes version incompatibility issues when loading the agent.
 """
 
 import pandas as pd
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 from MLmodel import create_XGBoost_pipeline, train_and_evaluate
 from ppd_agent import create_agent_from_training
@@ -12,62 +13,120 @@ print("=" * 60)
 print("Retraining PPD Agent (fixing sklearn version compatibility)")
 print("=" * 60)
 
-# Load the data
-print("\nLoading data...")
-df = pd.read_csv("data/postpartum-depression.csv")
+# Load the data from multiple CSV files
+print("\nLoading data from multiple CSV files...")
+data_dir = Path("data")
 
-# Drop the Timestamp column
-df.drop(columns=['Timestamp'], axis=1, inplace=True, errors='ignore')
+# Load Demographics.csv (full)
+demographics = pd.read_csv(data_dir / "Demographics.csv")
+print(f"Demographics shape: {demographics.shape}")
+
+# Load EPDS_answers.csv (only Name, Total Scores, מחשבות פגיעה עצמית columns)
+epds_columns = ["ID", "Name", "Total Scores", "מחשבות פגיעה עצמית"]
+epds = pd.read_csv(data_dir / "EPDS_answers.csv", usecols=epds_columns)
+print(f"EPDS_answers shape: {epds.shape}")
+
+# Load Clinical_data.csv (full)
+clinical = pd.read_csv(data_dir / "Clinical_data.csv")
+print(f"Clinical_data shape: {clinical.shape}")
+
+# Load Psychiatric_data.csv (full)
+psychiatric = pd.read_csv(data_dir / "Psychiatric_data.csv")
+print(f"Psychiatric_data shape: {psychiatric.shape}")
+
+# Load Functional_Psychosocial_data.csv (full)
+functional = pd.read_csv(data_dir / "Functional_Psychosocial_data.csv")
+print(f"Functional_Psychosocial_data shape: {functional.shape}")
+
+# Merge all dataframes on ID (foreign key)
+print("\nMerging dataframes on ID (foreign key)...")
+
+# Validate ID integrity before merging
+print("Validating ID integrity...")
+demographics_ids = set(demographics['ID'].unique())
+epds_ids = set(epds['ID'].unique())
+clinical_ids = set(clinical['ID'].unique())
+psychiatric_ids = set(psychiatric['ID'].unique())
+functional_ids = set(functional['ID'].unique())
+
+print(f"  Demographics: {len(demographics_ids)} unique IDs")
+print(f"  EPDS_answers: {len(epds_ids)} unique IDs")
+print(f"  Clinical_data: {len(clinical_ids)} unique IDs")
+print(f"  Psychiatric_data: {len(psychiatric_ids)} unique IDs")
+print(f"  Functional_Psychosocial_data: {len(functional_ids)} unique IDs")
+
+# Check for duplicate IDs within each table
+for name, df_check in [("Demographics", demographics), ("EPDS_answers", epds), 
+                        ("Clinical_data", clinical), ("Psychiatric_data", psychiatric),
+                        ("Functional_Psychosocial_data", functional)]:
+    duplicates = df_check['ID'].duplicated().sum()
+    if duplicates > 0:
+        print(f"  ⚠️  Warning: {duplicates} duplicate IDs found in {name}")
+
+# Perform inner joins on ID (foreign key) - keeps only records with matching IDs across all tables
+df = demographics.copy()
+df = df.merge(epds, on="ID", how="inner", suffixes=("", "_epds"), validate="one_to_one")
+df = df.merge(clinical, on="ID", how="inner", validate="one_to_one")
+df = df.merge(psychiatric, on="ID", how="inner", validate="one_to_one")
+df = df.merge(functional, on="ID", how="inner", validate="one_to_one")
+
+# Handle duplicate Name column
+if "Name_epds" in df.columns:
+    df.drop(columns=["Name_epds"], inplace=True)
+
+print(f"Merged dataframe shape: {df.shape}")
+print(f"Final unique IDs: {df['ID'].nunique()}")
 
 # Drop rows with missing values
+print("Dropping rows with missing values...")
 df.dropna(axis=0, inplace=True)
 
-# Create composite target
+# Create composite target based on EPDS Total Scores and self-harm thoughts
 print("Creating composite target...")
-symptom_cols = [
-    "Feeling sad or Tearful",
-    "Irritable towards baby & partner",
-    "Trouble sleeping at night",
-    "Problems concentrating or making decision",
-    "Overeating or loss of appetite",
-    "Feeling anxious",
-    "Feeling of guilt",
-    "Problems of bonding with baby",
-    "Suicide attempt"
-]
-
-# Calculate symptom count
-df['symptom_count'] = df[symptom_cols].apply(
-    lambda x: (x == "Yes").sum(), axis=1
-)
-
-# Calculate "No" answer count
-df['no_count'] = df[symptom_cols].apply(
-    lambda x: (x == "No").sum(), axis=1
-)
-
-# Create composite target
-threshold = 4
-no_threshold = 4
 target = "PPD_Composite"
-df[target] = ((df['symptom_count'] >= threshold) | 
-              (df['no_count'] < no_threshold) | 
-              (df['Suicide attempt'] != "No")).astype(int)
+
+# Convert Total Scores to numeric if it's not already
+df['Total Scores'] = pd.to_numeric(df['Total Scores'], errors='coerce')
+df['מחשבות פגיעה עצמית'] = pd.to_numeric(df['מחשבות פגיעה עצמית'], errors='coerce')
+
+# Create composite target: PPD = 1 if Total Scores >= 13 (Likely PPD) OR self-harm thoughts > 0
+# EPDS scoring: >= 13 indicates Likely PPD, 11-12 indicates Mild depression or dejection, <= 10 indicates Low PPD risk
+epds_threshold = 13
+df[target] = ((df['Total Scores'] >= epds_threshold) | 
+              (df['מחשבות פגיעה עצמית'] > 0)).astype(int)
 
 print(f"Target distribution: {df[target].value_counts().to_dict()}")
 
-# Identify categorical features
-cat_cols = [c for c in df.columns if df[c].dtype == "object" and c not in [target, 'symptom_count', 'no_count']]
-
-# Drop helper columns
-df.drop(columns=['symptom_count', 'no_count'], axis=1, inplace=True, errors='ignore')
+# Final dropna check
 df = df.dropna()
 
-# Prepare features and target
-X = df.drop(columns=[target])
+# Ensure Age is numeric (convert if needed)
+if 'Age' in df.columns:
+    df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
+    print(f"  Age column converted to numeric: {df['Age'].dtype}")
+
+# Prepare features and target (drop ID and Name as they are identifiers)
+# ID is used for data merging only, Name is only for display purposes
+# Also drop Total Scores and מחשבות פגיעה עצמית as they are used for target creation, not as features
+X = df.drop(columns=[target, 'ID', 'Name', 'Total Scores', 'מחשבות פגיעה עצמית'], errors='ignore')
 y = df[target]
 
-print(f"Features shape: {X.shape}")
+# Validate that ID and Name are not in features
+if 'ID' in X.columns or 'Name' in X.columns:
+    raise ValueError("ERROR: ID or Name columns found in features! They should not be used for model training.")
+
+# 🧩 Identify categorical and numeric features AFTER creating X (to ensure we only use features in X)
+cat_cols = [c for c in X.columns if X[c].dtype == "object"]
+numeric_cols = [c for c in X.columns if X[c].dtype in ['int64', 'float64']]
+
+print(f"\n📊 Feature Analysis:")
+print(f"  Total features: {X.shape[1]}")
+print(f"  Categorical features ({len(cat_cols)}): {cat_cols}")
+print(f"  Numeric features ({len(numeric_cols)}): {numeric_cols}")
+print(f"  Feature columns: {list(X.columns)}")
+
+print(f"\n✅ Final feature set:")
+print(f"  Features shape: {X.shape}")
 
 # Split the data
 print("\nSplitting data...")

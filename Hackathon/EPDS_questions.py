@@ -4,7 +4,7 @@ import os
 from textblob import TextBlob
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 
 load_dotenv()
 # Set your OpenAI key in the .env file
@@ -15,7 +15,7 @@ chat_llm = ChatOpenAI(
     temperature=0.5,
     )
 
-    agent_prompt = ChatPromptTemplate.from_messages([
+agent_prompt = ChatPromptTemplate.from_messages([
     ("system",
      """את סוכנת רגשית תומכת ליולדות לאחר לידה.
      את מנהלת שיחה קצרה, רגישה ולא פולשנית.
@@ -103,7 +103,7 @@ def save_conversation(name, epds_answers, free_text_answer, sentiment, keywords)
     row_data = {
         "ID": [next_id],
         "Timestamp": [timestamp],
-        "Name": [name if name else f"Patient_{next_id}"],
+        "Name": [name.strip() if name and name.strip() else f"Patient_{next_id}"],
         "Total Scores": [total_score]
     }
     
@@ -148,7 +148,9 @@ class EPDSConversation:
     def start_conversation(self, name=""):
         """Start a new EPDS conversation."""
         self.reset()
-        self.patient_name = name if name else f"Patient_{self.session_id[:8]}"
+        # Only use UUID if name is truly empty (after stripping whitespace)
+        name_clean = name.strip() if name else ""
+        self.patient_name = name_clean if name_clean else f"Patient_{self.session_id[:8]}"
         self.started = True
         return f"שלום! אני כאן כדי לעזור לך להעריך את המצב הרגשי שלך לאחר הלידה.\n\n" + \
                f"אנא עני על כל שאלה בסולם של 0-3:\n" + \

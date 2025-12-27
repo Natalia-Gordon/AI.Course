@@ -14,18 +14,42 @@ def create_XGBoost_pipeline(cat_cols, **xgb_params):
     """
     Create a preprocessing and modeling pipeline for XGBoost classifier.
     
+    IMPORTANT: OneHotEncoder is ONLY applied to categorical columns.
+    Numeric columns (like Age) are passed through unchanged, which is correct
+    for tree-based models like XGBoost that can handle numeric features directly.
+    
     Args:
-        cat_cols: List of categorical column names
+        cat_cols: List of categorical column names (object dtype)
         **xgb_params: Optional XGBoost hyperparameters to override defaults
         
     Returns:
-        sklearn Pipeline object
+        sklearn Pipeline object with:
+        - Categorical columns: OneHotEncoded
+        - Numeric columns: Passed through unchanged (remainder='passthrough')
     """
-    # 📌 OneHotEncode categorical columns
-    categorical_transformer = OneHotEncoder(handle_unknown="ignore")
+    # 📌 OneHotEncode ONLY categorical columns
+    # OneHotEncoder is designed for categorical data, NOT numeric data
+    # Use sparse_output=False for newer sklearn, sparse=False for older versions
+    try:
+        categorical_transformer = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+    except TypeError:
+        # Fallback for older sklearn versions
+        categorical_transformer = OneHotEncoder(handle_unknown="ignore", sparse=False)
     
+    # 📌 Create transformers list
+    transformers = []
+    
+    # Add categorical transformer ONLY if there are categorical columns
+    if cat_cols:
+        transformers.append(("cat", categorical_transformer, cat_cols))
+    
+    # 📌 Handle numeric columns with passthrough
+    # remainder='passthrough' means all columns NOT in transformers are passed through unchanged
+    # This is correct for tree-based models (XGBoost, Random Forest) which handle numeric features directly
+    # Numeric columns like Age do NOT need OneHotEncoding - they are used as continuous values
     preprocess = ColumnTransformer(
-        transformers=[("cat", categorical_transformer, cat_cols)]
+        transformers=transformers,
+        remainder='passthrough'  # Numeric columns (int64, float64) pass through unchanged
     )
     
     # 📌 Default XGBoost parameters
@@ -166,18 +190,42 @@ def create_rf_pipeline(cat_cols, **rf_params):
     """
     Create a preprocessing and modeling pipeline for Random Forest classifier.
     
+    IMPORTANT: OneHotEncoder is ONLY applied to categorical columns.
+    Numeric columns (like Age) are passed through unchanged, which is correct
+    for tree-based models like Random Forest that can handle numeric features directly.
+    
     Args:
-        cat_cols: List of categorical column names
+        cat_cols: List of categorical column names (object dtype)
         **rf_params: Optional Random Forest hyperparameters to override defaults
         
     Returns:
-        sklearn Pipeline object
+        sklearn Pipeline object with:
+        - Categorical columns: OneHotEncoded
+        - Numeric columns: Passed through unchanged (remainder='passthrough')
     """
-    # 📌 OneHotEncode categorical columns
-    categorical_transformer = OneHotEncoder(handle_unknown="ignore")
+    # 📌 OneHotEncode ONLY categorical columns
+    # OneHotEncoder is designed for categorical data, NOT numeric data
+    # Use sparse_output=False for newer sklearn, sparse=False for older versions
+    try:
+        categorical_transformer = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+    except TypeError:
+        # Fallback for older sklearn versions
+        categorical_transformer = OneHotEncoder(handle_unknown="ignore", sparse=False)
     
+    # 📌 Create transformers list
+    transformers = []
+    
+    # Add categorical transformer ONLY if there are categorical columns
+    if cat_cols:
+        transformers.append(("cat", categorical_transformer, cat_cols))
+    
+    # 📌 Handle numeric columns with passthrough
+    # remainder='passthrough' means all columns NOT in transformers are passed through unchanged
+    # This is correct for tree-based models (XGBoost, Random Forest) which handle numeric features directly
+    # Numeric columns like Age do NOT need OneHotEncoding - they are used as continuous values
     preprocess = ColumnTransformer(
-        transformers=[("cat", categorical_transformer, cat_cols)]
+        transformers=transformers,
+        remainder='passthrough'  # Numeric columns (int64, float64) pass through unchanged
     )
     
     # 📌 Default Random Forest parameters

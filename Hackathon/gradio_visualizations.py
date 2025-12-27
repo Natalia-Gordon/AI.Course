@@ -43,16 +43,16 @@ def create_shap_summary_plot(
         feat_names = [feat.split('__')[-1] if '__' in feat else feat for feat, _ in top_features]
         shap_vals = [val for _, val in top_features]
         
-        # Create horizontal bar plot
-        fig, ax = plt.subplots(figsize=(10, 6))
+        # Create horizontal bar plot - use consistent, moderate size
+        fig, ax = plt.subplots(figsize=(14, 8))
         colors = ['#e74c3c' if val > 0 else '#2ecc71' for val in shap_vals]
         y_pos = np.arange(len(feat_names))
         
         bars = ax.barh(y_pos, shap_vals, color=colors, alpha=0.7)
         ax.set_yticks(y_pos)
-        ax.set_yticklabels(feat_names, fontsize=10)
-        ax.set_xlabel('SHAP Value (Impact on Risk)', fontsize=12, fontweight='bold')
-        ax.set_title('Top 5 Feature Contributions to PPD Risk', fontsize=14, fontweight='bold', pad=20)
+        ax.set_yticklabels(feat_names, fontsize=12)
+        ax.set_xlabel('SHAP Value (Impact on Risk)', fontsize=14, fontweight='bold')
+        ax.set_title('Top 5 Feature Contributions to PPD Risk', fontsize=16, fontweight='bold', pad=20)
         ax.axvline(x=0, color='black', linestyle='--', linewidth=0.8)
         ax.grid(axis='x', alpha=0.3)
         
@@ -62,7 +62,7 @@ def create_shap_summary_plot(
             label_x = width + (0.01 if width > 0 else -0.01)
             ax.text(label_x, bar.get_y() + bar.get_height()/2, 
                    f'{val:.3f}', ha='left' if width > 0 else 'right', 
-                   va='center', fontsize=9, fontweight='bold')
+                   va='center', fontsize=11, fontweight='bold')
         
         plt.tight_layout()
         
@@ -71,19 +71,21 @@ def create_shap_summary_plot(
             try:
                 os.makedirs(save_path, exist_ok=True)
                 filepath = os.path.join(save_path, "shap_summary_bar.png")
-                plt.savefig(filepath, format='png', dpi=100, bbox_inches='tight')
+                plt.savefig(filepath, format='png', dpi=200, bbox_inches='tight')
                 print(f"   💾 Saved: {filepath}")
             except OSError as e:
                 print(f"Warning: Could not save plot to {save_path}: {e}")
         
-        # Convert to base64 HTML
+        # Convert to base64 HTML with higher DPI and better styling
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        plt.savefig(buf, format='png', dpi=250, bbox_inches='tight')
         buf.seek(0)
         img_base64 = base64.b64encode(buf.read()).decode('utf-8')
         plt.close()
         
-        return f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%; height:auto;">'
+        # Improved HTML styling for consistent sizing across XGBoost and RF
+        # Use moderate, consistent width that works well for both models
+        return f'<div style="width:100%; text-align:center; overflow-x:auto; padding:10px;"><img src="data:image/png;base64,{img_base64}" style="width:900px; max-width:100%; height:auto; display:block; margin:0 auto; border:1px solid #ddd;"></div>'
     except Exception as e:
         plt.close()
         raise VisualizationError(f"Failed to create SHAP summary plot: {str(e)}") from e
@@ -123,7 +125,8 @@ def create_enhanced_shap_plot(
         shap_vals = [x[1] for x in sorted_data]
         
         # Create figure with two subplots: bar plot and waterfall
-        fig = plt.figure(figsize=(14, 8))
+        # Use consistent, moderate size that works well for both XGBoost and RF
+        fig = plt.figure(figsize=(18, 10))
         gs = fig.add_gridspec(2, 1, height_ratios=[1, 1.2], hspace=0.3)
         
         # Subplot 1: Horizontal bar plot
@@ -133,9 +136,9 @@ def create_enhanced_shap_plot(
         
         bars = ax1.barh(y_pos, shap_vals, color=colors, alpha=0.7, edgecolor='black', linewidth=1)
         ax1.set_yticks(y_pos)
-        ax1.set_yticklabels(feat_names, fontsize=10)
-        ax1.set_xlabel('SHAP Value (Impact on Risk)', fontsize=11, fontweight='bold')
-        ax1.set_title('Feature Contributions to PPD Risk Prediction', fontsize=13, fontweight='bold', pad=15)
+        ax1.set_yticklabels(feat_names, fontsize=12)
+        ax1.set_xlabel('SHAP Value (Impact on Risk)', fontsize=13, fontweight='bold')
+        ax1.set_title('Feature Contributions to PPD Risk Prediction', fontsize=15, fontweight='bold', pad=15)
         ax1.axvline(x=0, color='black', linestyle='--', linewidth=1)
         ax1.grid(axis='x', alpha=0.3, linestyle=':')
         
@@ -145,7 +148,7 @@ def create_enhanced_shap_plot(
             label_x = width + (0.02 if width > 0 else -0.02)
             ax1.text(label_x, bar.get_y() + bar.get_height()/2, 
                     f'{val:+.3f}', ha='left' if width > 0 else 'right', 
-                    va='center', fontsize=9, fontweight='bold',
+                    va='center', fontsize=11, fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
         
         # Subplot 2: Waterfall-style cumulative plot
@@ -167,27 +170,27 @@ def create_enhanced_shap_plot(
             
             label_y = bar_bottom + bar_height/2
             ax2.text(i + 1, label_y, f'{bar_height:+.3f}', 
-                    ha='center', va='center', fontsize=8, fontweight='bold',
+                    ha='center', va='center', fontsize=10, fontweight='bold',
                     color='white' if abs(bar_height) > 0.05 else 'black')
         
         # Show base value
         ax2.bar(0, base_value, color='#3498db', alpha=0.7, edgecolor='black', linewidth=1)
         ax2.text(0, base_value/2, f'Base\n{base_value:.2f}', 
-                ha='center', va='center', fontsize=8, fontweight='bold', color='white')
+                ha='center', va='center', fontsize=10, fontweight='bold', color='white')
         
         # Show final prediction
         final_pred = cumulative[-1]
         ax2.bar(len(feat_names) + 1, final_pred, color='#9b59b6', alpha=0.7, 
                edgecolor='black', linewidth=2)
         ax2.text(len(feat_names) + 1, final_pred/2, f'Final\n{final_pred:.2f}', 
-                ha='center', va='center', fontsize=8, fontweight='bold', color='white')
+                ha='center', va='center', fontsize=10, fontweight='bold', color='white')
         
         # Set labels
         ax2.set_xticks(range(len(feat_names) + 2))
-        ax2.set_xticklabels(['Base'] + feat_names + ['Final'], rotation=45, ha='right', fontsize=9)
-        ax2.set_ylabel('Cumulative Prediction Value', fontsize=11, fontweight='bold')
+        ax2.set_xticklabels(['Base'] + feat_names + ['Final'], rotation=45, ha='right', fontsize=11)
+        ax2.set_ylabel('Cumulative Prediction Value', fontsize=13, fontweight='bold')
         ax2.set_title('Waterfall Plot: How Features Build Up to Final Prediction', 
-                     fontsize=13, fontweight='bold', pad=15)
+                     fontsize=15, fontweight='bold', pad=15)
         ax2.grid(axis='y', alpha=0.3, linestyle=':')
         ax2.set_ylim([0, max(cumulative) * 1.1])
         
@@ -198,7 +201,7 @@ def create_enhanced_shap_plot(
             Patch(facecolor='#3498db', alpha=0.7, label='Base Value'),
             Patch(facecolor='#9b59b6', alpha=0.7, label='Final Prediction')
         ]
-        ax2.legend(handles=legend_elements, loc='upper left', fontsize=9)
+        ax2.legend(handles=legend_elements, loc='upper left', fontsize=11)
         
         # Use subplots_adjust() instead of tight_layout() for GridSpec compatibility
         plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
@@ -208,19 +211,21 @@ def create_enhanced_shap_plot(
             try:
                 os.makedirs(save_path, exist_ok=True)
                 filepath = os.path.join(save_path, "shap_enhanced_waterfall.png")
-                plt.savefig(filepath, format='png', dpi=120, bbox_inches='tight')
+                plt.savefig(filepath, format='png', dpi=200, bbox_inches='tight')
                 print(f"   💾 Saved: {filepath}")
             except OSError as e:
                 print(f"Warning: Could not save plot to {save_path}: {e}")
         
-        # Convert to base64 HTML
+        # Convert to base64 HTML with higher DPI and better styling
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=120, bbox_inches='tight')
+        plt.savefig(buf, format='png', dpi=250, bbox_inches='tight')
         buf.seek(0)
         img_base64 = base64.b64encode(buf.read()).decode('utf-8')
         plt.close()
         
-        return f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%; height:auto;">'
+        # Improved HTML styling for consistent sizing across XGBoost and RF
+        # Use moderate, consistent width that works well for both models
+        return f'<div style="width:100%; text-align:center; overflow-x:auto; padding:10px;"><img src="data:image/png;base64,{img_base64}" style="width:1000px; max-width:100%; height:auto; display:block; margin:0 auto; border:1px solid #ddd;"></div>'
     except Exception as e:
         plt.close()
         # Fallback to simple plot

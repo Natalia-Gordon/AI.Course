@@ -12,17 +12,41 @@ from ppd_agent import PPDAgent
 
 
 class PPDPredictionInput(BaseModel):
-    """Input schema for PPD prediction tool."""
-    age: str = Field(description="Age group (e.g., '25-30', '30-35', etc.)")
-    feeling_sad: str = Field(description="Feeling sad or tearful: Yes/No/Sometimes")
-    irritable: str = Field(description="Irritable towards baby & partner: Yes/No/Sometimes")
-    trouble_sleeping: str = Field(description="Trouble sleeping: Yes/No/Two or more days a week")
-    concentration: str = Field(description="Problems concentrating: Yes/No/Often")
-    appetite: str = Field(description="Overeating or loss of appetite: Yes/No/Not at all")
-    feeling_anxious: str = Field(description="Feeling anxious: Yes/No")
-    guilt: str = Field(description="Feeling of guilt: Yes/No/Maybe")
-    bonding: str = Field(description="Problems of bonding with baby: Yes/No/Sometimes")
-    suicide_attempt: str = Field(description="Suicide attempt: Yes/No/Not interested to say")
+    """Input schema for PPD prediction tool with new feature structure.
+    
+    Note: Field names should match the exact column names from the merged dataset.
+    Use Field aliases if column names contain spaces or special characters.
+    """
+    # Demographics (matching exact column names)
+    Age: Optional[str] = Field(default="", description="Actual age as numeric value (e.g., '30', '35', '27', etc.)")
+    Marital_status: Optional[str] = Field(default="", alias="Marital status", description="Marital status (e.g., 'Married', 'Single', etc.)")
+    SES: Optional[str] = Field(default="", description="Socioeconomic status (e.g., 'High', 'Low', 'Medium')")
+    Population: Optional[str] = Field(default="", description="Population group")
+    Employment_Category: Optional[str] = Field(default="", alias="Employment Category", description="Employment category")
+    
+    # Clinical data
+    First_birth: Optional[str] = Field(default="", alias="First birth", description="First birth: Yes/No")
+    GDM: Optional[str] = Field(default="", description="Gestational Diabetes Mellitus: Yes/No")
+    TSH: Optional[str] = Field(default="", description="TSH level: Normal/Abnormal")
+    NVP: Optional[str] = Field(default="", description="Nausea and Vomiting of Pregnancy: Yes/No")
+    GH: Optional[str] = Field(default="", description="Gestational Hypertension: Yes/No")
+    Mode_of_birth: Optional[str] = Field(default="", alias="Mode of birth", description="Mode of birth (e.g., 'Spontaneous Vaginal', 'Cesarean', etc.)")
+    
+    # Psychiatric data
+    Depression_History: Optional[str] = Field(default="", alias="Depression History", description="Depression history")
+    Anxiety_History: Optional[str] = Field(default="", alias="Anxiety History", description="Anxiety history")
+    Depression_or_anxiety_during_pregnancy: Optional[str] = Field(default="", alias="Depression or anxiety during pregnancy", description="Depression or anxiety during pregnancy: Yes/No")
+    Use_of_psychiatric_medications: Optional[str] = Field(default="", alias="Use of psychiatric medications", description="Use of psychiatric medications: Yes/No")
+    
+    # Functional/Psychosocial data
+    Sleep_quality: Optional[str] = Field(default="", alias="Sleep quality", description="Sleep quality (e.g., 'Normal', 'Insomnia', 'RLS')")
+    Fatigue: Optional[str] = Field(default="", description="Fatigue: Yes/No")
+    Partner_support: Optional[str] = Field(default="", alias="Partner support", description="Partner support level (e.g., 'High', 'Moderate', 'Interrupted')")
+    Family_or_social_support: Optional[str] = Field(default="", alias="Family or social support", description="Family or social support level (e.g., 'High', 'Moderate', 'Low')")
+    Domestic_violence: Optional[str] = Field(default="", alias="Domestic violence", description="Domestic violence: No/Physical/Sexual/Emotional")
+    
+    class Config:
+        populate_by_name = True  # Allow both field names and aliases
 
 
 class PPDPredictionTool(BaseTool):
@@ -55,22 +79,12 @@ class PPDPredictionTool(BaseTool):
         super().__init__(**kwargs)
         self.agent = ppd_agent
     
-    def _run(self, 
-             age: str,
-             feeling_sad: str,
-             irritable: str,
-             trouble_sleeping: str,
-             concentration: str,
-             appetite: str,
-             feeling_anxious: str,
-             guilt: str,
-             bonding: str,
-             suicide_attempt: str) -> str:
+    def _run(self, **kwargs) -> str:
         """
         Execute the tool.
         
         Args:
-            All input parameters for PPD prediction
+            **kwargs: Feature names and values matching agent's feature columns
         
         Returns:
             Formatted string with prediction results
@@ -79,18 +93,31 @@ class PPDPredictionTool(BaseTool):
             return "Error: PPD Agent not initialized"
         
         try:
-            result = self.agent.predict(
-                age=age,
-                feeling_sad=feeling_sad,
-                irritable=irritable,
-                trouble_sleeping=trouble_sleeping,
-                concentration=concentration,
-                appetite=appetite,
-                feeling_anxious=feeling_anxious,
-                guilt=guilt,
-                bonding=bonding,
-                suicide_attempt=suicide_attempt
-            )
+            # Map field names to actual column names (handling aliases)
+            field_to_column = {
+                "Marital_status": "Marital status",
+                "Employment_Category": "Employment Category",
+                "First_birth": "First birth",
+                "Mode_of_birth": "Mode of birth",
+                "Depression_History": "Depression History",
+                "Anxiety_History": "Anxiety History",
+                "Depression_or_anxiety_during_pregnancy": "Depression or anxiety during pregnancy",
+                "Use_of_psychiatric_medications": "Use of psychiatric medications",
+                "Sleep_quality": "Sleep quality",
+                "Partner_support": "Partner support",
+                "Family_or_social_support": "Family or social support",
+                "Domestic_violence": "Domestic violence",
+            }
+            
+            # Convert kwargs to dict with proper column names
+            input_dict = {}
+            for key, value in kwargs.items():
+                # Use mapped column name if available, otherwise use key as-is
+                column_name = field_to_column.get(key, key)
+                input_dict[column_name] = value
+            
+            # Use predict_from_dict with the converted dictionary
+            result = self.agent.predict_from_dict(input_dict)
             
             # Format result as a readable string
             output = f"""
@@ -113,30 +140,9 @@ Top Contributing Factors:
         except Exception as e:
             return f"Error during prediction: {str(e)}"
     
-    async def _arun(self, 
-                    age: str,
-                    feeling_sad: str,
-                    irritable: str,
-                    trouble_sleeping: str,
-                    concentration: str,
-                    appetite: str,
-                    feeling_anxious: str,
-                    guilt: str,
-                    bonding: str,
-                    suicide_attempt: str) -> str:
+    async def _arun(self, **kwargs) -> str:
         """Async version of _run."""
-        return self._run(
-            age=age,
-            feeling_sad=feeling_sad,
-            irritable=irritable,
-            trouble_sleeping=trouble_sleeping,
-            concentration=concentration,
-            appetite=appetite,
-            feeling_anxious=feeling_anxious,
-            guilt=guilt,
-            bonding=bonding,
-            suicide_attempt=suicide_attempt
-        )
+        return self._run(**kwargs)
 
 
 def create_langchain_tool(ppd_agent: PPDAgent) -> PPDPredictionTool:
