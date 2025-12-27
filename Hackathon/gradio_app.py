@@ -99,6 +99,26 @@ def create_gradio_interface(
 
     # Get feature dtypes to ensure exact match
     feature_dtypes = X_train_sample.dtypes.to_dict()
+    
+    # Helper function to get unique values from dataframe for a given column
+    def get_unique_values(column_name: str, default_choices: List[str] = None) -> List[str]:
+        """Extract unique values from dataframe for a given column."""
+        if df is not None and column_name in df.columns:
+            unique_vals = sorted([str(v) for v in df[column_name].dropna().unique()])
+            # Filter out empty strings
+            unique_vals = [v for v in unique_vals if v.strip()]
+            if unique_vals:
+                return unique_vals
+        # Fallback to default choices if column not found or no unique values
+        return default_choices if default_choices else []
+    
+    # Helper function to get default value (first value from choices, or fallback)
+    def get_default_value(column_name: str, fallback: str = "") -> str:
+        """Get default value for a column (first unique value, or fallback)."""
+        choices = get_unique_values(column_name)
+        if choices:
+            return choices[0]
+        return fallback
 
     # Try to load existing trained agent if available (try both XGBoost and Random Forest)
     agent_loaded = False
@@ -1145,32 +1165,30 @@ The model is now ready for predictions!"""
             with gr.Column():
                 age = gr.Number(
                     label="Age",
-                    value=30,
-                    minimum=18,
-                    maximum=50,
+                    value=None,
                     step=1,
                     info="Enter the actual age (numeric value from Demographics.csv)"
                 )
                 marital_status = gr.Radio(
                     label="Marital status",
-                    choices=["Married", "Single", "Divorced", "Widowed"],
-                    value="Married",
+                    choices=get_unique_values("Marital status", ["Married", "Single", "Divorced", "Widowed"]),
+                    value=None,
                 )
                 ses = gr.Radio(
                     label="SES (Socioeconomic Status)",
-                    choices=["High", "Low", "Medium"],
-                    value="High",
+                    choices=get_unique_values("SES", ["High", "Low", "Medium"]),
+                    value=None,
                 )
             with gr.Column():
                 population = gr.Dropdown(
                     label="Population",
-                    choices=["Secular", "Peripheral Jewish towns", "Religious", "Other"],
-                    value="Secular",
+                    choices=get_unique_values("Population", ["Secular", "Peripheral Jewish towns", "Religious", "Other"]),
+                    value=None,
                 )
                 employment_category = gr.Dropdown(
                     label="Employment Category",
-                    choices=["Employed (Full-Time)", "Self-Employed", "Unemployed", "Part-Time", "Student"],
-                    value="Employed (Full-Time)",
+                    choices=get_unique_values("Employment Category", ["Employed (Full-Time)", "Self-Employed", "Unemployed", "Part-Time", "Student"]),
+                    value=None,
                 )
         
         gr.Markdown("### Clinical Data")
@@ -1178,34 +1196,34 @@ The model is now ready for predictions!"""
             with gr.Column():
                 first_birth = gr.Radio(
                     label="First birth",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("First birth", ["Yes", "No"]),
+                    value=None,
                 )
                 gdm = gr.Radio(
                     label="GDM (Gestational Diabetes Mellitus)",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("GDM", ["Yes", "No"]),
+                    value=None,
                 )
                 tsh = gr.Radio(
                     label="TSH",
-                    choices=["Normal", "Abnormal"],
-                    value="Normal",
+                    choices=get_unique_values("TSH", ["Normal", "Abnormal"]),
+                    value=None,
                 )
             with gr.Column():
                 nvp = gr.Radio(
                     label="NVP (Nausea and Vomiting of Pregnancy)",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("NVP", ["Yes", "No"]),
+                    value=None,
                 )
                 gh = gr.Radio(
                     label="GH (Gestational Hypertension)",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("GH", ["Yes", "No"]),
+                    value=None,
                 )
                 mode_of_birth = gr.Dropdown(
                     label="Mode of birth",
-                    choices=["Spontaneous Vaginal", "Cesarean", "Assisted Vaginal", "Other"],
-                    value="Spontaneous Vaginal",
+                    choices=get_unique_values("Mode of birth", ["Spontaneous Vaginal", "Cesarean", "Assisted Vaginal", "Other"]),
+                    value=None,
                 )
         
         gr.Markdown("### Psychiatric Data")
@@ -1213,24 +1231,24 @@ The model is now ready for predictions!"""
             with gr.Column():
                 depression_history = gr.Dropdown(
                     label="Depression History",
-                    choices=["Not documented", "Yes", "No"],
-                    value="Not documented",
+                    choices=get_unique_values("Depression History", ["Not documented", "Yes", "No"]),
+                    value=None,
                 )
                 anxiety_history = gr.Dropdown(
                     label="Anxiety History",
-                    choices=["Not documented", "Yes", "No"],
-                    value="Not documented",
+                    choices=get_unique_values("Anxiety History", ["Not documented", "Yes", "No"]),
+                    value=None,
                 )
             with gr.Column():
                 depression_or_anxiety_during_pregnancy = gr.Radio(
                     label="Depression or anxiety during pregnancy",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("Depression or anxiety during pregnancy", ["Yes", "No"]),
+                    value=None,
                 )
                 use_of_psychiatric_medications = gr.Radio(
                     label="Use of psychiatric medications",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("Use of psychiatric medications", ["Yes", "No"]),
+                    value=None,
                 )
         
         gr.Markdown("### Functional/Psychosocial Data")
@@ -1238,29 +1256,29 @@ The model is now ready for predictions!"""
             with gr.Column():
                 sleep_quality = gr.Dropdown(
                     label="Sleep quality",
-                    choices=["Normal", "Insomnia", "RLS"],
-                    value="Normal",
+                    choices=get_unique_values("Sleep quality", ["Normal", "Insomnia", "RLS"]),
+                    value=None,
                 )
                 fatigue = gr.Radio(
                     label="Fatigue",
-                    choices=["Yes", "No"],
-                    value="No",
+                    choices=get_unique_values("Fatigue", ["Yes", "No"]),
+                    value=None,
                 )
                 partner_support = gr.Dropdown(
                     label="Partner support",
-                    choices=["High", "Moderate", "Interrupted", "Low"],
-                    value="High",
+                    choices=get_unique_values("Partner support", ["High", "Moderate", "Interrupted", "Low"]),
+                    value=None,
                 )
             with gr.Column():
                 family_or_social_support = gr.Dropdown(
                     label="Family or social support",
-                    choices=["High", "Moderate", "Low"],
-                    value="High",
+                    choices=get_unique_values("Family or social support", ["High", "Moderate", "Low"]),
+                    value=None,
                 )
                 domestic_violence = gr.Dropdown(
                     label="Domestic violence",
-                    choices=["No", "Physical", "Sexual", "Emotional"],
-                    value="No",
+                    choices=get_unique_values("Domestic violence", ["No", "Physical", "Sexual", "Emotional"]),
+                    value=None,
                 )
 
         # Add examples
