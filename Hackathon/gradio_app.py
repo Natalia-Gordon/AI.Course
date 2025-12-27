@@ -1355,7 +1355,7 @@ The model is now ready for predictions!"""
 
         predict_btn = gr.Button("🔍 Assess Risk", variant="primary", interactive=model_trained)
         gr.Markdown(
-            "ℹ️ **Note:** This button is disabled until the model is trained. Please train the model first using the 'Start Train Model' button above.",
+            "ℹ️ **Note:** This button is disabled until the model is trained. Please train the model using the 'Retrain Model' button above.",
             visible=True
         )
 
