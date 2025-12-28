@@ -178,6 +178,7 @@ def generate_shap_explanation_markdown(
 def get_save_path_for_algorithm(pipeline: Optional[Pipeline] = None, algorithm_name: Optional[str] = None) -> Optional[str]:
     """
     Get save path for plots based on algorithm.
+    Returns path relative to the Hackathon directory (script directory).
     
     Args:
         pipeline: Optional pipeline to detect algorithm from
@@ -187,13 +188,17 @@ def get_save_path_for_algorithm(pipeline: Optional[Pipeline] = None, algorithm_n
         Save path string or None
     """
     import os
+    from pathlib import Path
     try:
         if algorithm_name is None and pipeline is not None:
             algorithm_name = get_algorithm_name(pipeline)
         elif algorithm_name is None:
             return None
         
-        return os.path.join("output", "plots", algorithm_name)
+        # Get the Hackathon directory (where the script is located)
+        script_dir = Path(__file__).parent
+        save_path = script_dir / "output" / "plots" / algorithm_name
+        return str(save_path)
     except Exception:
         return None
 

@@ -534,8 +534,10 @@ Thought:{agent_scratchpad}""")
                 try:
                     # Agent's pipeline and explainer are already updated by train_xgboost/train_random_forest
                     # Just save the existing agent
-                    import os
-                    os.makedirs("output/agents", exist_ok=True)
+                    from pathlib import Path
+                    script_dir = Path(__file__).parent
+                    agent_dir = script_dir / "output" / "agents"
+                    agent_dir.mkdir(parents=True, exist_ok=True)
                     # Determine algorithm type from pipeline
                     model_type = type(new_pipeline.named_steps.get("model", None)).__name__
                     if "XGB" in model_type.upper():
@@ -545,8 +547,8 @@ Thought:{agent_scratchpad}""")
                     else:
                         algo_suffix = "unknown"
                     
-                    agent_path = f"output/agents/ppd_agent_{algo_suffix}.pkl"
-                    current_agent[0].save(agent_path)
+                    agent_path = agent_dir / f"ppd_agent_{algo_suffix}.pkl"
+                    current_agent[0].save(str(agent_path))
                     print(f"✅ Agent saved to {agent_path} (Algorithm: {algorithm_name})")
                     explainer_status += "\n✅ PPD Agent saved with new model"
                 except Exception as e:
@@ -588,9 +590,18 @@ Thought:{agent_scratchpad}""")
                     print(f"DEBUG: True Positives: {cm_values[1,1]}, True Negatives: {cm_values[0,0]}")
                     print(f"DEBUG: False Positives: {cm_values[0,1]}, False Negatives: {cm_values[1,0]}")
                     
-                    # Create save path for plots
-                    save_path = os.path.join("output", "plots", algorithm_name.replace(" ", "_"))
-                    os.makedirs(save_path, exist_ok=True)
+                    # Create save path for plots using the same helper function as load_visualizations
+                    # This will use the Hackathon directory as base
+                    save_path = get_save_path_for_algorithm(pipeline=new_pipeline, algorithm_name=algorithm_name)
+                    if save_path:
+                        os.makedirs(save_path, exist_ok=True)
+                    else:
+                        # Fallback if helper fails - use script directory as base
+                        from pathlib import Path
+                        script_dir = Path(__file__).parent
+                        save_path = script_dir / "output" / "plots" / algorithm_name.replace(" ", "_")
+                        os.makedirs(save_path, exist_ok=True)
+                        save_path = str(save_path)
                     
                     confusion_html = plot_confusion_matrix(
                         y_test_split, y_pred_new, 
@@ -622,6 +633,37 @@ Thought:{agent_scratchpad}""")
                         correlation_html = plot_correlation_heatmap(
                             df, target, return_image=True, save_path=save_path
                         )
+                    
+                    # Also regenerate target distribution and feature distributions plots after training
+                    # These are needed so they're available in load_visualizations
+                    if save_path and df is not None and target in df.columns:
+                        from visualization import plot_target_distribution, plot_feature_distributions
+                        try:
+                            # Regenerate target distribution plot
+                            plot_target_distribution(
+                                df[target], 
+                                title="PPD Target Distribution",
+                                return_image=True, 
+                                save_path=save_path
+                            )
+                            print(f"✅ Regenerated target_distribution.png in {save_path}")
+                        except Exception as e:
+                            print(f"⚠️ Could not regenerate target distribution plot: {e}")
+                        
+                        try:
+                            # Regenerate feature distributions plot (use original cat_cols)
+                            if cat_cols and len(cat_cols) > 0:
+                                plot_feature_distributions(
+                                    df, 
+                                    cat_cols[:12], 
+                                    target, 
+                                    n_cols=3, 
+                                    return_image=True, 
+                                    save_path=save_path
+                                )
+                                print(f"✅ Regenerated feature_distributions.png in {save_path}")
+                        except Exception as e:
+                            print(f"⚠️ Could not regenerate feature distributions plot: {e}")
                 except Exception as e:
                     import traceback
                     print(f"Warning: Could not update visualizations: {e}")
@@ -999,12 +1041,24 @@ The model is now ready for predictions!"""
                         viz_df[target] = y_test.values
                 
                 # Ensure cat_cols matches actual categorical columns in viz_df
+                # Always use the original cat_cols list (which excludes ID, Name, target)
+                # but filter it to only include columns that exist in viz_df
                 if viz_df is not None:
-                    actual_cat_cols = [c for c in viz_df.columns if c != target and viz_df[c].dtype == "object"]
-                    if len(actual_cat_cols) > 0:
-                        viz_cat_cols = actual_cat_cols
-                    else:
-                        viz_cat_cols = cat_cols if cat_cols else []
+                    # Use original cat_cols, but filter to columns that exist in viz_df
+                    # Also exclude target column and ID/Name if they somehow made it through
+                    viz_df_cols = set(viz_df.columns)
+                    excluded_from_plot = {'ID', 'Name', target}
+                    viz_cat_cols = [
+                        c for c in (cat_cols if cat_cols else []) 
+                        if c in viz_df_cols and c not in excluded_from_plot
+                    ]
+                    # If no valid cat_cols found, try to detect from dtype (fallback)
+                    if len(viz_cat_cols) == 0:
+                        actual_cat_cols = [
+                            c for c in viz_df.columns 
+                            if c not in excluded_from_plot and viz_df[c].dtype == "object"
+                        ]
+                        viz_cat_cols = actual_cat_cols if len(actual_cat_cols) > 0 else []
                 else:
                     viz_cat_cols = cat_cols if cat_cols else []
                 
