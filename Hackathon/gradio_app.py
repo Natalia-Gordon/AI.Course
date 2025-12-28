@@ -499,9 +499,9 @@ Thought:{agent_scratchpad}""")
             # Note: Training and evaluation is now done by the agent tool above
             # y_proba_new, y_pred_new, roc_auc_new are already set from agent training results
             
-            # Debug: Print prediction statistics
-            print(f"DEBUG: {algorithm_name} predictions - Unique values: {np.unique(y_pred_new, return_counts=True)}")
-            print(f"DEBUG: {algorithm_name} predictions - Sum: {np.sum(y_pred_new)}, Total: {len(y_pred_new)}")
+            # Prediction statistics logged for debugging (commented out for production)
+            # print(f"DEBUG: {algorithm_name} predictions - Unique values: {np.unique(y_pred_new, return_counts=True)}")
+            # print(f"DEBUG: {algorithm_name} predictions - Sum: {np.sum(y_pred_new)}, Total: {len(y_pred_new)}")
             
             # Update current pipeline and predictions
             current_pipeline[0] = new_pipeline
@@ -575,20 +575,13 @@ Thought:{agent_scratchpad}""")
                         plot_prediction_distribution
                     )
                     # Use the test data and predictions from the newly trained model
-                    # Debug: Print to verify we're using new predictions
-                    print(f"DEBUG: Creating confusion matrix - Model: {algorithm_name}")
-                    print(f"DEBUG: y_test_split shape: {len(y_test_split)}, y_pred_new shape: {len(y_pred_new)}")
-                    print(f"DEBUG: y_pred_new unique values: {np.unique(y_pred_new)}")
-                    print(f"DEBUG: y_test_split unique values: {np.unique(y_test_split)}")
-                    print(f"DEBUG: Confusion matrix will show predictions from {algorithm_name} model")
-                    
-                    # Create confusion matrix with model name in title
-                    # Calculate confusion matrix values for debugging
+                    # Calculate confusion matrix values
                     from sklearn.metrics import confusion_matrix as cm_func
                     cm_values = cm_func(y_test_split, y_pred_new)
-                    print(f"DEBUG: {algorithm_name} Confusion Matrix values:\n{cm_values}")
-                    print(f"DEBUG: True Positives: {cm_values[1,1]}, True Negatives: {cm_values[0,0]}")
-                    print(f"DEBUG: False Positives: {cm_values[0,1]}, False Negatives: {cm_values[1,0]}")
+                    # Debug logs (commented out for production):
+                    # print(f"DEBUG: Creating confusion matrix - Model: {algorithm_name}")
+                    # print(f"DEBUG: y_test_split shape: {len(y_test_split)}, y_pred_new shape: {len(y_pred_new)}")
+                    # print(f"DEBUG: {algorithm_name} Confusion Matrix values:\n{cm_values}")
                     
                     # Create save path for plots using the same helper function as load_visualizations
                     # This will use the Hackathon directory as base
