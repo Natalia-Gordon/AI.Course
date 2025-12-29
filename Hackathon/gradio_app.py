@@ -1633,7 +1633,7 @@ The model is now ready for predictions!"""
             )
         
         gr.Markdown("---")
-        gr.Markdown("## 💬 AI Chatbot Assistant")
+        gr.Markdown("## 💬 Medical Staff Chatbot")
         gr.Markdown(
             "Ask questions about postpartum depression risk assessment. "
             "The chatbot can help you understand risk factors, interpret results, and answer questions about the model."
@@ -1684,7 +1684,7 @@ The model is now ready for predictions!"""
         
         # Initialize chatbot - Gradio 3.50+ expects dictionary format with 'role' and 'content'
         chatbot = gr.Chatbot(
-            label="Chat with AI Assistant",
+            label="Chat with Medical Staff Assistant",
             height=400
         )
         

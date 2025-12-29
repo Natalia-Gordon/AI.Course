@@ -90,7 +90,7 @@ The system helps healthcare professionals and researchers identify women at risk
 │  │    Tab       │  │     Tab      │  │     Tab      │     │
 │  └──────────────┘  └──────────────┘  └──────────────┘     │
 │  ┌──────────────┐  ┌──────────────┐                        │
-│  │  AI Chatbot  │  │ EPDS Chatbot │                        │
+│  │  Medical Staff Chatbot  │  │ EPDS Chatbot │                        │
 │  │     Tab      │  │     Tab      │                        │
 │  └──────────────┘  └──────────────┘                        │
 └─────────────────────────────────────────────────────────────┘
@@ -234,7 +234,7 @@ The system uses a comprehensive dataset combining multiple sources:
    - Correlation heatmap
    - SHAP summary plots
 
-#### 4. **AI Chatbot Tab**
+#### 4. **Medical Staff Chatbot Tab**
    - LangChain-powered conversational agent
    - Natural language queries about PPD risk
    - Example questions provided
@@ -319,7 +319,7 @@ Ensure the following CSV files are in the `data/` directory:
    - View predictions, explanations, and visualizations
 
 5. **Use Chatbots:**
-   - **AI Chatbot:** Ask questions about PPD risk assessment
+   - **Medical Staff Chatbot:** Ask questions about PPD risk assessment
    - **EPDS Chatbot:** Conduct conversational EPDS screening with patients
 
 ### Loading Pre-trained Models
