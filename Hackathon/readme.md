@@ -448,7 +448,7 @@ Hackathon/
 
 ## 👥 Acknowledgments
 
-This project was developed as part of an AI course, focusing on:
+This project was developed as part of PPD Prediction Prototype, focusing on:
 - Machine learning model development
 - Explainable AI (XAI) implementation
 - Natural language processing
