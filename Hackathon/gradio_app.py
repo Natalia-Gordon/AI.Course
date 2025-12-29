@@ -1342,35 +1342,35 @@ The model is now ready for predictions!"""
                     "יעל חמו", 7, 35, "Married", "High", "Secular", "Self-Employed",
                     "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "Yes", "No",
-                    "Normal", "Yes", "Interrupted", "Moderate", "No"
+                    "Normal", "Yes", "Moderate", "Moderate", "No"
                 ],
                 # Low risk case - Very low EPDS score (Total Scores = 2)
                 [
                     "ענת גרוס", 9, 27, "Married", "Low", "Peripheral Jewish towns", "Employed (Full-Time)",
                     "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "Yes", "No",
-                    "RLS", "No", "High", "High", "Physical"
+                    "RLS", "No", "Interrupted", "High", "Verbal"
                 ],
                 # Very high risk case - Direct criteria met (EPDS = 27 > 12, self-harm thoughts = 2)
                 [
                     "חנה ברק", 5, 27, "Married", "Low", "Peripheral Jewish towns", "Employed (Full-Time)",
-                    "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
+                    "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "No", "No",
-                    "Insomnia", "No", "High", "High", "Economic"
+                    "Normal", "No", "Interrupted", "High", "Economic"
                 ],
                 # Moderate risk case - Risk factors present (Very Low SES, Haredi, Verbal DV, Anxiety History)
                 [
-                    "ענת דדון", 14, 24, "Married", "Very Low", "Haredi", "Employed (Full-Time)",
+                    "ענת דדון", 14, 24, "Married", "Very Low", "Haredi", "Employed (Part-Time)",
                     "No", "No", "Normal", "Yes", "No", "Spontaneous Vaginal",
                     "Not documented", "Documented", "Yes", "No",
-                    "RLS", "Yes", "High", "High", "Verbal"
+                    "RLS", "Yes", "Moderate", "High", "Verbal"
                 ],
                 # Risk-based case - Single, Unemployed, Interrupted support, Low family support
                 [
                     "עדן אבוטבול", 4, 39, "Never-Married (Single)", "High", "Secular", "Unemployed",
                     "No", "No", "Normal", "No", "No", "Spontaneous Vaginal",
                     "Not documented", "Not documented", "No", "No",
-                    "Normal", "No", "Interrupted", "Low", "No"
+                    "Normal", "No", "Interrupted", "Moderate", "No"
                 ],
             ],
             inputs=[
