@@ -1,0 +1,1501 @@
+﻿ID,Name,Age,Marital status,SES,Population,Employment Category
+1,יעל חמו,35,Married,High,Secular,Self-Employed
+2,ענת גרוס,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+3,יעלה שביט,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+4,דנה חדד,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+5,חנה ברק,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+6,אור בלום,30,Married,High,Secular,Employed (Part-Time)
+7,עדן אבוטבול,39,Never-Married (Single),High,Secular,Unemployed
+8,ענת דדון,24,Married,Very Low,Haredi,Employed (Full-Time)
+9,גל תאומים,31,Married,High,Secular,Employed (Part-Time)
+10,רעות משה,31,Married,High,Secular,Employed (Part-Time)
+11,ענת פרידמן,23,Married,Very Low,Haredi,Employed (Full-Time)
+12,עידן גרין,31,Married,High,Secular,Employed (Part-Time)
+13,תמר ברק,30,Married,Medium,Traditional,Employed (Full-Time)
+14,אלה שביט,32,Married,Medium,Traditional,Employed (Full-Time)
+15,דפנה בלום,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+16,מירב כהן,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+17,דנה מאיר,30,Married,Medium,Traditional,Employed (Full-Time)
+18,תמר חיימוב,32,Married,Medium,Traditional,Employed (Part-Time)
+19,לילי גרוס,34,Married,Medium,Traditional,Employed (Full-Time)
+20,טל רובין,26,Married,Medium,Traditional,Employed (Full-Time)
+21,דנה פלדמן,43,Never-Married (Single),High,Secular,Unemployed
+22,תמר דדון,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+23,עמית זועבי,24,Married,Very Low,Haredi,Employed (Full-Time)
+24,יעלה רוזן,39,Married,High,Secular,Self-Employed
+25,דקלה בן-ארי,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+26,דורית אוחנה,30,Married,Medium,Traditional,Employed (Full-Time)
+27,עדי מגיד,39,Married,High,Secular,Self-Employed
+28,ליעד טולדנו,27,Married,Medium,Traditional,Employed (Full-Time)
+29,עמית גואטה,20,Married,Very Low,Haredi,Employed (Full-Time)
+30,מוריה יזראלי,26,Married,Very Low,Bedouin,Employed (Full-Time)
+31,אורית דניאל,27,Married,Very Low,Haredi,Employed (Full-Time)
+32,ליאת תירוש,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+33,עמליה פרחי,27,Married,Very Low,Bedouin,Employed (Full-Time)
+34,רחל בדוש,42,Never-Married (Single),High,Secular,Unemployed
+35,חנה שלום,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+36,מיכל יזראלי,36,Married,High,Secular,Self-Employed
+37,יעל תאומים,31,Married,Medium,Traditional,Employed (Part-Time)
+38,מרים בראון,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+39,מירב מגיד,33,Married,Medium,Traditional,Employed (Part-Time)
+40,יעל תירוש,30,Married,Medium,Traditional,Employed (Full-Time)
+41,לירון אברמוביץ,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+42,יעלה קדוש,30,Married,Medium,Traditional,Employed (Part-Time)
+43,רות גבאי,35,Never-Married (Single),High,Secular,Unemployed
+44,תמר לוי,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+45,מיכל בוזגלו,31,Married,Medium,Traditional,Employed (Part-Time)
+46,דקלה יעקב,33,Married,High,Secular,Employed (Part-Time)
+47,רוני אלון,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+48,עדי אדלר,28,Married,Very Low,Bedouin,Employed (Full-Time)
+49,לירון נוימן,22,Married,Very Low,Bedouin,Employed (Full-Time)
+50,עמית גבאי,31,Married,Medium,Traditional,Employed (Part-Time)
+51,יעל מזרחי,32,Married,High,Secular,Employed (Part-Time)
+52,נבו שביט,32,Married,Medium,Traditional,Employed (Part-Time)
+53,שרה נגר,22,Married,Very Low,Haredi,Employed (Full-Time)
+54,מיכל אסולין,39,Married,High,Secular,Unemployed
+55,מיכל אבוטבול,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+56,דורית מגן,35,Married,High,Secular,Self-Employed
+57,תמרה גבאי,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+58,מור רובין,31,Married,High,Secular,Employed (Part-Time)
+59,עדי מגן,26,Married,Very Low,Haredi,Employed (Full-Time)
+60,גל גרין,34,Married,Medium,Traditional,Employed (Part-Time)
+61,שיר דויטש,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+62,מיכל מגיד,35,Married,High,Secular,Self-Employed
+63,רינה בן-ארי,32,Married,Medium,Traditional,Employed (Full-Time)
+64,דנה אדלר,38,Never-Married (Single),High,Secular,Unemployed
+65,יעל פרידמן,23,Married,Very Low,Haredi,Employed (Full-Time)
+66,ליעד בן-ארי,28,Married,Medium,Traditional,Employed (Full-Time)
+67,יעל אברהם,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+68,עדן אברהם,33,Married,High,Secular,Employed (Part-Time)
+69,תמרה תירוש,23,Married,Very Low,Haredi,Employed (Full-Time)
+70,נורית כהן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+71,מעין צור,36,Married,High,Secular,Self-Employed
+72,אור אזולאי,34,Married,Medium,Traditional,Employed (Part-Time)
+73,רחל לוין,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+74,ענת מאיר,27,Married,Very Low,Haredi,Employed (Full-Time)
+75,לירון לוי,33,Married,Medium,Traditional,Employed (Part-Time)
+76,עדן גולדברג,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+77,מור גוטמן,27,Married,Very Low,Bedouin,Employed (Full-Time)
+78,עמית גולדברג,34,Married,Medium,Traditional,Employed (Part-Time)
+79,נופר תמיר,38,Married,High,Secular,Unemployed
+80,אורלי בר,34,Married,Medium,Traditional,Employed (Part-Time)
+81,נועה לוי,32,Married,Medium,Traditional,Employed (Full-Time)
+82,אסתר חמו,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+83,שרה אלון,41,Never-Married (Single),High,Secular,Unemployed
+84,רותי גבאי,43,Never-Married (Single),High,Secular,Unemployed
+85,רינה יוסף,34,Married,Medium,Traditional,Employed (Full-Time)
+86,לילי חמו,30,Married,Medium,Traditional,Employed (Part-Time)
+87,רונה טייטלבאום,35,Married,High,Secular,Self-Employed
+88,לירון מגיד,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+89,רות בן-ארי,32,Married,Medium,Traditional,Employed (Part-Time)
+90,רעות סויסה,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+91,רעות חדד,36,Married,High,Secular,Self-Employed
+92,ענת כספי,37,Married,High,Secular,Self-Employed
+93,מיכל יעקב,27,Married,Very Low,Haredi,Employed (Full-Time)
+94,עידן לוין,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+95,מעיין מאיר,30,Married,Medium,Traditional,Employed (Part-Time)
+96,גילי תמיר,30,Married,Medium,Traditional,Employed (Part-Time)
+97,רות גולדברג,23,Married,Very Low,Bedouin,Employed (Full-Time)
+98,אביב פלג,28,Married,Medium,Traditional,Employed (Full-Time)
+99,עדי חמו,26,Married,Very Low,Haredi,Employed (Full-Time)
+100,עלמה לבנה,31,Married,Medium,Traditional,Employed (Full-Time)
+101,ליזה אסולין,38,Married,High,Secular,Self-Employed
+102,ליזה רוזן,24,Married,Very Low,Haredi,Employed (Full-Time)
+103,יעל גואטה,21,Married,Very Low,Haredi,Employed (Full-Time)
+104,עדי פלג,39,Married,High,Secular,Self-Employed
+105,רותם בדוש,39,Married,High,Secular,Self-Employed
+106,דנה אלון,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+107,רינה יונה,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+108,רותי שלום,23,Married,Very Low,Haredi,Employed (Full-Time)
+109,ליאור בר,30,Married,Medium,Traditional,Employed (Part-Time)
+110,רוני בן-ארי,33,Married,Medium,Traditional,Employed (Full-Time)
+111,יואב משה,30,Married,Medium,Traditional,Employed (Part-Time)
+112,עדן רובין,43,Never-Married (Single),High,Secular,Unemployed
+113,גילי מזרחי,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+114,עידן לבנה,22,Married,Very Low,Haredi,Employed (Full-Time)
+115,תמרה דוד,34,Married,Medium,Traditional,Employed (Part-Time)
+116,שירה אברמוביץ,33,Married,Medium,Traditional,Employed (Part-Time)
+117,מיקה שטרן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+118,דפנה טולדנו,33,Married,High,Secular,Employed (Part-Time)
+119,מור פלדמן,33,Married,Medium,Traditional,Employed (Part-Time)
+120,עדי בלום,32,Married,Medium,Traditional,Employed (Part-Time)
+121,מוריה תאומים,20,Married,Very Low,Haredi,Employed (Full-Time)
+122,רותי שביט,28,Married,Medium,Traditional,Employed (Full-Time)
+123,רות בוזגלו,20,Married,Very Low,Haredi,Employed (Full-Time)
+124,רחל דניאל,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+125,אסתר תאומים,31,Married,Medium,Traditional,Employed (Full-Time)
+126,מור אבוטבול,24,Married,Very Low,Haredi,Employed (Full-Time)
+127,אושרית בוזגלו,23,Married,Very Low,Haredi,Employed (Full-Time)
+128,מעין אבנר,37,Married,High,Secular,Self-Employed
+129,מירב דוד,35,Married,High,Secular,Self-Employed
+130,גילי יונה,33,Married,High,Secular,Employed (Part-Time)
+131,אסתר כץ,35,Married,High,Secular,Self-Employed
+132,עמליה סופר,21,Married,Very Low,Haredi,Employed (Full-Time)
+133,יעלה סופר,43,Divorced,High,Secular,Unemployed
+134,דורית וייס,29,Married,Very Low,Haredi,Employed (Full-Time)
+135,נטע זועבי,33,Married,Medium,Traditional,Employed (Part-Time)
+136,מרים שלום,34,Married,Medium,Traditional,Employed (Part-Time)
+137,יובל שגב,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+138,עדן וייס,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+139,נופר אזולאי,32,Married,Medium,Traditional,Employed (Part-Time)
+140,חנה גרין,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+141,מיכל זועבי,31,Married,High,Secular,Employed (Part-Time)
+142,אסתר הררי,32,Married,High,Secular,Employed (Part-Time)
+143,עדי פלדמן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+144,רוני חדד,20,Married,Very Low,Haredi,Employed (Full-Time)
+145,יעלה פרחי,24,Married,Very Low,Haredi,Employed (Full-Time)
+146,נטע אלון,30,Married,Medium,Traditional,Employed (Part-Time)
+147,דפנה כהן,29,Married,Very Low,Haredi,Employed (Full-Time)
+148,עדן עובדיה,24,Married,Very Low,Haredi,Employed (Full-Time)
+149,מירב נוימן,26,Married,Very Low,Haredi,Employed (Full-Time)
+150,יעלה בוזגלו,32,Married,Medium,Traditional,Employed (Part-Time)
+151,מיקה בר,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+152,מרים אזולאי,21,Married,Very Low,Haredi,Employed (Full-Time)
+153,שירה ברק,31,Married,Medium,Traditional,Employed (Part-Time)
+154,מיכל לוי,30,Married,Medium,Traditional,Employed (Part-Time)
+155,אור אבנר,18,Married,Very Low,Haredi,Employed (Full-Time)
+156,רוני וייס,22,Married,Very Low,Bedouin,Employed (Full-Time)
+157,מור עזרא,41,Never-Married (Single),High,Secular,Unemployed
+158,גל הררי,31,Married,Medium,Traditional,Employed (Part-Time)
+159,אסתר נחום,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+160,עמית כהן,36,Married,High,Secular,Self-Employed
+161,אגם בן-ארי,35,Married,High,Secular,Self-Employed
+162,טל מגיד,36,Never-Married (Single),High,Secular,Unemployed
+163,ענבל חיימוב,23,Married,Very Low,Haredi,Employed (Full-Time)
+164,תמר פרידמן,43,Never-Married (Single),High,Secular,Unemployed
+165,נועה פלג,34,Married,Medium,Traditional,Employed (Full-Time)
+166,טל פרחי,34,Married,Medium,Traditional,Employed (Part-Time)
+167,רונה רובין,23,Married,Very Low,Bedouin,Employed (Full-Time)
+168,אסתר אברהם,24,Married,Very Low,Haredi,Employed (Full-Time)
+169,אור ברק,24,Married,Very Low,Bedouin,Employed (Full-Time)
+170,אסתר מגן,32,Married,Medium,Traditional,Employed (Part-Time)
+171,אסתר אזולאי,22,Married,Very Low,Bedouin,Employed (Full-Time)
+172,אורית עזרא,31,Married,Medium,Traditional,Employed (Part-Time)
+173,רעות תמיר,23,Married,Very Low,Haredi,Employed (Full-Time)
+174,לירון אסולין,35,Married,High,Secular,Self-Employed
+175,מעין גואטה,19,Married,Very Low,Bedouin,Employed (Full-Time)
+176,אביב עובדיה,33,Married,Medium,Traditional,Employed (Full-Time)
+177,מור גולדברג,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+178,מור כהן,32,Married,Medium,Traditional,Employed (Full-Time)
+179,ליזה הררי,34,Married,Medium,Traditional,Employed (Part-Time)
+180,אורית רוזן,25,Married,Very Low,Haredi,Employed (Full-Time)
+181,יעלה אברהם,37,Married,High,Secular,Self-Employed
+182,שרית אוחנה,34,Married,Medium,Traditional,Employed (Part-Time)
+183,ליאת גואטה,30,Married,Medium,Traditional,Employed (Full-Time)
+184,אלה שלום,27,Married,Very Low,Bedouin,Employed (Full-Time)
+185,נעמה מגן,33,Married,High,Secular,Employed (Part-Time)
+186,דינה קדוש,28,Married,Medium,Traditional,Employed (Full-Time)
+187,רות מגן,35,Married,High,Secular,Self-Employed
+188,ליזה בן-ארי,30,Married,Medium,Traditional,Employed (Full-Time)
+189,הודיה יונה,32,Married,Medium,Traditional,Employed (Full-Time)
+190,רות יוסף,32,Married,Medium,Traditional,Employed (Part-Time)
+191,מורן מגיד,30,Married,Medium,Traditional,Employed (Part-Time)
+192,נועה מגיד,30,Married,Medium,Traditional,Employed (Part-Time)
+193,ליאת רוזן,39,Married,High,Secular,Self-Employed
+194,מרים בוזגלו,34,Married,Medium,Traditional,Employed (Part-Time)
+195,ליעד רובין,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+196,רעות בן-ארי,33,Married,Medium,Traditional,Employed (Part-Time)
+197,רותי רוזן,33,Married,Medium,Traditional,Employed (Part-Time)
+198,מור אדלר,44,Never-Married (Single),High,Secular,Unemployed
+199,מעיין הורוביץ,34,Married,Medium,Traditional,Employed (Part-Time)
+200,לירון כהן-אור,35,Married,High,Secular,Self-Employed
+201,אורית ברק,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+202,רחל כספי,34,Married,Medium,Traditional,Employed (Full-Time)
+203,מירי גרין,31,Married,Medium,Traditional,Employed (Full-Time)
+204,יואב לוי,37,Married,High,Secular,Self-Employed
+205,רות בר,24,Married,Very Low,Haredi,Employed (Full-Time)
+206,מורן שלום,38,Married,High,Secular,Self-Employed
+207,תמר כהן,34,Married,Medium,Traditional,Employed (Part-Time)
+208,דינה חמו,21,Married,Very Low,Bedouin,Employed (Full-Time)
+209,תמר בר,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+210,טל גבאי,33,Married,Medium,Traditional,Employed (Part-Time)
+211,ענבל משה,30,Married,Medium,Traditional,Employed (Part-Time)
+212,ליעד פלדמן,37,Married,High,Secular,Self-Employed
+213,ליעד לוי,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+214,יעל בן-ארי,34,Married,Medium,Traditional,Employed (Part-Time)
+215,רעות פלג,31,Married,Medium,Traditional,Employed (Part-Time)
+216,אורלי אזולאי,30,Married,Medium,Traditional,Employed (Part-Time)
+217,אור יעקב,36,Married,High,Secular,Self-Employed
+218,עדן גרוס,23,Married,Very Low,Haredi,Employed (Full-Time)
+219,חנה כהן,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+220,אושרית יונה,29,Married,Very Low,Bedouin,Employed (Full-Time)
+221,מוריה חיימוב,24,Married,Very Low,Haredi,Employed (Full-Time)
+222,נבו לוי,39,Married,High,Secular,Self-Employed
+223,רחל בוזגלו,21,Married,Very Low,Bedouin,Employed (Full-Time)
+224,מור לוין,32,Married,Medium,Traditional,Employed (Part-Time)
+225,גילי אבוטבול,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+226,אורית אברמוביץ,32,Married,Medium,Traditional,Employed (Part-Time)
+227,אורית בר,33,Married,Medium,Traditional,Employed (Part-Time)
+228,רינה טייטלבאום,33,Married,Medium,Traditional,Employed (Part-Time)
+229,רותי אוחנה,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+230,שי-לי תירוש,34,Married,Medium,Traditional,Employed (Part-Time)
+231,לירון אוחנה,20,Married,Very Low,Bedouin,Employed (Full-Time)
+232,שרה אדלר,27,Married,Medium,Traditional,Employed (Full-Time)
+233,רות חדד,40,Never-Married (Single),High,Secular,Unemployed
+234,יעלה פרידמן,32,Married,Medium,Traditional,Employed (Part-Time)
+235,רומן ישראל,30,Married,High,Secular,Employed (Part-Time)
+236,יעל לוין,34,Married,Medium,Traditional,Employed (Part-Time)
+237,ליזה מאיר,33,Married,Medium,Traditional,Employed (Full-Time)
+238,רוני סויסה,37,Married,High,Secular,Self-Employed
+239,רומן דהן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+240,דורית סולומון,34,Married,Medium,Traditional,Employed (Part-Time)
+241,טל וייס,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+242,רוני דוד,27,Married,Medium,Traditional,Employed (Full-Time)
+243,אור אדלר,30,Married,Medium,Traditional,Employed (Part-Time)
+244,רינה מאיר,34,Married,Medium,Traditional,Employed (Full-Time)
+245,טל דהן,31,Married,Medium,Traditional,Employed (Part-Time)
+246,תמר בראון,37,Married,High,Secular,Self-Employed
+247,שרה סופר,27,Married,Medium,Traditional,Employed (Full-Time)
+248,נורית צדוק,33,Married,Medium,Traditional,Employed (Part-Time)
+249,רותם מגיד,21,Married,Very Low,Haredi,Employed (Full-Time)
+250,ניצן לבנה,24,Married,Very Low,Haredi,Employed (Full-Time)
+251,נטע תאומים,30,Married,Medium,Traditional,Employed (Part-Time)
+252,נורית דהן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+253,נועה פרחי,44,Never-Married (Single),High,Secular,Unemployed
+254,תמרה סולומון,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+255,מירב בדוש,32,Married,Medium,Traditional,Employed (Part-Time)
+256,רינה גרוס,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+257,ניצן יוסף,39,Married,High,Secular,Self-Employed
+258,מעין הררי,25,Married,Medium,Traditional,Employed (Full-Time)
+259,חנה אלון,45,Never-Married (Single),High,Secular,Unemployed
+260,אושרית דהן,23,Married,Very Low,Haredi,Employed (Full-Time)
+261,רחל בן-ארי,39,Married,High,Secular,Unemployed
+262,דורית אברהם,22,Married,Very Low,Haredi,Employed (Full-Time)
+263,דינה אבוטבול,30,Married,Medium,Traditional,Employed (Part-Time)
+264,תמר גולדברג,27,Married,Medium,Traditional,Employed (Full-Time)
+265,יובל רוזן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+266,יובל משה,21,Married,Very Low,Haredi,Employed (Full-Time)
+267,מעין חמו,31,Married,Medium,Traditional,Employed (Full-Time)
+268,אגם כץ,32,Married,Medium,Traditional,Employed (Part-Time)
+269,נטע אורן,38,Never-Married (Single),High,Secular,Unemployed
+270,חנה טייטלבאום,31,Married,Medium,Traditional,Employed (Full-Time)
+271,רות שטרן,31,Married,Medium,Traditional,Employed (Part-Time)
+272,דורית אלון,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+273,שרה דוד,31,Married,High,Secular,Employed (Part-Time)
+274,עידן תירוש,30,Married,Medium,Traditional,Employed (Part-Time)
+275,יובל בדוש,19,Married,Very Low,Haredi,Employed (Full-Time)
+276,רות סולומון,30,Married,Medium,Traditional,Employed (Full-Time)
+277,ליאת מגן,34,Married,Medium,Traditional,Employed (Part-Time)
+278,נועה טולדנו,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+279,אסתר כספי,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+280,רעות לבנה,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+281,רות וייס,37,Married,High,Secular,Self-Employed
+282,אביב הררי,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+283,תמר יזראלי,31,Married,Medium,Traditional,Employed (Part-Time)
+284,מוריה יונה,34,Married,Medium,Traditional,Employed (Full-Time)
+285,נטע זכריה,33,Married,Medium,Traditional,Employed (Part-Time)
+286,רות בראון,26,Married,Medium,Traditional,Employed (Full-Time)
+287,חנה סויסה,21,Married,Very Low,Haredi,Employed (Full-Time)
+288,מירי רוזן,31,Married,Medium,Traditional,Employed (Full-Time)
+289,מורן הררי,34,Married,Medium,Traditional,Employed (Part-Time)
+290,מוריה כהן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+291,מורן הורוביץ,38,Never-Married (Single),High,Secular,Unemployed
+292,ליעד טייטלבאום,20,Married,Very Low,Haredi,Employed (Full-Time)
+293,טל אברהם,23,Married,Very Low,Bedouin,Employed (Full-Time)
+294,דקלה גרין,32,Married,Medium,Traditional,Employed (Part-Time)
+295,אביב נוימן,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+296,מיקה כהן-אור,23,Married,Very Low,Haredi,Employed (Full-Time)
+297,חנה רובין,39,Married,High,Secular,Self-Employed
+298,מעין סופר,32,Married,High,Secular,Employed (Part-Time)
+299,לירון נחום,23,Married,Very Low,Bedouin,Employed (Full-Time)
+300,נועה גואטה,31,Married,High,Secular,Employed (Part-Time)
+301,ענבל רז,34,Married,Medium,Traditional,Employed (Part-Time)
+302,נועה יעקב,36,Never-Married (Single),High,Secular,Unemployed
+303,ליאת סולומון,32,Married,Medium,Traditional,Employed (Full-Time)
+304,חנה לבנה,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+305,רינה דהן,31,Married,Medium,Traditional,Employed (Full-Time)
+306,חנה אדלר,32,Married,High,Secular,Employed (Part-Time)
+307,ליאור בן-דוד,39,Married,High,Secular,Self-Employed
+308,אביב בוזגלו,33,Married,High,Secular,Employed (Part-Time)
+309,מילה זכריה,23,Married,Very Low,Bedouin,Employed (Full-Time)
+310,ענת כץ,37,Never-Married (Single),High,Secular,Unemployed
+311,נטע דהן,23,Married,Very Low,Bedouin,Employed (Full-Time)
+312,אגם צור,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+313,תמרה אדלר,34,Married,High,Secular,Employed (Part-Time)
+314,רינה גרין,33,Married,High,Secular,Employed (Part-Time)
+315,רותי חדד,21,Married,Very Low,Bedouin,Employed (Full-Time)
+316,גל חיימוב,26,Married,Medium,Traditional,Employed (Full-Time)
+317,נורית סויסה,24,Married,Very Low,Haredi,Employed (Full-Time)
+318,רוני דהן,36,Married,High,Secular,Self-Employed
+319,נעמה נוימן,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+320,מיכל פרידמן,30,Married,Medium,Traditional,Employed (Part-Time)
+321,יעלה טולדנו,23,Married,Very Low,Haredi,Employed (Full-Time)
+322,מילה כהן,22,Married,Very Low,Bedouin,Employed (Full-Time)
+323,רוני נוימן,39,Married,High,Secular,Unemployed
+324,רות תמיר,30,Married,Medium,Traditional,Employed (Part-Time)
+325,נבו גולדברג,24,Married,Very Low,Haredi,Employed (Full-Time)
+326,מיכל כהן-אור,30,Married,Medium,Traditional,Employed (Part-Time)
+327,מירי קורן,22,Married,Very Low,Haredi,Employed (Full-Time)
+328,עדן בר,30,Divorced,High,Secular,Unemployed
+329,דפנה מאיר,31,Married,Medium,Traditional,Employed (Part-Time)
+330,יעל סופר,32,Married,Medium,Traditional,Employed (Part-Time)
+331,דפנה בן-ארי,33,Married,Medium,Traditional,Employed (Part-Time)
+332,רותי אדלר,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+333,מירב שטרן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+334,מור דניאל,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+335,ליזה גרוס,25,Married,Medium,Traditional,Employed (Full-Time)
+336,מיקה בוזגלו,36,Married,High,Secular,Self-Employed
+337,מרים הורוביץ,33,Married,Medium,Traditional,Employed (Part-Time)
+338,ליזה גבאי,37,Never-Married (Single),High,Secular,Unemployed
+339,אושרית מגן,35,Married,High,Secular,Self-Employed
+340,גילי גואטה,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+341,דנה לוין,35,Never-Married (Single),High,Secular,Unemployed
+342,מיכל גוטמן,33,Married,Medium,Traditional,Employed (Full-Time)
+343,רחל רובין,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+344,מור זכריה,22,Married,Very Low,Haredi,Employed (Full-Time)
+345,רומן סולומון,26,Married,Very Low,Haredi,Employed (Full-Time)
+346,גילי נוימן,33,Married,Medium,Traditional,Employed (Part-Time)
+347,אלה אסולין,35,Married,High,Secular,Self-Employed
+348,ליעד זכריה,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+349,אגם אברהם,31,Married,Medium,Traditional,Employed (Full-Time)
+350,תמר מזרחי,30,Married,Medium,Traditional,Employed (Full-Time)
+351,לילי כץ,32,Married,Medium,Traditional,Employed (Full-Time)
+352,עמית עזרא,35,Married,High,Secular,Self-Employed
+353,רות שגב,37,Never-Married (Single),High,Secular,Unemployed
+354,מורן גוטמן,31,Married,Medium,Traditional,Employed (Part-Time)
+355,לילי זכריה,21,Married,Very Low,Haredi,Employed (Full-Time)
+356,ליעד ברק,30,Married,Medium,Traditional,Employed (Part-Time)
+357,רוני משה,32,Married,Medium,Traditional,Employed (Part-Time)
+358,נורית פלג,43,Never-Married (Single),High,Secular,Unemployed
+359,נורית גבאי,31,Married,High,Secular,Employed (Part-Time)
+360,יובל פלג,45,Never-Married (Single),High,Secular,Unemployed
+361,ענת גוטמן,33,Married,Medium,Traditional,Employed (Full-Time)
+362,לילי דוד,28,Married,Very Low,Bedouin,Employed (Full-Time)
+363,חנה הררי,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+364,מיכל נוימן,30,Married,Medium,Traditional,Employed (Part-Time)
+365,רותי ישראל,30,Married,Medium,Traditional,Employed (Part-Time)
+366,ליעד דהן,30,Married,Medium,Traditional,Employed (Part-Time)
+367,הודיה בלום,27,Married,Very Low,Bedouin,Employed (Full-Time)
+368,עדי שלום,26,Married,Medium,Traditional,Employed (Full-Time)
+369,ענת גואטה,36,Married,High,Secular,Self-Employed
+370,מיכל חיימוב,29,Married,Medium,Traditional,Employed (Full-Time)
+371,דנה נוימן,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+372,רותם אזולאי,34,Married,Medium,Traditional,Employed (Full-Time)
+373,דינה בראון,43,Never-Married (Single),High,Secular,Unemployed
+374,אביב רובין,30,Married,Medium,Traditional,Employed (Full-Time)
+375,מילה נגר,37,Never-Married (Single),High,Secular,Unemployed
+376,לילי בראון,36,Married,High,Secular,Self-Employed
+377,מירב זכריה,37,Married,High,Secular,Self-Employed
+378,אורלי גואטה,20,Married,Very Low,Haredi,Employed (Full-Time)
+379,ליאור מזרחי,30,Married,Medium,Traditional,Employed (Part-Time)
+380,יעל ברק,21,Married,Very Low,Haredi,Employed (Full-Time)
+381,מיכל רוזן,43,Never-Married (Single),High,Secular,Unemployed
+382,נורית גרין,39,Married,High,Secular,Self-Employed
+383,מור גרין,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+384,חנה דהן,35,Married,High,Secular,Self-Employed
+385,יעלה צדוק,30,Married,Medium,Traditional,Employed (Part-Time)
+386,מיכל מזרחי,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+387,ליאת לוין,34,Married,Medium,Traditional,Employed (Full-Time)
+388,ליזה יונה,34,Married,High,Secular,Employed (Part-Time)
+389,ליאור דוד,30,Married,Medium,Traditional,Employed (Part-Time)
+390,רחל רוזן,39,Married,High,Secular,Self-Employed
+391,גל נוימן,39,Never-Married (Single),High,Secular,Unemployed
+392,תמר אורן,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+393,רינה אברמוביץ,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+394,דקלה חמו,22,Married,Very Low,Haredi,Employed (Full-Time)
+395,גל מאיר,23,Married,Very Low,Bedouin,Employed (Full-Time)
+396,שי-לי חדד,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+397,אורית דהן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+398,שי-לי כץ,37,Married,High,Secular,Self-Employed
+399,חנה בראון,31,Married,Medium,Traditional,Employed (Part-Time)
+400,הודיה צדוק,34,Married,Medium,Traditional,Employed (Part-Time)
+401,שירה בלום,38,Married,High,Secular,Self-Employed
+402,יעלה חדד,26,Married,Very Low,Haredi,Employed (Full-Time)
+403,תמר כספי,25,Married,Very Low,Haredi,Employed (Full-Time)
+404,אביב לוי,34,Married,Medium,Traditional,Employed (Full-Time)
+405,שרית טולדנו,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+406,לירון רוזן,20,Married,Very Low,Haredi,Employed (Full-Time)
+407,טל אוחנה,39,Married,High,Secular,Self-Employed
+408,ניצן אלון,34,Married,Medium,Traditional,Employed (Part-Time)
+409,עדן שלום,29,Married,Very Low,Bedouin,Employed (Full-Time)
+410,מעיין בדוש,34,Married,Medium,Traditional,Employed (Part-Time)
+411,רעות יוסף,24,Married,Very Low,Haredi,Employed (Full-Time)
+412,לילי לוי,30,Married,Medium,Traditional,Employed (Part-Time)
+413,אביב זכריה,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+414,נטע פלג,33,Married,Medium,Traditional,Employed (Part-Time)
+415,תמר טייטלבאום,30,Married,Medium,Traditional,Employed (Part-Time)
+416,עלמה יעקב,23,Married,Very Low,Haredi,Employed (Full-Time)
+417,אורית מגיד,22,Married,Very Low,Haredi,Employed (Full-Time)
+418,יובל סויסה,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+419,עדי שטרן,35,Never-Married (Single),High,Secular,Unemployed
+420,שירה גבאי,27,Married,Very Low,Haredi,Employed (Full-Time)
+421,מירי אלון,20,Married,Very Low,Haredi,Employed (Full-Time)
+422,גל עזרא,32,Married,Medium,Traditional,Employed (Part-Time)
+423,נופר טייטלבאום,31,Married,Medium,Traditional,Employed (Part-Time)
+424,נטע בלום,30,Married,Medium,Traditional,Employed (Full-Time)
+425,רינה נגר,24,Married,Very Low,Haredi,Employed (Full-Time)
+426,לילי אדלר,32,Married,Medium,Traditional,Employed (Part-Time)
+427,אורית דדון,21,Married,Very Low,Haredi,Employed (Full-Time)
+428,מירב לוי-שלום,30,Married,Medium,Traditional,Employed (Part-Time)
+429,יעלה נוימן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+430,עדי בן-דוד,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+431,לילי דהן,37,Married,High,Secular,Self-Employed
+432,שיר נגר,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+433,רותם פלג,33,Married,Medium,Traditional,Employed (Part-Time)
+434,גל שגב,23,Married,Very Low,Haredi,Employed (Full-Time)
+435,שרית דהן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+436,מירב פרידמן,36,Married,High,Secular,Self-Employed
+437,נועה שטרן,30,Married,Medium,Traditional,Employed (Part-Time)
+438,נטע גואטה,38,Married,High,Secular,Self-Employed
+439,ליזה וייס,25,Married,Very Low,Bedouin,Employed (Full-Time)
+440,מור פרידמן,22,Married,Very Low,Haredi,Employed (Full-Time)
+441,דנה אבנר,41,Never-Married (Single),High,Secular,Unemployed
+442,מור סופר,20,Married,Very Low,Haredi,Employed (Full-Time)
+443,מיכל פלג,36,Never-Married (Single),High,Secular,Unemployed
+444,דפנה מזרחי,20,Married,Very Low,Haredi,Employed (Full-Time)
+445,אור יזראלי,37,Married,High,Secular,Self-Employed
+446,נורית הררי,22,Married,Very Low,Haredi,Employed (Full-Time)
+447,שי-לי שלום,34,Married,Medium,Traditional,Employed (Part-Time)
+448,יואב רוזן,33,Married,High,Secular,Employed (Part-Time)
+449,אושרית שגב,34,Married,Medium,Traditional,Employed (Full-Time)
+450,תמר מגיד,23,Married,Very Low,Haredi,Employed (Full-Time)
+451,רינה לבנה,32,Married,Medium,Traditional,Employed (Part-Time)
+452,אורלי תאומים,40,Never-Married (Single),High,Secular,Unemployed
+453,אורית פרחי,31,Married,Medium,Traditional,Employed (Part-Time)
+454,מיכל טולדנו,37,Married,High,Secular,Self-Employed
+455,יעל אלון,32,Married,High,Secular,Employed (Part-Time)
+456,דנה מזרחי,30,Married,High,Secular,Employed (Part-Time)
+457,רותם פרחי,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+458,מירב בלום,22,Married,Very Low,Haredi,Employed (Full-Time)
+459,דנה תמיר,30,Married,High,Secular,Employed (Part-Time)
+460,שרית הורוביץ,27,Married,Very Low,Bedouin,Employed (Full-Time)
+461,מרים פרחי,33,Married,Medium,Traditional,Employed (Part-Time)
+462,רונה תאומים,33,Married,Medium,Traditional,Employed (Part-Time)
+463,עלמה סויסה,33,Married,Medium,Traditional,Employed (Part-Time)
+464,מורן לוי,23,Married,Very Low,Bedouin,Employed (Full-Time)
+465,רחל אלון,32,Married,Medium,Traditional,Employed (Part-Time)
+466,רותי גרוס,31,Married,Medium,Traditional,Employed (Part-Time)
+467,חנה אזולאי,38,Married,High,Secular,Self-Employed
+468,תמר יונה,28,Married,Medium,Traditional,Employed (Full-Time)
+469,יעל פלג,32,Married,Medium,Traditional,Employed (Part-Time)
+470,עמליה הורוביץ,34,Married,Medium,Traditional,Employed (Part-Time)
+471,ליאור עזרא,27,Married,Very Low,Haredi,Employed (Full-Time)
+472,מיקה פלדמן,30,Married,Medium,Traditional,Employed (Part-Time)
+473,אורלי עזרא,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+474,תמרה פלג,30,Married,Medium,Traditional,Employed (Part-Time)
+475,שירה כץ,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+476,ענת לוי,34,Married,Medium,Traditional,Employed (Part-Time)
+477,מיכל לוין,36,Never-Married (Single),High,Secular,Unemployed
+478,טל רוזן,34,Married,Medium,Traditional,Employed (Part-Time)
+479,מורן גואטה,37,Married,High,Secular,Self-Employed
+480,נבו זכריה,32,Married,Medium,Traditional,Employed (Part-Time)
+481,דקלה גולדברג,25,Married,Medium,Traditional,Employed (Full-Time)
+482,לירון ישראל,30,Married,Medium,Traditional,Employed (Part-Time)
+483,נורית שטרן,27,Married,Very Low,Haredi,Employed (Full-Time)
+484,עמית לוי-שלום,32,Married,Medium,Traditional,Employed (Part-Time)
+485,מיקה כספי,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+486,רותי חיימוב,28,Married,Very Low,Haredi,Employed (Full-Time)
+487,שי-לי רוזן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+488,ליאת אסולין,45,Never-Married (Single),High,Secular,Unemployed
+489,מירי זועבי,33,Married,Medium,Traditional,Employed (Part-Time)
+490,דנה קדוש,21,Married,Very Low,Haredi,Employed (Full-Time)
+491,ענת רובין,23,Married,Very Low,Bedouin,Employed (Full-Time)
+492,דינה שלום,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+493,יעל מאיר,38,Married,High,Secular,Self-Employed
+494,ליזה סויסה,20,Married,Very Low,Haredi,Employed (Full-Time)
+495,מוריה בוזגלו,37,Married,High,Secular,Self-Employed
+496,לירון כהן,24,Married,Very Low,Bedouin,Employed (Full-Time)
+497,רומן לוי-שלום,33,Married,Medium,Traditional,Employed (Part-Time)
+498,ליאור יזראלי,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+499,שרה תאומים,30,Married,Medium,Traditional,Employed (Full-Time)
+500,ענבל הורוביץ,20,Married,Very Low,Haredi,Employed (Full-Time)
+501,שירה לוי,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+502,מיכל בן-ארי,27,Married,Very Low,Bedouin,Employed (Full-Time)
+503,טל דניאל,24,Married,Very Low,Haredi,Employed (Full-Time)
+504,רוני צדוק,31,Married,High,Secular,Employed (Part-Time)
+505,עדן חמו,30,Married,Medium,Traditional,Employed (Full-Time)
+506,גילי שביט,31,Married,Medium,Traditional,Employed (Part-Time)
+507,רינה כרמי,24,Married,Very Low,Haredi,Employed (Full-Time)
+508,שירה אסולין,33,Married,Medium,Traditional,Employed (Full-Time)
+509,רוני לבנה,30,Married,Medium,Traditional,Employed (Part-Time)
+510,שרית רוזן,31,Married,Medium,Traditional,Employed (Full-Time)
+511,ענבל כהן-אור,30,Married,Medium,Traditional,Employed (Part-Time)
+512,אורית נוימן,26,Married,Very Low,Haredi,Employed (Full-Time)
+513,מור כספי,27,Married,Very Low,Haredi,Employed (Full-Time)
+514,תמר הררי,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+515,רינה קורן,33,Married,Medium,Traditional,Employed (Part-Time)
+516,גילי צור,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+517,מיקה גואטה,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+518,יובל נגר,39,Married,High,Secular,Self-Employed
+519,דקלה אורן,31,Married,Medium,Traditional,Employed (Part-Time)
+520,מיכל כהן,23,Married,Very Low,Haredi,Employed (Full-Time)
+521,מיכל כץ,32,Married,Medium,Traditional,Employed (Part-Time)
+522,רותי מזרחי,32,Married,Medium,Traditional,Employed (Part-Time)
+523,דנה כהן,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+524,נטע גבאי,20,Married,Very Low,Haredi,Employed (Full-Time)
+525,עמליה אוחנה,39,Married,High,Secular,Self-Employed
+526,דנה סויסה,31,Married,High,Secular,Employed (Part-Time)
+527,ליאור שטרן,24,Married,Very Low,Haredi,Employed (Full-Time)
+528,שירה כהן-אור,37,Married,High,Secular,Unemployed
+529,מירב עובדיה,43,Never-Married (Single),High,Secular,Unemployed
+530,אורית טייטלבאום,37,Never-Married (Single),High,Secular,Unemployed
+531,אור סופר,27,Married,Very Low,Haredi,Employed (Full-Time)
+532,ניצן וייס,31,Married,Medium,Traditional,Employed (Full-Time)
+533,אושרית נגר,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+534,לילי מאיר,20,Married,Very Low,Bedouin,Employed (Full-Time)
+535,אושרית וייס,31,Married,Medium,Traditional,Employed (Part-Time)
+536,מור צור,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+537,ענבל שלום,39,Never-Married (Single),High,Secular,Unemployed
+538,תמרה בר,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+539,שרה מגיד,34,Married,Medium,Traditional,Employed (Part-Time)
+540,אור מגן,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+541,אורלי נגר,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+542,רחל הררי,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+543,מעין כהן,23,Married,Very Low,Haredi,Employed (Full-Time)
+544,נועה ברק,36,Never-Married (Single),High,Secular,Unemployed
+545,נופר וייס,34,Married,Medium,Traditional,Employed (Part-Time)
+546,מיכל פרחי,27,Married,Very Low,Bedouin,Employed (Full-Time)
+547,נעמה תירוש,33,Married,Medium,Traditional,Employed (Part-Time)
+548,ליאת צור,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+549,ענת כהן-אור,30,Married,Medium,Traditional,Employed (Part-Time)
+550,דנה אזולאי,36,Married,High,Secular,Self-Employed
+551,ליעד גבאי,25,Married,Very Low,Haredi,Employed (Full-Time)
+552,תמר פלג,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+553,ענת משה,31,Married,Medium,Traditional,Employed (Part-Time)
+554,רוני אבנר,33,Married,Medium,Traditional,Employed (Full-Time)
+555,רחל מאיר,25,Married,Medium,Traditional,Employed (Full-Time)
+556,שי-לי בר,22,Married,Very Low,Bedouin,Employed (Full-Time)
+557,נועה בר,27,Married,Medium,Traditional,Employed (Full-Time)
+558,רומן דדון,20,Married,Very Low,Bedouin,Employed (Full-Time)
+559,נורית חמו,24,Married,Very Low,Bedouin,Employed (Full-Time)
+560,נופר טולדנו,34,Married,Medium,Traditional,Employed (Part-Time)
+561,שיר יזראלי,32,Married,Medium,Traditional,Employed (Part-Time)
+562,מעין גבאי,27,Married,Very Low,Haredi,Employed (Full-Time)
+563,אלה עזרא,21,Married,Very Low,Haredi,Employed (Full-Time)
+564,ליאור אדלר,21,Married,Very Low,Haredi,Employed (Full-Time)
+565,מילה בר,27,Married,Very Low,Haredi,Employed (Full-Time)
+566,רינה גוטמן,34,Married,Medium,Traditional,Employed (Part-Time)
+567,נטע גולדברג,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+568,מור גרוס,30,Married,High,Secular,Employed (Part-Time)
+569,רינה זכריה,18,Married,Very Low,Haredi,Employed (Full-Time)
+570,לילי קורן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+571,רינה כהן,21,Married,Very Low,Bedouin,Employed (Full-Time)
+572,ענבל כספי,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+573,מיכל בלום,20,Married,Very Low,Haredi,Employed (Full-Time)
+574,אורית שלום,32,Married,High,Secular,Employed (Part-Time)
+575,דפנה אלון,24,Married,Very Low,Haredi,Employed (Full-Time)
+576,קרן רוזן,34,Married,Medium,Traditional,Employed (Part-Time)
+577,אושרית בר,37,Married,High,Secular,Self-Employed
+578,דנה ברק,33,Married,Medium,Traditional,Employed (Part-Time)
+579,עמית מגיד,39,Never-Married (Single),High,Secular,Unemployed
+580,אביב פרחי,21,Married,Very Low,Bedouin,Employed (Full-Time)
+581,תמר אבנר,44,Never-Married (Single),High,Secular,Unemployed
+582,עמליה גוטמן,25,Married,Very Low,Haredi,Employed (Full-Time)
+583,מיכל וייס,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+584,חנה מגן,27,Married,Very Low,Haredi,Employed (Full-Time)
+585,רחל בראון,33,Married,Medium,Traditional,Employed (Part-Time)
+586,אגם שלום,33,Married,Medium,Traditional,Employed (Full-Time)
+587,לירון גרין,34,Married,Medium,Traditional,Employed (Part-Time)
+588,טל צור,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+589,שרה יונה,23,Married,Very Low,Bedouin,Employed (Full-Time)
+590,רעות בלום,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+591,אושרית זועבי,30,Married,Medium,Traditional,Employed (Part-Time)
+592,אביב כהן-אור,21,Married,Very Low,Haredi,Employed (Full-Time)
+593,מרים תמיר,22,Married,Very Low,Haredi,Employed (Full-Time)
+594,מילה לוי,30,Married,Medium,Traditional,Employed (Part-Time)
+595,אסתר כרמי,33,Married,Medium,Traditional,Employed (Part-Time)
+596,רומן גרין,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+597,טל בוזגלו,24,Married,Very Low,Bedouin,Employed (Full-Time)
+598,ליאור בן-ארי,22,Married,Very Low,Bedouin,Employed (Full-Time)
+599,לילי ישראל,41,Never-Married (Single),High,Secular,Unemployed
+600,מור דויטש,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+601,שירה גואטה,24,Married,Very Low,Haredi,Employed (Full-Time)
+602,לילי סולומון,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+603,לילי כהן,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+604,לילי אלון,23,Married,Very Low,Bedouin,Employed (Full-Time)
+605,עמית מגן,34,Married,High,Secular,Employed (Part-Time)
+606,ענת פלג,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+607,ליאת בדוש,30,Married,Medium,Traditional,Employed (Part-Time)
+608,ליזה דניאל,24,Married,Very Low,Haredi,Employed (Full-Time)
+609,שרה הורוביץ,21,Married,Very Low,Bedouin,Employed (Full-Time)
+610,מיכל דדון,27,Married,Medium,Traditional,Employed (Full-Time)
+611,יובל זועבי,36,Married,High,Secular,Self-Employed
+612,דנה יעקב,36,Married,High,Secular,Self-Employed
+613,רחל זועבי,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+614,מיקה נחום,26,Married,Very Low,Haredi,Employed (Full-Time)
+615,ענת אוחנה,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+616,אביב אסולין,34,Married,Medium,Traditional,Employed (Full-Time)
+617,רונה שגב,22,Married,Very Low,Haredi,Employed (Full-Time)
+618,מעיין טייטלבאום,30,Married,Medium,Traditional,Employed (Part-Time)
+619,רינה אדלר,32,Married,Medium,Traditional,Employed (Full-Time)
+620,יואב וייס,26,Married,Very Low,Bedouin,Employed (Full-Time)
+621,עדי לוי,29,Married,Medium,Traditional,Employed (Full-Time)
+622,לירון עובדיה,22,Married,Very Low,Haredi,Employed (Full-Time)
+623,יעל בן-דוד,21,Married,Very Low,Haredi,Employed (Full-Time)
+624,עמית ישראל,27,Married,Very Low,Bedouin,Employed (Full-Time)
+625,שרה אבנר,39,Never-Married (Single),High,Secular,Unemployed
+626,שיר אברהם,34,Married,High,Secular,Employed (Part-Time)
+627,רינה תאומים,35,Married,High,Secular,Self-Employed
+628,נופר יעקב,29,Married,Very Low,Haredi,Employed (Full-Time)
+629,אורלי מגיד,21,Married,Very Low,Haredi,Employed (Full-Time)
+630,אורלי דוד,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+631,נועה נוימן,24,Married,Very Low,Haredi,Employed (Full-Time)
+632,ענבל כהן,31,Married,Medium,Traditional,Employed (Part-Time)
+633,גילי מאיר,36,Married,High,Secular,Self-Employed
+634,ניצן בלום,39,Never-Married (Single),High,Secular,Unemployed
+635,מורן יעקב,29,Married,Very Low,Haredi,Employed (Full-Time)
+636,עדן מזרחי,37,Married,High,Secular,Self-Employed
+637,אביב כספי,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+638,עידן גוטמן,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+639,לילי עזרא,30,Married,Medium,Traditional,Employed (Part-Time)
+640,עמית כץ,30,Married,Medium,Traditional,Employed (Part-Time)
+641,יעלה כץ,30,Married,Medium,Traditional,Employed (Part-Time)
+642,רונה דהן,24,Married,Very Low,Bedouin,Employed (Full-Time)
+643,רונה מזרחי,32,Married,High,Secular,Employed (Part-Time)
+644,הודיה גרוס,36,Never-Married (Single),High,Secular,Unemployed
+645,נועה רוזן,24,Married,Very Low,Haredi,Employed (Full-Time)
+646,שרה אזולאי,33,Married,High,Secular,Employed (Part-Time)
+647,דקלה צור,24,Married,Very Low,Haredi,Employed (Full-Time)
+648,אורית הורוביץ,45,Never-Married (Single),High,Secular,Unemployed
+649,דקלה שגב,30,Married,Medium,Traditional,Employed (Part-Time)
+650,נורית יעקב,38,Married,High,Secular,Self-Employed
+651,נטע ישראל,39,Married,High,Secular,Self-Employed
+652,אורלי כהן,27,Married,Very Low,Bedouin,Employed (Full-Time)
+653,שרה כהן,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+654,ענת זועבי,33,Married,Medium,Traditional,Employed (Part-Time)
+655,ענת יוסף,31,Married,Medium,Traditional,Employed (Part-Time)
+656,טל כהן-אור,45,Divorced,High,Secular,Unemployed
+657,שרה אברהם,33,Married,Medium,Traditional,Employed (Part-Time)
+658,עלמה יונה,27,Married,Very Low,Haredi,Employed (Full-Time)
+659,דורית צדוק,33,Married,Medium,Traditional,Employed (Part-Time)
+660,רותי ברק,30,Married,High,Secular,Employed (Part-Time)
+661,עלמה תמיר,30,Married,Medium,Traditional,Employed (Part-Time)
+662,רעות גבאי,31,Married,Medium,Traditional,Employed (Part-Time)
+663,אורית נחום,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+664,דורית יזראלי,43,Never-Married (Single),High,Secular,Unemployed
+665,יעל פלדמן,43,Never-Married (Single),High,Secular,Unemployed
+666,רוני חמו,33,Married,Medium,Traditional,Employed (Part-Time)
+667,נופר בוזגלו,21,Married,Very Low,Haredi,Employed (Full-Time)
+668,רינה שביט,27,Married,Very Low,Haredi,Employed (Full-Time)
+669,הודיה פרידמן,39,Married,High,Secular,Unemployed
+670,עלמה דדון,21,Married,Very Low,Bedouin,Employed (Full-Time)
+671,לירון דויטש,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+672,נועה בן-ארי,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+673,מילה אברמוביץ,27,Married,Medium,Traditional,Employed (Full-Time)
+674,דינה אברהם,38,Married,High,Secular,Self-Employed
+675,עמית יעקב,21,Married,Very Low,Bedouin,Employed (Full-Time)
+676,מעיין חדד,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+677,חנה תאומים,34,Married,High,Secular,Employed (Part-Time)
+678,ליאור דהן,34,Married,High,Secular,Employed (Part-Time)
+679,ליאת פרידמן,35,Married,High,Secular,Self-Employed
+680,אביב בן-דוד,22,Married,Very Low,Haredi,Employed (Full-Time)
+681,נורית יוסף,21,Married,Very Low,Haredi,Employed (Full-Time)
+682,מור יעקב,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+683,נטע נוימן,18,Married,Very Low,Bedouin,Employed (Full-Time)
+684,שירה וייס,42,Never-Married (Single),High,Secular,Unemployed
+685,רחל כהן,28,Married,Very Low,Haredi,Employed (Full-Time)
+686,חנה אבוטבול,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+687,מורן צור,26,Married,Very Low,Haredi,Employed (Full-Time)
+688,ליזה אלון,25,Married,Very Low,Haredi,Employed (Full-Time)
+689,דנה גוטמן,25,Married,Very Low,Haredi,Employed (Full-Time)
+690,רות דהן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+691,גילי זכריה,38,Married,High,Secular,Self-Employed
+692,רותי לוין,39,Married,High,Secular,Self-Employed
+693,אלה גרין,33,Married,Medium,Traditional,Employed (Part-Time)
+694,מרים פלג,31,Married,Medium,Traditional,Employed (Part-Time)
+695,מירי וייס,31,Married,Medium,Traditional,Employed (Part-Time)
+696,מירב אבוטבול,32,Married,Medium,Traditional,Employed (Part-Time)
+697,מור אברמוביץ,39,Married,High,Secular,Self-Employed
+698,גל כהן-אור,32,Married,Medium,Traditional,Employed (Part-Time)
+699,מיקה אבנר,36,Married,High,Secular,Self-Employed
+700,לילי תירוש,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+701,מרים לוי,38,Never-Married (Single),High,Secular,Unemployed
+702,מעיין ברק,44,Never-Married (Single),High,Secular,Unemployed
+703,מיכל שגב,33,Married,Medium,Traditional,Employed (Part-Time)
+704,אסתר דויטש,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+705,מירב פרחי,37,Never-Married (Single),High,Secular,Unemployed
+706,אור שלום,43,Never-Married (Single),High,Secular,Unemployed
+707,גל יוסף,20,Married,Very Low,Bedouin,Employed (Full-Time)
+708,יעל גולדברג,30,Married,High,Secular,Employed (Part-Time)
+709,עדי אזולאי,28,Married,Very Low,Haredi,Employed (Full-Time)
+710,טל סולומון,34,Married,Medium,Traditional,Employed (Full-Time)
+711,יעלה יונה,33,Married,Medium,Traditional,Employed (Part-Time)
+712,ליעד בדוש,31,Married,Medium,Traditional,Employed (Part-Time)
+713,ליעד בלום,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+714,אושרית כרמי,34,Married,Medium,Traditional,Employed (Part-Time)
+715,טל גולדברג,37,Never-Married (Single),High,Secular,Unemployed
+716,רות גרוס,25,Married,Very Low,Bedouin,Employed (Full-Time)
+717,לילי כרמי,25,Married,Medium,Traditional,Employed (Full-Time)
+718,אורלי סויסה,32,Married,Medium,Traditional,Employed (Part-Time)
+719,רחל שלום,33,Married,Medium,Traditional,Employed (Part-Time)
+720,ענת יונה,39,Married,High,Secular,Self-Employed
+721,נועה שגב,33,Married,Medium,Traditional,Employed (Part-Time)
+722,לירון אבנר,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+723,רותי נגר,29,Married,Medium,Traditional,Employed (Full-Time)
+724,עדי סויסה,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+725,דינה אזולאי,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+726,רותי זכריה,23,Married,Very Low,Haredi,Employed (Full-Time)
+727,יואב חמו,36,Never-Married (Single),High,Secular,Unemployed
+728,יעל בדוש,37,Married,High,Secular,Self-Employed
+729,ליאור לוי-שלום,19,Married,Very Low,Haredi,Employed (Full-Time)
+730,גל תירוש,28,Married,Very Low,Haredi,Employed (Full-Time)
+731,מעין בלום,37,Married,High,Secular,Self-Employed
+732,תמר לוי-שלום,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+733,רעות שביט,33,Married,Medium,Traditional,Employed (Part-Time)
+734,מירי אוחנה,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+735,נעמה כספי,29,Married,Medium,Traditional,Employed (Full-Time)
+736,מילה יוסף,39,Married,High,Secular,Self-Employed
+737,ענת אסולין,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+738,קרן הררי,27,Married,Very Low,Haredi,Employed (Full-Time)
+739,עדן לוי,24,Married,Very Low,Haredi,Employed (Full-Time)
+740,מרים כהן-אור,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+741,אביב משה,20,Married,Very Low,Haredi,Employed (Full-Time)
+742,רינה בדוש,33,Married,High,Secular,Employed (Part-Time)
+743,ליאת יעקב,34,Married,Medium,Traditional,Employed (Full-Time)
+744,מרים נגר,33,Married,Medium,Traditional,Employed (Part-Time)
+745,יואב יזראלי,34,Married,Medium,Traditional,Employed (Part-Time)
+746,מילה קורן,32,Married,High,Secular,Employed (Part-Time)
+747,דקלה טייטלבאום,24,Married,Very Low,Haredi,Employed (Full-Time)
+748,מרים דהן,39,Married,High,Secular,Self-Employed
+749,רחל גרין,30,Married,Medium,Traditional,Employed (Part-Time)
+750,שירה בר,36,Married,High,Secular,Self-Employed
+751,אסתר רובין,20,Married,Very Low,Haredi,Employed (Full-Time)
+752,יובל לוי-שלום,38,Never-Married (Single),High,Secular,Unemployed
+753,לילי מגיד,37,Married,High,Secular,Unemployed
+754,תמרה זכריה,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+755,עדי זועבי,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+756,מיכל דוד,32,Married,Medium,Traditional,Employed (Full-Time)
+757,אורלי אברמוביץ,31,Married,Medium,Traditional,Employed (Part-Time)
+758,טל לוי,26,Married,Very Low,Haredi,Employed (Full-Time)
+759,ליאור בדוש,24,Married,Very Low,Haredi,Employed (Full-Time)
+760,אור גואטה,44,Never-Married (Single),High,Secular,Unemployed
+761,אור טייטלבאום,38,Married,High,Secular,Self-Employed
+762,מרים אברמוביץ,39,Married,High,Secular,Self-Employed
+763,דורית יונה,30,Married,High,Secular,Employed (Part-Time)
+764,נבו אסולין,30,Married,Medium,Traditional,Employed (Full-Time)
+765,רותי פרידמן,30,Married,Medium,Traditional,Employed (Part-Time)
+766,נבו סולומון,31,Married,Medium,Traditional,Employed (Part-Time)
+767,רות טולדנו,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+768,רומן שגב,23,Married,Very Low,Bedouin,Employed (Full-Time)
+769,רות חיימוב,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+770,ענבל גולדברג,38,Married,High,Secular,Self-Employed
+771,שי-לי שגב,31,Married,Medium,Traditional,Employed (Part-Time)
+772,תמר כץ,34,Married,Medium,Traditional,Employed (Part-Time)
+773,רעות רובין,39,Married,High,Secular,Self-Employed
+774,טל שלום,36,Married,High,Secular,Self-Employed
+775,קרן שביט,32,Married,High,Secular,Employed (Part-Time)
+776,אביב חדד,29,Married,Medium,Traditional,Employed (Full-Time)
+777,ניצן פרידמן,32,Married,High,Secular,Employed (Part-Time)
+778,מעיין חמו,21,Married,Very Low,Haredi,Employed (Full-Time)
+779,דנה גרוס,33,Married,Medium,Traditional,Employed (Part-Time)
+780,עמליה שביט,39,Never-Married (Single),High,Secular,Unemployed
+781,דורית חיימוב,27,Married,Medium,Traditional,Employed (Full-Time)
+782,אביב פרידמן,44,Never-Married (Single),High,Secular,Unemployed
+783,רינה ישראל,32,Married,High,Secular,Employed (Part-Time)
+784,מירי כהן,34,Married,Medium,Traditional,Employed (Part-Time)
+785,נועה מזרחי,24,Married,Very Low,Bedouin,Employed (Full-Time)
+786,רותם גבאי,34,Married,Medium,Traditional,Employed (Full-Time)
+787,תמר לבנה,23,Married,Very Low,Haredi,Employed (Full-Time)
+788,לילי רוזן,29,Married,Medium,Traditional,Employed (Full-Time)
+789,רות עובדיה,22,Married,Very Low,Bedouin,Employed (Full-Time)
+790,רינה רוזן,28,Married,Medium,Traditional,Employed (Full-Time)
+791,נועה הררי,30,Married,High,Secular,Employed (Part-Time)
+792,מור כרמי,27,Married,Very Low,Haredi,Employed (Full-Time)
+793,יעל תמיר,22,Married,Very Low,Bedouin,Employed (Full-Time)
+794,גל בראון,35,Never-Married (Single),High,Secular,Unemployed
+795,אלה מגיד,33,Married,Medium,Traditional,Employed (Full-Time)
+796,מעיין לבנה,34,Married,High,Secular,Employed (Part-Time)
+797,אסתר נגר,32,Married,High,Secular,Employed (Part-Time)
+798,גל רוזן,20,Married,Very Low,Bedouin,Employed (Full-Time)
+799,שרית גואטה,29,Married,Very Low,Haredi,Employed (Full-Time)
+800,יעל גבאי,33,Married,High,Secular,Employed (Part-Time)
+801,מיקה שלום,32,Married,Medium,Traditional,Employed (Full-Time)
+802,עדן פלג,29,Married,Very Low,Haredi,Employed (Full-Time)
+803,דקלה כהן-אור,34,Married,Medium,Traditional,Employed (Part-Time)
+804,אלה גבאי,31,Married,Medium,Traditional,Employed (Full-Time)
+805,גל רז,25,Married,Very Low,Haredi,Employed (Full-Time)
+806,יובל חמו,39,Never-Married (Single),High,Secular,Unemployed
+807,חנה בלום,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+808,מור תמיר,21,Married,Very Low,Haredi,Employed (Full-Time)
+809,רות לבנה,29,Married,Very Low,Bedouin,Employed (Full-Time)
+810,חנה שביט,45,Never-Married (Single),High,Secular,Unemployed
+811,הודיה גולדברג,29,Married,Very Low,Haredi,Employed (Full-Time)
+812,אסתר כהן,43,Never-Married (Single),High,Secular,Unemployed
+813,ליעד כספי,36,Never-Married (Single),High,Secular,Unemployed
+814,גל כהן,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+815,דנה אורן,35,Married,High,Secular,Self-Employed
+816,רונה נגר,39,Married,High,Secular,Self-Employed
+817,אורית כהן,25,Married,Medium,Traditional,Employed (Full-Time)
+818,שיר טייטלבאום,36,Never-Married (Single),High,Secular,Unemployed
+819,עמית אלון,40,Never-Married (Single),High,Secular,Unemployed
+820,רחל תאומים,33,Married,Medium,Traditional,Employed (Part-Time)
+821,רעות פרידמן,32,Married,High,Secular,Employed (Part-Time)
+822,אורית דוד,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+823,דורית שגב,31,Married,High,Secular,Employed (Part-Time)
+824,שירה דויטש,23,Married,Very Low,Bedouin,Employed (Full-Time)
+825,אור אוחנה,31,Married,High,Secular,Employed (Part-Time)
+826,יובל מזרחי,28,Married,Medium,Traditional,Employed (Full-Time)
+827,מילה בוזגלו,39,Married,High,Secular,Unemployed
+828,עדן כץ,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+829,תמרה יעקב,23,Married,Very Low,Bedouin,Employed (Full-Time)
+830,אלה יזראלי,35,Never-Married (Single),High,Secular,Unemployed
+831,עדי נגר,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+832,רוני ישראל,39,Married,High,Secular,Self-Employed
+833,מילה מזרחי,31,Married,Medium,Traditional,Employed (Full-Time)
+834,יובל חדד,29,Married,Medium,Traditional,Employed (Full-Time)
+835,יעלה טייטלבאום,27,Married,Very Low,Haredi,Employed (Full-Time)
+836,רותי הררי,33,Married,Medium,Traditional,Employed (Part-Time)
+837,יואב גואטה,24,Married,Very Low,Haredi,Employed (Full-Time)
+838,הודיה לבנה,38,Married,High,Secular,Self-Employed
+839,נורית סולומון,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+840,גל נחום,26,Married,Very Low,Haredi,Employed (Full-Time)
+841,שירה רז,33,Married,Medium,Traditional,Employed (Part-Time)
+842,יואב רז,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+843,נטע רוזן,22,Married,Very Low,Haredi,Employed (Full-Time)
+844,רותם כרמי,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+845,ליזה חדד,32,Married,Medium,Traditional,Employed (Part-Time)
+846,רינה אורן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+847,עידן סויסה,34,Married,Medium,Traditional,Employed (Full-Time)
+848,דקלה לוין,38,Married,High,Secular,Self-Employed
+849,דנה גרין,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+850,שירה סויסה,36,Never-Married (Single),High,Secular,Unemployed
+851,רינה דניאל,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+852,שיר נוימן,34,Married,Medium,Traditional,Employed (Full-Time)
+853,דנה אברהם,32,Married,Medium,Traditional,Employed (Part-Time)
+854,דפנה לוי,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+855,עדי יוסף,37,Never-Married (Single),High,Secular,Unemployed
+856,יעל ישראל,32,Married,High,Secular,Employed (Part-Time)
+857,אביב דניאל,31,Married,Medium,Traditional,Employed (Part-Time)
+858,מיקה בדוש,33,Married,Medium,Traditional,Employed (Part-Time)
+859,ליאור כהן-אור,37,Married,High,Secular,Self-Employed
+860,לירון גרוס,23,Married,Very Low,Haredi,Employed (Full-Time)
+861,רותי אסולין,37,Never-Married (Single),High,Secular,Unemployed
+862,יעלה קורן,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+863,שירה לבנה,37,Married,High,Secular,Self-Employed
+864,נופר לוי-שלום,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+865,שרה אסולין,35,Married,High,Secular,Self-Employed
+866,שירה יוסף,34,Married,Medium,Traditional,Employed (Part-Time)
+867,לילי דדון,24,Married,Very Low,Haredi,Employed (Full-Time)
+868,מירי גולדברג,23,Married,Very Low,Haredi,Employed (Full-Time)
+869,רעות גוטמן,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+870,נופר אברהם,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+871,מוריה אוחנה,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+872,דפנה כץ,37,Married,High,Secular,Self-Employed
+873,שירה פרחי,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+874,ליאור קורן,32,Married,Medium,Traditional,Employed (Part-Time)
+875,טל אסולין,35,Never-Married (Single),High,Secular,Unemployed
+876,דפנה חדד,32,Married,High,Secular,Employed (Part-Time)
+877,דורית פלדמן,33,Married,Medium,Traditional,Employed (Full-Time)
+878,מרים גואטה,22,Married,Very Low,Haredi,Employed (Full-Time)
+879,יעלה כהן-אור,33,Married,Medium,Traditional,Employed (Full-Time)
+880,מיקה תמיר,31,Married,Medium,Traditional,Employed (Part-Time)
+881,נעמה בן-דוד,31,Married,Medium,Traditional,Employed (Part-Time)
+882,לירון תירוש,39,Married,High,Secular,Self-Employed
+883,אגם וייס,37,Never-Married (Single),High,Secular,Unemployed
+884,גל פלדמן,24,Married,Very Low,Bedouin,Employed (Full-Time)
+885,חנה גולדברג,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+886,מיכל דניאל,36,Married,High,Secular,Unemployed
+887,מיכל סולומון,30,Married,Medium,Traditional,Employed (Part-Time)
+888,מור סולומון,29,Married,Very Low,Haredi,Employed (Full-Time)
+889,מרים פרידמן,34,Married,Medium,Traditional,Employed (Part-Time)
+890,חנה גוטמן,41,Never-Married (Single),High,Secular,Unemployed
+891,ענבל אורן,31,Married,Medium,Traditional,Employed (Full-Time)
+892,אסתר שלום,30,Married,Medium,Traditional,Employed (Part-Time)
+893,אושרית גואטה,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+894,שי-לי גרין,26,Married,Very Low,Haredi,Employed (Full-Time)
+895,תמר שלום,21,Married,Very Low,Bedouin,Employed (Full-Time)
+896,שי-לי פרידמן,25,Married,Medium,Traditional,Employed (Full-Time)
+897,עמית יוסף,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+898,לירון סולומון,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+899,רותם יונה,32,Married,Medium,Traditional,Employed (Part-Time)
+900,אורית לוי,33,Married,Medium,Traditional,Employed (Full-Time)
+901,יואב דדון,35,Never-Married (Single),High,Secular,Unemployed
+902,עדן רז,26,Married,Medium,Traditional,Employed (Full-Time)
+903,עלמה מזרחי,30,Married,Medium,Traditional,Employed (Part-Time)
+904,רותם רובין,24,Married,Very Low,Haredi,Employed (Full-Time)
+905,לילי פלג,31,Married,Medium,Traditional,Employed (Part-Time)
+906,נטע שביט,28,Married,Very Low,Bedouin,Employed (Full-Time)
+907,שירה יזראלי,38,Married,High,Secular,Self-Employed
+908,אביב זועבי,33,Married,Medium,Traditional,Employed (Part-Time)
+909,רעות ברק,36,Married,High,Secular,Self-Employed
+910,אורית תמיר,32,Married,Medium,Traditional,Employed (Full-Time)
+911,שרה שלום,22,Married,Very Low,Haredi,Employed (Full-Time)
+912,רותי גולדברג,32,Married,Medium,Traditional,Employed (Part-Time)
+913,עמית לוין,30,Married,Medium,Traditional,Employed (Part-Time)
+914,אורית מזרחי,30,Married,Medium,Traditional,Employed (Part-Time)
+915,דורית נחום,34,Married,High,Secular,Employed (Part-Time)
+916,אסתר כהן-אור,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+917,חנה וייס,34,Married,Medium,Traditional,Employed (Part-Time)
+918,עלמה כהן,30,Married,Medium,Traditional,Employed (Full-Time)
+919,אסתר אבנר,31,Married,Medium,Traditional,Employed (Part-Time)
+920,מיקה בן-דוד,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+921,ענבל לוי-שלום,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+922,מיכל אלון,30,Married,Medium,Traditional,Employed (Part-Time)
+923,ליזה לבנה,33,Married,Medium,Traditional,Employed (Full-Time)
+924,דורית סופר,28,Married,Very Low,Haredi,Employed (Full-Time)
+925,מעיין כהן,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+926,עמליה כהן-אור,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+927,נופר הורוביץ,30,Married,Medium,Traditional,Employed (Part-Time)
+928,אלה מאיר,30,Married,High,Secular,Employed (Part-Time)
+929,רותם צדוק,32,Married,Medium,Traditional,Employed (Part-Time)
+930,מיכל יוסף,34,Married,Medium,Traditional,Employed (Part-Time)
+931,קרן אברמוביץ,24,Married,Very Low,Haredi,Employed (Full-Time)
+932,מוריה חדד,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+933,מרים שטרן,37,Married,High,Secular,Self-Employed
+934,אביב טולדנו,32,Married,Medium,Traditional,Employed (Part-Time)
+935,ענבל גואטה,43,Never-Married (Single),High,Secular,Unemployed
+936,רינה לוי-שלום,34,Married,Medium,Traditional,Employed (Part-Time)
+937,מעין כרמי,44,Divorced,High,Secular,Unemployed
+938,אור שביט,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+939,רותם לוי-שלום,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+940,ניצן דהן,34,Married,Medium,Traditional,Employed (Full-Time)
+941,אלה אזולאי,33,Married,Medium,Traditional,Employed (Part-Time)
+942,הודיה קורן,22,Married,Very Low,Haredi,Employed (Full-Time)
+943,מעיין אבנר,36,Never-Married (Single),High,Secular,Unemployed
+944,אגם גואטה,35,Never-Married (Single),High,Secular,Unemployed
+945,מעיין שביט,32,Married,Medium,Traditional,Employed (Part-Time)
+946,ענת מגן,21,Married,Very Low,Bedouin,Employed (Full-Time)
+947,מרים גרין,33,Married,Medium,Traditional,Employed (Part-Time)
+948,דנה אבוטבול,32,Married,Medium,Traditional,Employed (Part-Time)
+949,ענבל סופר,31,Married,Medium,Traditional,Employed (Part-Time)
+950,דנה סופר,30,Married,Medium,Traditional,Employed (Full-Time)
+951,דפנה בן-דוד,32,Married,Medium,Traditional,Employed (Part-Time)
+952,רות גואטה,19,Married,Very Low,Haredi,Employed (Full-Time)
+953,עדי אורן,44,Never-Married (Single),High,Secular,Unemployed
+954,גל לוין,26,Married,Medium,Traditional,Employed (Full-Time)
+955,מוריה משה,21,Married,Very Low,Bedouin,Employed (Full-Time)
+956,יואב חיימוב,24,Married,Very Low,Bedouin,Employed (Full-Time)
+957,רחל הורוביץ,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+958,ליזה כספי,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+959,אורית אזולאי,44,Never-Married (Single),High,Secular,Unemployed
+960,ליזה זכריה,32,Married,Medium,Traditional,Employed (Full-Time)
+961,מילה בדוש,40,Never-Married (Single),High,Secular,Unemployed
+962,רחל צור,23,Married,Very Low,Haredi,Employed (Full-Time)
+963,שרית אלון,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+964,עדי דניאל,36,Never-Married (Single),High,Secular,Unemployed
+965,מעין כץ,41,Never-Married (Single),High,Secular,Unemployed
+966,ליזה כרמי,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+967,רונה חיימוב,32,Married,Medium,Traditional,Employed (Part-Time)
+968,רות בן-דוד,21,Married,Very Low,Bedouin,Employed (Full-Time)
+969,יעלה אבנר,30,Married,Medium,Traditional,Employed (Full-Time)
+970,עמליה זכריה,32,Married,Medium,Traditional,Employed (Part-Time)
+971,רותם דוד,33,Married,Medium,Traditional,Employed (Part-Time)
+972,יואב תירוש,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+973,גילי קורן,23,Married,Very Low,Haredi,Employed (Full-Time)
+974,טל קורן,22,Married,Very Low,Bedouin,Employed (Full-Time)
+975,מוריה מזרחי,22,Married,Very Low,Haredi,Employed (Full-Time)
+976,אגם סופר,32,Married,High,Secular,Employed (Part-Time)
+977,חנה יעקב,24,Married,Very Low,Haredi,Employed (Full-Time)
+978,אגם אברמוביץ,34,Married,Medium,Traditional,Employed (Part-Time)
+979,אורלי מזרחי,20,Married,Very Low,Bedouin,Employed (Full-Time)
+980,יעלה בדוש,37,Married,High,Secular,Self-Employed
+981,ניצן אבנר,27,Married,Medium,Traditional,Employed (Full-Time)
+982,ענת חדד,21,Married,Very Low,Haredi,Employed (Full-Time)
+983,רינה אברהם,30,Married,Medium,Traditional,Employed (Full-Time)
+984,אור סולומון,30,Married,Medium,Traditional,Employed (Part-Time)
+985,דנה אוחנה,33,Married,Medium,Traditional,Employed (Part-Time)
+986,יעלה ברק,22,Married,Very Low,Haredi,Employed (Full-Time)
+987,לילי יוסף,26,Married,Very Low,Haredi,Employed (Full-Time)
+988,דורית לוי,28,Married,Medium,Traditional,Employed (Full-Time)
+989,נופר דהן,29,Married,Medium,Traditional,Employed (Full-Time)
+990,קרן דניאל,27,Married,Medium,Traditional,Employed (Full-Time)
+991,רותם כהן,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+992,מור מגיד,27,Married,Very Low,Haredi,Employed (Full-Time)
+993,שרה יזראלי,22,Married,Very Low,Bedouin,Employed (Full-Time)
+994,עידן אוחנה,29,Married,Medium,Traditional,Employed (Full-Time)
+995,לירון צדוק,21,Married,Very Low,Haredi,Employed (Full-Time)
+996,שי-לי רז,31,Married,Medium,Traditional,Employed (Full-Time)
+997,הודיה ברק,31,Married,Medium,Traditional,Employed (Part-Time)
+998,ליאור אורן,33,Married,Medium,Traditional,Employed (Part-Time)
+999,שרה יוסף,31,Married,Medium,Traditional,Employed (Part-Time)
+1000,נטע הורוביץ,33,Married,Medium,Traditional,Employed (Part-Time)
+1001,יעלה אזולאי,34,Married,Medium,Traditional,Employed (Part-Time)
+1002,שירה סולומון,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1003,רינה טולדנו,23,Married,Very Low,Haredi,Employed (Full-Time)
+1004,רוני אברמוביץ,34,Married,Medium,Traditional,Employed (Full-Time)
+1005,יובל הררי,33,Married,Medium,Traditional,Employed (Part-Time)
+1006,יעל כהן-אור,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1007,אגם פלדמן,45,Never-Married (Single),High,Secular,Unemployed
+1008,רותם צור,26,Married,Very Low,Haredi,Employed (Full-Time)
+1009,מעיין שטרן,26,Married,Medium,Traditional,Employed (Full-Time)
+1010,רינה גואטה,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1011,עדי חיימוב,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1012,יעל טייטלבאום,34,Married,Medium,Traditional,Employed (Part-Time)
+1013,דקלה עובדיה,43,Never-Married (Single),High,Secular,Unemployed
+1014,גילי יזראלי,24,Married,Very Low,Haredi,Employed (Full-Time)
+1015,יעל נגר,27,Married,Very Low,Bedouin,Employed (Full-Time)
+1016,נועה יזראלי,25,Married,Very Low,Haredi,Employed (Full-Time)
+1017,שי-לי לוי-שלום,18,Married,Very Low,Haredi,Employed (Full-Time)
+1018,דקלה חיימוב,30,Married,Medium,Traditional,Employed (Part-Time)
+1019,רוני מזרחי,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1020,מיקה רוזן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1021,דפנה אוחנה,26,Married,Very Low,Haredi,Employed (Full-Time)
+1022,עדי שגב,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1023,מירי טייטלבאום,29,Married,Medium,Traditional,Employed (Full-Time)
+1024,מירב יעקב,26,Married,Very Low,Bedouin,Employed (Full-Time)
+1025,שירה דוד,36,Married,High,Secular,Self-Employed
+1026,יעל הררי,32,Married,Medium,Traditional,Employed (Part-Time)
+1027,עלמה רז,39,Married,High,Secular,Self-Employed
+1028,רוני כהן,28,Married,Very Low,Haredi,Employed (Full-Time)
+1029,לירון דהן,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1030,רינה משה,36,Married,High,Secular,Self-Employed
+1031,חנה כהן-אור,29,Married,Medium,Traditional,Employed (Full-Time)
+1032,מור אבנר,33,Married,Medium,Traditional,Employed (Part-Time)
+1033,עלמה תירוש,25,Married,Medium,Traditional,Employed (Full-Time)
+1034,אגם רוזן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1035,שרה משה,43,Never-Married (Single),High,Secular,Unemployed
+1036,טל כהן,30,Married,Medium,Traditional,Employed (Part-Time)
+1037,דפנה אברמוביץ,38,Married,High,Secular,Self-Employed
+1038,מעיין כהן-אור,21,Married,Very Low,Haredi,Employed (Full-Time)
+1039,דנה בוזגלו,34,Married,Medium,Traditional,Employed (Part-Time)
+1040,עמליה כהן,33,Married,Medium,Traditional,Employed (Full-Time)
+1041,הודיה מגן,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1042,שירה גרוס,18,Married,Very Low,Haredi,Employed (Full-Time)
+1043,יעלה חמו,34,Married,Medium,Traditional,Employed (Part-Time)
+1044,ענת עובדיה,33,Married,High,Secular,Employed (Part-Time)
+1045,שיר שטרן,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1046,אגם פרידמן,45,Never-Married (Single),High,Secular,Unemployed
+1047,אורית בן-ארי,35,Married,High,Secular,Unemployed
+1048,גל בן-ארי,33,Married,Medium,Traditional,Employed (Part-Time)
+1049,רחל לוי-שלום,32,Married,Medium,Traditional,Employed (Part-Time)
+1050,גל בן-דוד,30,Married,Medium,Traditional,Employed (Part-Time)
+1051,ענבל מזרחי,36,Married,High,Secular,Employed (Part-Time)
+1052,מור צדוק,34,Married,Medium,Traditional,Employed (Full-Time)
+1053,לילי בוזגלו,30,Married,Medium,Traditional,Employed (Part-Time)
+1054,דפנה סויסה,20,Married,Very Low,Haredi,Employed (Full-Time)
+1055,אור לוי,23,Married,Very Low,Haredi,Employed (Full-Time)
+1056,אביב מגן,32,Married,High,Secular,Employed (Part-Time)
+1057,רות רוזן,35,Married,High,Secular,Self-Employed
+1058,מוריה ברק,34,Married,High,Secular,Employed (Part-Time)
+1059,רונה כספי,30,Married,High,Secular,Employed (Part-Time)
+1060,אביב מאיר,20,Married,Very Low,Haredi,Employed (Full-Time)
+1061,יעל סויסה,28,Married,Medium,Traditional,Employed (Full-Time)
+1062,מעין שביט,30,Married,Medium,Traditional,Employed (Part-Time)
+1063,אורית צדוק,37,Never-Married (Single),High,Secular,Unemployed
+1064,ליזה צור,33,Married,Medium,Traditional,Employed (Full-Time)
+1065,ענת תירוש,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1066,מוריה כץ,41,Never-Married (Single),High,Secular,Unemployed
+1067,מעיין נוימן,45,Never-Married (Single),High,Secular,Unemployed
+1068,רוני בר,28,Married,Medium,Traditional,Employed (Full-Time)
+1069,רותי בן-דוד,32,Married,Medium,Traditional,Employed (Part-Time)
+1070,אור בדוש,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1071,שי-לי דויטש,23,Married,Very Low,Haredi,Employed (Full-Time)
+1072,מרים עזרא,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1073,רינה וייס,43,Never-Married (Single),High,Secular,Unemployed
+1074,נטע כץ,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1075,שירה יונה,34,Married,Medium,Traditional,Employed (Full-Time)
+1076,שירה לוי-שלום,31,Married,Medium,Traditional,Employed (Part-Time)
+1077,נופר לוי,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1078,נעמה רוזן,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1079,רותי בר,31,Married,Medium,Traditional,Employed (Part-Time)
+1080,יעל בלום,24,Married,Very Low,Bedouin,Employed (Full-Time)
+1081,יובל קורן,33,Married,Medium,Traditional,Employed (Full-Time)
+1082,אסתר טולדנו,24,Married,Very Low,Bedouin,Employed (Full-Time)
+1083,נעמה לוין,41,Never-Married (Single),High,Secular,Unemployed
+1084,מורן נחום,36,Married,High,Secular,Unemployed
+1085,לירון נגר,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1086,רחל שביט,30,Married,Medium,Traditional,Employed (Part-Time)
+1087,ניצן שטרן,27,Married,Medium,Traditional,Employed (Full-Time)
+1088,אורלי צדוק,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1089,יעל בר,24,Married,Very Low,Haredi,Employed (Full-Time)
+1090,מירב יונה,33,Married,Medium,Traditional,Employed (Part-Time)
+1091,אור קורן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1092,מיכל נחום,28,Married,Very Low,Haredi,Employed (Full-Time)
+1093,רותי אברהם,36,Married,High,Secular,Self-Employed
+1094,טל נחום,26,Married,Very Low,Haredi,Employed (Full-Time)
+1095,נועה ישראל,38,Married,High,Secular,Self-Employed
+1096,אסתר משה,32,Married,Medium,Traditional,Employed (Full-Time)
+1097,יעל אוחנה,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1098,דינה גרין,37,Married,High,Secular,Self-Employed
+1099,ליעד כץ,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1100,אלה ישראל,30,Married,Medium,Traditional,Employed (Full-Time)
+1101,יעל דהן,35,Married,High,Secular,Self-Employed
+1102,שיר דניאל,33,Married,Medium,Traditional,Employed (Full-Time)
+1103,מיכל כספי,29,Married,Medium,Traditional,Employed (Full-Time)
+1104,קרן אדלר,20,Married,Very Low,Haredi,Employed (Full-Time)
+1105,תמרה כספי,26,Married,Very Low,Haredi,Employed (Full-Time)
+1106,מור אסולין,31,Married,Medium,Traditional,Employed (Part-Time)
+1107,נופר קדוש,25,Married,Very Low,Bedouin,Employed (Full-Time)
+1108,לילי משה,30,Married,High,Secular,Employed (Part-Time)
+1109,רינה מגן,24,Married,Very Low,Haredi,Employed (Full-Time)
+1110,מרים מגן,25,Married,Very Low,Haredi,Employed (Full-Time)
+1111,עדי רוזן,38,Married,High,Secular,Self-Employed
+1112,תמרה יונה,39,Married,High,Secular,Self-Employed
+1113,דנה אברמוביץ,30,Married,High,Secular,Employed (Part-Time)
+1114,מעין פרידמן,31,Married,Medium,Traditional,Employed (Part-Time)
+1115,תמר מגן,30,Married,Medium,Traditional,Employed (Part-Time)
+1116,ליזה נוימן,38,Married,High,Secular,Self-Employed
+1117,אורית גבאי,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1118,דפנה אדלר,26,Married,Very Low,Haredi,Employed (Full-Time)
+1119,רינה זועבי,29,Married,Medium,Traditional,Employed (Full-Time)
+1120,אגם בן-דוד,18,Married,Very Low,Bedouin,Employed (Full-Time)
+1121,אלה אדלר,20,Married,Very Low,Bedouin,Employed (Full-Time)
+1122,עמליה מגן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1123,נטע מאיר,39,Married,High,Secular,Self-Employed
+1124,שיר רז,42,Never-Married (Single),High,Secular,Unemployed
+1125,נופר צור,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1126,שי-לי צור,39,Married,High,Secular,Unemployed
+1127,עדי דדון,37,Married,High,Secular,Self-Employed
+1128,מילה אבנר,34,Married,Medium,Traditional,Employed (Part-Time)
+1129,גל אברהם,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1130,מיכל הורוביץ,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1131,שיר גולדברג,31,Married,Medium,Traditional,Employed (Full-Time)
+1132,מיכל גרין,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1133,חנה סופר,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1134,ענבל אלון,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1135,נועה חדד,41,Never-Married (Single),High,Secular,Unemployed
+1136,יובל כהן,43,Never-Married (Single),High,Secular,Unemployed
+1137,דינה תירוש,22,Married,Very Low,Haredi,Employed (Full-Time)
+1138,דנה הררי,22,Married,Very Low,Haredi,Employed (Full-Time)
+1139,עלמה אוחנה,40,Never-Married (Single),High,Secular,Unemployed
+1140,תמרה אזולאי,29,Married,Very Low,Bedouin,Employed (Full-Time)
+1141,עדי פרידמן,24,Married,Very Low,Bedouin,Employed (Full-Time)
+1142,נטע תירוש,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1143,מוריה הורוביץ,33,Married,High,Secular,Employed (Part-Time)
+1144,שירה גוטמן,24,Married,Very Low,Haredi,Employed (Full-Time)
+1145,רעות לוי-שלום,38,Married,High,Secular,Unemployed
+1146,דנה בר,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1147,מירב ישראל,32,Married,High,Secular,Employed (Part-Time)
+1148,שרה בן-דוד,38,Married,High,Secular,Self-Employed
+1149,אורית יונה,39,Married,High,Secular,Self-Employed
+1150,מרים דויטש,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1151,מעיין פלדמן,33,Married,Medium,Traditional,Employed (Full-Time)
+1152,נבו תירוש,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1153,רותי כרמי,31,Married,High,Secular,Employed (Part-Time)
+1154,עידן משה,32,Married,Medium,Traditional,Employed (Full-Time)
+1155,רעות אוחנה,28,Married,Very Low,Haredi,Employed (Full-Time)
+1156,דנה סולומון,31,Married,High,Secular,Employed (Part-Time)
+1157,רוני סופר,34,Married,Medium,Traditional,Employed (Part-Time)
+1158,נעמה מגיד,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1159,טל משה,31,Married,Medium,Traditional,Employed (Part-Time)
+1160,מיכל מאיר,21,Married,Very Low,Haredi,Employed (Full-Time)
+1161,הודיה בן-דוד,22,Married,Very Low,Haredi,Employed (Full-Time)
+1162,אור כספי,31,Married,High,Secular,Employed (Part-Time)
+1163,רותי פלדמן,33,Married,Medium,Traditional,Employed (Part-Time)
+1164,רעות רז,20,Married,Very Low,Haredi,Employed (Full-Time)
+1165,ליעד פלג,24,Married,Very Low,Bedouin,Employed (Full-Time)
+1166,מורן סופר,33,Married,High,Secular,Employed (Part-Time)
+1167,רותם מזרחי,33,Married,Medium,Traditional,Employed (Part-Time)
+1168,מעיין סולומון,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1169,חנה חמו,29,Married,Very Low,Bedouin,Employed (Full-Time)
+1170,אלה אברהם,36,Never-Married (Single),High,Secular,Unemployed
+1171,שי-לי מזרחי,38,Married,High,Secular,Self-Employed
+1172,ענת דהן,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1173,שרית סופר,27,Married,Medium,Traditional,Employed (Full-Time)
+1174,עמליה תאומים,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1175,רוני תמיר,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1176,ענת ישראל,25,Married,Medium,Traditional,Employed (Full-Time)
+1177,רינה לוי,33,Married,Medium,Traditional,Employed (Part-Time)
+1178,יעלה אבוטבול,32,Married,High,Secular,Employed (Part-Time)
+1179,עמליה דהן,30,Married,Medium,Traditional,Employed (Part-Time)
+1180,רחל פרחי,24,Married,Very Low,Haredi,Employed (Full-Time)
+1181,עדי כהן-אור,21,Married,Very Low,Haredi,Employed (Full-Time)
+1182,מיכל זכריה,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1183,מור קדוש,32,Married,High,Secular,Employed (Part-Time)
+1184,רומן קורן,23,Married,Very Low,Haredi,Employed (Full-Time)
+1185,ליאור אסולין,34,Married,Medium,Traditional,Employed (Part-Time)
+1186,נעמה קדוש,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1187,נבו נגר,20,Married,Very Low,Haredi,Employed (Full-Time)
+1188,נועה עזרא,20,Married,Very Low,Haredi,Employed (Full-Time)
+1189,יואב בראון,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1190,מיכל סויסה,24,Married,Very Low,Haredi,Employed (Full-Time)
+1191,מילה אלון,34,Married,Medium,Traditional,Employed (Part-Time)
+1192,לילי ברק,21,Married,Very Low,Haredi,Employed (Full-Time)
+1193,יעלה כהן,28,Married,Very Low,Bedouin,Employed (Full-Time)
+1194,דינה בן-דוד,31,Married,Medium,Traditional,Employed (Part-Time)
+1195,קרן פרחי,32,Married,Medium,Traditional,Employed (Part-Time)
+1196,יעלה גרוס,32,Married,Medium,Traditional,Employed (Part-Time)
+1197,נבו כספי,30,Married,High,Secular,Employed (Part-Time)
+1198,נורית כספי,21,Married,Very Low,Haredi,Employed (Full-Time)
+1199,רינה הורוביץ,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1200,רחל קדוש,25,Married,Medium,Traditional,Employed (Full-Time)
+1201,מור פלג,38,Married,High,Secular,Self-Employed
+1202,מיכל עזרא,31,Married,High,Secular,Employed (Part-Time)
+1203,ענבל טולדנו,34,Married,High,Secular,Employed (Part-Time)
+1204,גילי בראון,21,Married,Very Low,Haredi,Employed (Full-Time)
+1205,הודיה רוזן,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1206,רונה אוחנה,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1207,ניצן כהן-אור,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1208,שירה אורן,27,Married,Very Low,Haredi,Employed (Full-Time)
+1209,יעל עזרא,32,Married,Medium,Traditional,Employed (Part-Time)
+1210,גל צדוק,33,Married,High,Secular,Employed (Part-Time)
+1211,רינה פרידמן,38,Never-Married (Single),High,Secular,Unemployed
+1212,תמר גבאי,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1213,מירי בלום,32,Married,Medium,Traditional,Employed (Part-Time)
+1214,ליזה אדלר,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1215,יואב שביט,32,Married,Medium,Traditional,Employed (Part-Time)
+1216,מרים סופר,19,Married,Very Low,Bedouin,Employed (Full-Time)
+1217,לירון וייס,34,Married,Medium,Traditional,Employed (Full-Time)
+1218,שירה סופר,28,Married,Very Low,Haredi,Employed (Full-Time)
+1219,קרן גרין,38,Married,High,Secular,Self-Employed
+1220,עידן הורוביץ,35,Never-Married (Single),High,Secular,Unemployed
+1221,אביב הורוביץ,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1222,רינה דדון,32,Married,Medium,Traditional,Employed (Part-Time)
+1223,אור אבוטבול,36,Married,High,Secular,Self-Employed
+1224,דורית זכריה,32,Married,Medium,Traditional,Employed (Part-Time)
+1225,שרה דויטש,27,Married,Very Low,Haredi,Employed (Full-Time)
+1226,רותם יזראלי,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1227,שרה לוי,40,Never-Married (Single),High,Secular,Unemployed
+1228,מורן רוזן,24,Married,Very Low,Haredi,Employed (Full-Time)
+1229,דקלה חדד,31,Married,Medium,Traditional,Employed (Part-Time)
+1230,אושרית הורוביץ,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1231,שיר כהן,20,Married,Very Low,Haredi,Employed (Full-Time)
+1232,אביב קורן,32,Married,High,Secular,Employed (Part-Time)
+1233,נופר גבאי,34,Married,Medium,Traditional,Employed (Part-Time)
+1234,נטע חמו,24,Married,Very Low,Bedouin,Employed (Full-Time)
+1235,אושרית מאיר,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1236,מיכל אורן,33,Married,Medium,Traditional,Employed (Part-Time)
+1237,מרים עובדיה,37,Married,High,Secular,Self-Employed
+1238,נועה פלדמן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1239,לירון יזראלי,36,Married,High,Secular,Unemployed
+1240,עדי כהן,27,Married,Very Low,Haredi,Employed (Full-Time)
+1241,רותי פרחי,31,Married,Medium,Traditional,Employed (Part-Time)
+1242,דורית בן-דוד,43,Never-Married (Single),High,Secular,Unemployed
+1243,לילי יעקב,39,Married,High,Secular,Self-Employed
+1244,תמרה חיימוב,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1245,מעין נגר,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1246,אור הררי,24,Married,Very Low,Haredi,Employed (Full-Time)
+1247,רות זועבי,32,Married,Medium,Traditional,Employed (Full-Time)
+1248,קרן נגר,32,Married,Medium,Traditional,Employed (Part-Time)
+1249,דינה גוטמן,23,Married,Very Low,Haredi,Employed (Full-Time)
+1250,ליזה לוי-שלום,23,Married,Very Low,Haredi,Employed (Full-Time)
+1251,אושרית כספי,23,Married,Very Low,Haredi,Employed (Full-Time)
+1252,אורית כץ,31,Married,Medium,Traditional,Employed (Part-Time)
+1253,שירה תירוש,32,Married,Medium,Traditional,Employed (Part-Time)
+1254,אסתר דוד,31,Married,Medium,Traditional,Employed (Part-Time)
+1255,שי-לי מאיר,31,Married,Medium,Traditional,Employed (Full-Time)
+1256,תמרה לוי,34,Married,Medium,Traditional,Employed (Part-Time)
+1257,מור טולדנו,43,Never-Married (Single),High,Secular,Unemployed
+1258,יעל יזראלי,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1259,מעיין בן-דוד,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1260,נורית שביט,30,Married,Medium,Traditional,Employed (Part-Time)
+1261,דנה עזרא,39,Married,High,Secular,Self-Employed
+1262,יעל משה,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1263,מעיין זכריה,30,Married,Medium,Traditional,Employed (Part-Time)
+1264,ליאור אלון,30,Married,High,Secular,Employed (Part-Time)
+1265,נטע רובין,30,Married,High,Secular,Employed (Part-Time)
+1266,שרה גולדברג,28,Married,Very Low,Bedouin,Employed (Full-Time)
+1267,טל גואטה,36,Married,High,Secular,Self-Employed
+1268,יואב לוי-שלום,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1269,שירה רוזן,30,Married,Medium,Traditional,Employed (Part-Time)
+1270,רחל אסולין,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1271,רעות צדוק,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1272,עמליה אלון,31,Married,Medium,Traditional,Employed (Part-Time)
+1273,אביב שטרן,39,Married,High,Secular,Self-Employed
+1274,מיקה חמו,28,Married,Medium,Traditional,Employed (Full-Time)
+1275,שרה קדוש,22,Married,Very Low,Haredi,Employed (Full-Time)
+1276,מרים אברהם,20,Married,Very Low,Haredi,Employed (Full-Time)
+1277,מור דדון,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1278,מעין לוי-שלום,24,Married,Very Low,Haredi,Employed (Full-Time)
+1279,דורית אסולין,23,Married,Very Low,Haredi,Employed (Full-Time)
+1280,מילה יונה,19,Married,Very Low,Haredi,Employed (Full-Time)
+1281,מעין זכריה,40,Never-Married (Single),High,Secular,Unemployed
+1282,מילה רוזן,35,Married,High,Secular,Self-Employed
+1283,אסתר פרידמן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1284,נופר כהן,34,Married,High,Secular,Employed (Part-Time)
+1285,דורית לבנה,38,Married,High,Secular,Self-Employed
+1286,אסתר מזרחי,20,Married,Very Low,Haredi,Employed (Full-Time)
+1287,הודיה אורן,30,Married,Medium,Traditional,Employed (Full-Time)
+1288,יעל רובין,24,Married,Very Low,Haredi,Employed (Full-Time)
+1289,אורית בוזגלו,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1290,חנה חיימוב,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1291,מור ברק,22,Married,Very Low,Haredi,Employed (Full-Time)
+1292,אסתר בדוש,30,Married,Medium,Traditional,Employed (Part-Time)
+1293,ליאור אבוטבול,34,Married,Medium,Traditional,Employed (Part-Time)
+1294,ענבל וייס,33,Married,Medium,Traditional,Employed (Part-Time)
+1295,אלה אברמוביץ,31,Married,Medium,Traditional,Employed (Full-Time)
+1296,עמית בראון,35,Never-Married (Single),High,Secular,Unemployed
+1297,יעל לוי,25,Married,Medium,Traditional,Employed (Full-Time)
+1298,ניצן טולדנו,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1299,הודיה תמיר,36,Never-Married (Single),High,Secular,Unemployed
+1300,מורן נוימן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1301,עדן אלון,31,Married,Medium,Traditional,Employed (Part-Time)
+1302,עמית תאומים,39,Married,High,Secular,Self-Employed
+1303,יעלה מגיד,34,Married,Medium,Traditional,Employed (Part-Time)
+1304,ניצן לוין,37,Never-Married (Single),High,Secular,Unemployed
+1305,אלה בן-דוד,27,Married,Very Low,Bedouin,Employed (Full-Time)
+1306,רינה מזרחי,32,Married,High,Secular,Employed (Part-Time)
+1307,ליזה קדוש,33,Married,Medium,Traditional,Employed (Part-Time)
+1308,מור זועבי,25,Married,Very Low,Haredi,Employed (Full-Time)
+1309,שרית אבוטבול,27,Married,Very Low,Haredi,Employed (Full-Time)
+1310,דפנה גולדברג,33,Married,Medium,Traditional,Employed (Part-Time)
+1311,יעלה אוחנה,23,Married,Very Low,Haredi,Employed (Full-Time)
+1312,תמרה כהן-אור,34,Married,Medium,Traditional,Employed (Part-Time)
+1313,מיכל ברק,21,Married,Very Low,Haredi,Employed (Full-Time)
+1314,גל אסולין,45,Never-Married (Single),High,Secular,Unemployed
+1315,דנה קורן,36,Never-Married (Single),High,Secular,Unemployed
+1316,רותם כץ,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1317,שרית כהן,20,Married,Very Low,Bedouin,Employed (Full-Time)
+1318,רותם נגר,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1319,רינה שלום,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1320,נעמה שביט,33,Married,Medium,Traditional,Employed (Full-Time)
+1321,רומן כספי,23,Married,Very Low,Haredi,Employed (Full-Time)
+1322,מירב אסולין,23,Married,Very Low,Haredi,Employed (Full-Time)
+1323,נבו בלום,34,Married,Medium,Traditional,Employed (Part-Time)
+1324,אור סויסה,28,Married,Medium,Traditional,Employed (Full-Time)
+1325,ענת כהן,35,Married,High,Secular,Self-Employed
+1326,עדן פרידמן,18,Married,Very Low,Haredi,Employed (Full-Time)
+1327,שיר אזולאי,31,Married,Medium,Traditional,Employed (Part-Time)
+1328,טל תמיר,30,Married,Medium,Traditional,Employed (Part-Time)
+1329,מיכל דהן,28,Married,Very Low,Haredi,Employed (Full-Time)
+1330,אלה וייס,33,Married,Medium,Traditional,Employed (Full-Time)
+1331,טל כספי,37,Never-Married (Single),High,Secular,Unemployed
+1332,עמית עובדיה,44,Never-Married (Single),High,Secular,Unemployed
+1333,רותי אלון,35,Never-Married (Single),High,Secular,Unemployed
+1334,ליאור אבנר,39,Married,High,Secular,Self-Employed
+1335,אביב שביט,35,Married,High,Secular,Self-Employed
+1336,מורן כרמי,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1337,דורית נוימן,36,Married,High,Secular,Self-Employed
+1338,רומן זכריה,24,Married,Very Low,Haredi,Employed (Full-Time)
+1339,נבו תמיר,33,Married,Medium,Traditional,Employed (Part-Time)
+1340,יעלה אורן,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1341,ליעד סולומון,30,Married,Medium,Traditional,Employed (Part-Time)
+1342,מיכל גואטה,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1343,אור אלון,19,Married,Very Low,Bedouin,Employed (Full-Time)
+1344,אסתר פרחי,34,Married,Medium,Traditional,Employed (Part-Time)
+1345,מיכל גבאי,29,Married,Very Low,Haredi,Employed (Full-Time)
+1346,דקלה משה,30,Married,Medium,Traditional,Employed (Part-Time)
+1347,חנה בוזגלו,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1348,נבו רובין,42,Divorced,High,Secular,Unemployed
+1349,קרן קדוש,40,Never-Married (Single),High,Secular,Unemployed
+1350,נועה רובין,36,Married,High,Secular,Self-Employed
+1351,נטע טולדנו,39,Never-Married (Single),High,Secular,Unemployed
+1352,יעלה דהן,31,Married,Medium,Traditional,Employed (Part-Time)
+1353,דקלה קדוש,23,Married,Very Low,Bedouin,Employed (Full-Time)
+1354,הודיה אבנר,20,Married,Very Low,Bedouin,Employed (Full-Time)
+1355,מוריה נגר,32,Married,High,Secular,Employed (Part-Time)
+1356,גל הורוביץ,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1357,עמית נוימן,34,Married,Medium,Traditional,Employed (Part-Time)
+1358,ליעד גרין,31,Married,Medium,Traditional,Employed (Part-Time)
+1359,יעלה לבנה,39,Married,High,Secular,Self-Employed
+1360,נופר זועבי,33,Married,Medium,Traditional,Employed (Full-Time)
+1361,דנה מגן,34,Married,Medium,Traditional,Employed (Full-Time)
+1362,ליעד אברמוביץ,22,Married,Very Low,Haredi,Employed (Full-Time)
+1363,חנה רוזן,38,Married,High,Secular,Self-Employed
+1364,נורית כרמי,45,Never-Married (Single),High,Secular,Unemployed
+1365,עדי בן-ארי,26,Married,Very Low,Haredi,Employed (Full-Time)
+1366,מוריה אברהם,35,Married,High,Secular,Self-Employed
+1367,אורית זכריה,29,Married,Very Low,Haredi,Employed (Full-Time)
+1368,רונה לוין,22,Married,Very Low,Haredi,Employed (Full-Time)
+1369,עידן סולומון,20,Married,Very Low,Haredi,Employed (Full-Time)
+1370,מיכל בראון,20,Married,Very Low,Haredi,Employed (Full-Time)
+1371,שיר בר,33,Married,Medium,Traditional,Employed (Part-Time)
+1372,לילי אורן,31,Married,Medium,Traditional,Employed (Part-Time)
+1373,דנה פלג,25,Married,Very Low,Bedouin,Employed (Full-Time)
+1374,אסתר יוסף,37,Never-Married (Single),High,Secular,Unemployed
+1375,אור פלג,34,Married,Medium,Traditional,Employed (Full-Time)
+1376,מילה נחום,34,Married,Medium,Traditional,Employed (Part-Time)
+1377,אסתר ברק,34,Married,High,Secular,Employed (Part-Time)
+1378,מור עובדיה,33,Married,Medium,Traditional,Employed (Part-Time)
+1379,גילי יוסף,32,Married,High,Secular,Employed (Part-Time)
+1380,אסתר תמיר,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1381,שרה בוזגלו,32,Married,Medium,Traditional,Employed (Part-Time)
+1382,רומן כהן,43,Never-Married (Single),High,Secular,Unemployed
+1383,מיכל בדוש,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1384,רעות מגיד,41,Widowed,High,Secular,Unemployed
+1385,מעיין אסולין,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1386,קרן שלום,29,Married,Very Low,Haredi,Employed (Full-Time)
+1387,מור מזרחי,33,Married,Medium,Traditional,Employed (Part-Time)
+1388,רות אלון,38,Married,High,Secular,Self-Employed
+1389,מוריה וייס,31,Married,Medium,Traditional,Employed (Part-Time)
+1390,יואב גרוס,34,Married,Medium,Traditional,Employed (Part-Time)
+1391,ליעד הורוביץ,38,Married,High,Secular,Self-Employed
+1392,עדי קורן,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1393,רותם דהן,29,Married,Medium,Traditional,Employed (Full-Time)
+1394,דורית סויסה,32,Married,High,Secular,Employed (Part-Time)
+1395,תמר זועבי,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1396,יואב לוין,20,Married,Very Low,Bedouin,Employed (Full-Time)
+1397,ליזה פרחי,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1398,ליאת תמיר,32,Married,Medium,Traditional,Employed (Part-Time)
+1399,אורלי שגב,26,Married,Medium,Traditional,Employed (Full-Time)
+1400,רינה דויטש,43,Never-Married (Single),High,Secular,Unemployed
+1401,יעל אברמוביץ,26,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1402,תמרה מגיד,23,Married,Very Low,Bedouin,Employed (Full-Time)
+1403,תמר שביט,27,Married,Medium,Traditional,Employed (Full-Time)
+1404,שירה גרין,37,Never-Married (Single),High,Secular,Unemployed
+1405,מוריה סופר,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1406,אסתר יעקב,30,Married,High,Secular,Employed (Part-Time)
+1407,נועה דהן,35,Married,High,Secular,Self-Employed
+1408,רוני גואטה,27,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1409,יואב אוחנה,33,Married,Medium,Traditional,Employed (Full-Time)
+1410,מיכל רובין,32,Married,Medium,Traditional,Employed (Part-Time)
+1411,מור רוזן,27,Married,Very Low,Haredi,Employed (Full-Time)
+1412,ליאור גבאי,40,Widowed,High,Secular,Unemployed
+1413,שרה גרוס,31,Married,Medium,Traditional,Employed (Part-Time)
+1414,גילי רוזן,25,Married,Very Low,Haredi,Employed (Full-Time)
+1415,נועה אבוטבול,36,Married,High,Secular,Self-Employed
+1416,עדי קדוש,38,Married,High,Secular,Self-Employed
+1417,רותי דויטש,23,Married,Very Low,Haredi,Employed (Full-Time)
+1418,שירה כספי,39,Married,High,Secular,Self-Employed
+1419,אורית גוטמן,39,Never-Married (Single),High,Secular,Unemployed
+1420,אושרית גוטמן,29,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1421,רותי כהן,38,Never-Married (Single),High,Secular,Unemployed
+1422,לירון מזרחי,25,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1423,אסתר גואטה,30,Married,Medium,Traditional,Employed (Full-Time)
+1424,רעות רוזן,30,Married,Medium,Traditional,Employed (Full-Time)
+1425,יובל תאומים,27,Married,Very Low,Haredi,Employed (Full-Time)
+1426,רינה בן-דוד,34,Married,Medium,Traditional,Employed (Full-Time)
+1427,שרית דויטש,35,Married,High,Secular,Self-Employed
+1428,גל נגר,34,Married,Medium,Traditional,Employed (Part-Time)
+1429,ענת יעקב,44,Never-Married (Single),High,Secular,Unemployed
+1430,מור תאומים,42,Never-Married (Single),High,Secular,Unemployed
+1431,יעלה בר,23,Married,Very Low,Haredi,Employed (Full-Time)
+1432,עמית טייטלבאום,40,Never-Married (Single),High,Secular,Unemployed
+1433,רותם לוי,22,Married,Very Low,Haredi,Employed (Full-Time)
+1434,רונה אדלר,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1435,טל בראון,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1436,מרים יעקב,35,Married,High,Secular,Unemployed
+1437,טל גוטמן,24,Married,Very Low,Haredi,Employed (Full-Time)
+1438,מיכל תירוש,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1439,מיקה תירוש,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1440,דנה גבאי,34,Married,High,Secular,Employed (Part-Time)
+1441,אור עובדיה,31,Married,Medium,Traditional,Employed (Full-Time)
+1442,נבו פרידמן,38,Married,High,Secular,Self-Employed
+1443,מעין וייס,36,Married,High,Secular,Self-Employed
+1444,תמר דהן,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1445,אור שגב,32,Married,High,Secular,Employed (Part-Time)
+1446,מוריה דדון,22,Married,Very Low,Haredi,Employed (Full-Time)
+1447,שרית גולדברג,32,Married,Medium,Traditional,Employed (Full-Time)
+1448,טל נגר,28,Married,Very Low,Bedouin,Employed (Full-Time)
+1449,אגם לוי,31,Married,Medium,Traditional,Employed (Part-Time)
+1450,רונה וייס,30,Married,Medium,Traditional,Employed (Part-Time)
+1451,נעמה נחום,21,Married,Very Low,Haredi,Employed (Full-Time)
+1452,שרה בראון,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1453,רינה כספי,37,Married,High,Secular,Self-Employed
+1454,רינה צור,33,Married,Medium,Traditional,Employed (Full-Time)
+1455,רוני טייטלבאום,32,Married,Medium,Traditional,Employed (Full-Time)
+1456,מורן עזרא,23,Married,Very Low,Haredi,Employed (Full-Time)
+1457,עלמה אורן,30,Married,Medium,Traditional,Employed (Full-Time)
+1458,יעלה דניאל,22,Married,Very Low,Bedouin,Employed (Full-Time)
+1459,מירי צדוק,42,Widowed,High,Secular,Unemployed
+1460,מילה חדד,31,Married,Medium,Traditional,Employed (Full-Time)
+1461,דנה כספי,28,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1462,רות דויטש,29,Married,Very Low,Haredi,Employed (Full-Time)
+1463,אושרית ישראל,44,Never-Married (Single),High,Secular,Unemployed
+1464,עמית סולומון,31,Married,Medium,Traditional,Employed (Full-Time)
+1465,מיקה סולומון,33,Married,Medium,Traditional,Employed (Part-Time)
+1466,יובל גרין,40,Never-Married (Single),High,Secular,Unemployed
+1467,מורן נגר,26,Married,Very Low,Bedouin,Employed (Full-Time)
+1468,דקלה מזרחי,19,Married,Very Low,Haredi,Employed (Full-Time)
+1469,עידן עזרא,25,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1470,עמליה אדלר,38,Married,High,Secular,Self-Employed
+1471,אביב בראון,32,Married,Medium,Traditional,Employed (Part-Time)
+1472,מירב דויטש,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1473,עלמה חמו,33,Married,Medium,Traditional,Employed (Part-Time)
+1474,עדי צדוק,42,Never-Married (Single),High,Secular,Unemployed
+1475,רינה בר,43,Never-Married (Single),High,Secular,Unemployed
+1476,ענת נוימן,37,Married,High,Secular,Self-Employed
+1477,מיקה יזראלי,43,Never-Married (Single),High,Secular,Unemployed
+1478,מור וייס,29,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1479,חנה צור,31,Married,High,Secular,Employed (Part-Time)
+1480,מורן אבנר,22,Married,Very Low,Haredi,Employed (Full-Time)
+1481,אורלי שלום,37,Married,High,Secular,Self-Employed
+1482,טל חיימוב,34,Married,Medium,Traditional,Employed (Part-Time)
+1483,לירון בראון,26,Married,Low,Arab-Israeli towns,Employed (Full-Time)
+1484,שרית עזרא,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1485,אורית הררי,22,Married,Very Low,Bedouin,Employed (Full-Time)
+1486,ליעד קורן,21,Married,Very Low,Bedouin,Employed (Full-Time)
+1487,תמר אלון,23,Married,Very Low,Haredi,Employed (Full-Time)
+1488,שרית יעקב,32,Married,Medium,Traditional,Employed (Part-Time)
+1489,יעל חדד,37,Married,High,Secular,Self-Employed
+1490,נועה דוד,23,Married,Very Low,Bedouin,Employed (Full-Time)
+1491,יעלה נחום,34,Married,High,Secular,Employed (Part-Time)
+1492,מיכל בן-דוד,36,Never-Married (Single),High,Secular,Unemployed
+1493,מיכל הררי,22,Married,Very Low,Haredi,Employed (Full-Time)
+1494,רותי סולומון,28,Married,Very Low,Haredi,Employed (Full-Time)
+1495,לירון טייטלבאום,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1496,מרים בן-ארי,28,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1497,נורית רז,27,Married,Low,Peripheral Jewish towns,Employed (Full-Time)
+1498,יעל שטרן,20,Married,Very Low,Haredi,Employed (Full-Time)
+1499,נבו אברהם,24,Married,Very Low,Haredi,Employed (Full-Time)
+1500,מור כץ,36,Married,High,Secular,Self-Employed

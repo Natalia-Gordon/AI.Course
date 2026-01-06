@@ -1,0 +1,1501 @@
+ID,Sleep quality,Fatigue,Partner support,Family or social support,Domestic violence
+1,Normal,Yes,Interrupted,Moderate,No
+2,RLS,No,High,High,Physical
+3,RLS,Yes,High,High,Physical
+4,Insomnia,Yes,High,High,Sexual
+5,Insomnia,No,High,High,Economic
+6,Normal,Yes,Moderate,Moderate,No
+7,Normal,No,Interrupted,Low,No
+8,RLS,Yes,High,High,Verbal
+9,Normal,Yes,Moderate,Moderate,No
+10,Normal,Yes,Moderate,Moderate,No
+11,RLS,Yes,High,High,Verbal
+12,Normal,Yes,Moderate,Moderate,No
+13,Disordered Breathing,Yes,High,High,No
+14,Disordered Breathing,No,High,High,No
+15,Insomnia,No,High,High,Sexual
+16,Insomnia,Yes,High,High,Physical
+17,Insomnia,No,High,High,Economic
+18,Normal,Yes,Moderate,Moderate,No
+19,Disordered Breathing,Yes,High,High,No
+20,Insomnia,No,High,High,Economic
+21,Normal,Yes,Interrupted,Low,No
+22,Insomnia,Yes,High,High,Sexual
+23,RLS,Yes,High,High,Verbal
+24,Normal,No,Interrupted,Moderate,No
+25,Insomnia,Yes,High,High,Sexual
+26,Disordered Breathing,Yes,High,High,No
+27,Normal,Yes,Interrupted,Moderate,No
+28,Insomnia,Yes,High,High,Economic
+29,RLS,Yes,High,High,Verbal
+30,RLS,Yes,High,High,Verbal
+31,RLS,No,High,High,Verbal
+32,RLS,Yes,High,High,Physical
+33,RLS,Yes,High,High,Verbal
+34,Normal,Yes,Interrupted,Low,No
+35,Insomnia,Yes,High,High,Sexual
+36,Normal,Yes,Interrupted,Moderate,No
+37,Normal,Yes,Moderate,Moderate,No
+38,RLS,Yes,High,High,Physical
+39,Normal,Yes,Moderate,Moderate,No
+40,Insomnia,No,High,High,Economic
+41,Insomnia,Yes,High,High,Physical
+42,Disordered Breathing,Yes,Moderate,Moderate,No
+43,Normal,Yes,Interrupted,Low,No
+44,Insomnia,No,High,High,Physical
+45,Normal,Yes,Moderate,Moderate,No
+46,Normal,Yes,Moderate,Moderate,No
+47,RLS,Yes,High,High,Physical
+48,RLS,Yes,High,High,Verbal
+49,RLS,Yes,High,High,Verbal
+50,Disordered Breathing,Yes,Moderate,Moderate,No
+51,Normal,Yes,Moderate,Moderate,No
+52,Disordered Breathing,No,Moderate,Moderate,No
+53,RLS,Yes,High,High,Verbal
+54,Normal,Yes,Interrupted,Low,No
+55,Insomnia,No,High,High,Sexual
+56,Normal,Yes,Interrupted,Moderate,No
+57,RLS,Yes,High,High,Physical
+58,Normal,Yes,Moderate,Moderate,No
+59,RLS,Yes,High,High,Verbal
+60,Disordered Breathing,Yes,Moderate,Moderate,No
+61,Insomnia,Yes,High,High,Sexual
+62,Normal,No,Interrupted,Moderate,No
+63,Insomnia,Yes,High,High,No
+64,Normal,Yes,Interrupted,Low,No
+65,RLS,No,High,High,Verbal
+66,Insomnia,No,High,High,Economic
+67,Insomnia,Yes,High,High,Economic
+68,Normal,Yes,Moderate,Moderate,No
+69,RLS,Yes,High,High,Verbal
+70,Insomnia,Yes,High,High,Economic
+71,Normal,Yes,Interrupted,Moderate,No
+72,Disordered Breathing,Yes,Moderate,High,No
+73,Insomnia,Yes,High,High,Sexual
+74,RLS,Yes,High,High,Verbal
+75,Normal,Yes,Moderate,Moderate,No
+76,Insomnia,Yes,High,High,Physical
+77,RLS,Yes,High,High,Verbal
+78,Normal,Yes,Moderate,Moderate,No
+79,Normal,Yes,Interrupted,Low,No
+80,Disordered Breathing,Yes,Moderate,Moderate,No
+81,Disordered Breathing,Yes,High,High,No
+82,RLS,No,High,High,Physical
+83,Normal,Yes,Low,Low,No
+84,Normal,Yes,Low,Low,No
+85,Disordered Breathing,Yes,High,High,No
+86,Normal,Yes,Moderate,Moderate,No
+87,Normal,Yes,Interrupted,Moderate,No
+88,RLS,Yes,High,High,Physical
+89,Disordered Breathing,No,Moderate,Moderate,No
+90,Insomnia,Yes,High,High,Sexual
+91,Normal,Yes,Interrupted,Moderate,No
+92,Normal,Yes,Interrupted,Moderate,No
+93,RLS,Yes,High,High,Verbal
+94,Insomnia,No,High,High,Economic
+95,Normal,Yes,Moderate,Moderate,No
+96,Normal,Yes,Moderate,Moderate,No
+97,RLS,No,High,High,Verbal
+98,Insomnia,Yes,High,High,Economic
+99,RLS,Yes,High,High,Verbal
+100,Disordered Breathing,Yes,High,High,No
+101,Normal,Yes,Interrupted,Moderate,No
+102,RLS,Yes,High,High,Verbal
+103,RLS,No,High,High,Verbal
+104,Normal,No,Interrupted,Moderate,No
+105,Normal,Yes,Interrupted,Moderate,No
+106,Insomnia,Yes,High,High,Sexual
+107,RLS,Yes,High,High,Physical
+108,RLS,Yes,High,High,Verbal
+109,Disordered Breathing,Yes,High,High,No
+110,Insomnia,Yes,High,High,No
+111,Normal,No,Moderate,Moderate,No
+112,Normal,Yes,Interrupted,Low,No
+113,Insomnia,Yes,High,High,Sexual
+114,RLS,Yes,High,High,Verbal
+115,Normal,No,Moderate,Moderate,No
+116,Disordered Breathing,Yes,Moderate,Moderate,No
+117,Insomnia,No,High,High,Physical
+118,Normal,No,Moderate,Moderate,No
+119,Disordered Breathing,No,Moderate,High,No
+120,Normal,No,Moderate,Moderate,No
+121,RLS,No,High,High,Verbal
+122,Insomnia,Yes,High,High,Economic
+123,RLS,Yes,High,High,Verbal
+124,RLS,Yes,High,High,Physical
+125,Disordered Breathing,No,High,High,No
+126,RLS,Yes,High,High,Verbal
+127,RLS,Yes,High,High,Verbal
+128,Normal,Yes,Interrupted,Moderate,No
+129,Normal,Yes,Interrupted,Moderate,No
+130,Normal,Yes,Moderate,Moderate,No
+131,Normal,No,Interrupted,Moderate,No
+132,RLS,No,High,High,Verbal
+133,Normal,Yes,Low,Low,No
+134,RLS,Yes,High,High,Verbal
+135,Normal,Yes,Moderate,Moderate,No
+136,Disordered Breathing,No,Moderate,Moderate,No
+137,Insomnia,Yes,High,High,Economic
+138,Insomnia,Yes,High,High,Economic
+139,Normal,No,Moderate,Moderate,No
+140,Insomnia,No,High,High,Economic
+141,Normal,No,Moderate,Moderate,No
+142,Normal,No,Moderate,Moderate,No
+143,Insomnia,No,High,High,Economic
+144,RLS,Yes,High,High,Verbal
+145,RLS,Yes,High,High,Verbal
+146,Disordered Breathing,No,Moderate,Moderate,No
+147,RLS,No,High,High,Verbal
+148,RLS,Yes,High,High,Verbal
+149,RLS,No,High,High,Verbal
+150,Normal,Yes,Moderate,Moderate,No
+151,RLS,No,High,High,Physical
+152,RLS,Yes,High,High,Verbal
+153,Disordered Breathing,Yes,Moderate,High,No
+154,Disordered Breathing,Yes,High,High,No
+155,RLS,No,High,High,Verbal
+156,RLS,Yes,High,High,Verbal
+157,Normal,Yes,Low,Low,No
+158,Disordered Breathing,Yes,Moderate,Moderate,No
+159,Insomnia,Yes,High,High,Sexual
+160,Normal,Yes,Interrupted,Moderate,No
+161,Normal,Yes,Interrupted,Moderate,No
+162,Normal,No,Interrupted,Low,No
+163,RLS,Yes,High,High,Verbal
+164,Normal,No,Low,Low,No
+165,Disordered Breathing,No,High,High,No
+166,Normal,Yes,Moderate,Moderate,No
+167,RLS,Yes,High,High,Verbal
+168,RLS,No,High,High,Verbal
+169,RLS,Yes,High,High,Verbal
+170,Normal,Yes,Moderate,Moderate,No
+171,RLS,Yes,High,High,Verbal
+172,Disordered Breathing,Yes,Moderate,Moderate,No
+173,RLS,Yes,High,High,Verbal
+174,Normal,Yes,Interrupted,Moderate,No
+175,RLS,Yes,High,High,Verbal
+176,Insomnia,No,High,High,Economic
+177,Insomnia,Yes,High,High,Sexual
+178,Insomnia,Yes,High,High,Economic
+179,Disordered Breathing,No,Moderate,Moderate,No
+180,RLS,Yes,High,High,Verbal
+181,Normal,Yes,Interrupted,Moderate,No
+182,Normal,Yes,Moderate,Moderate,No
+183,Disordered Breathing,Yes,High,High,No
+184,RLS,Yes,High,High,Verbal
+185,Normal,Yes,Moderate,Moderate,No
+186,Insomnia,Yes,High,High,Economic
+187,Normal,No,Interrupted,Moderate,No
+188,Insomnia,Yes,High,High,No
+189,Insomnia,Yes,High,High,Economic
+190,Normal,No,Moderate,Moderate,No
+191,Normal,Yes,Moderate,Moderate,No
+192,Disordered Breathing,No,Moderate,High,No
+193,Normal,Yes,Interrupted,Moderate,No
+194,Normal,No,Moderate,Moderate,No
+195,Insomnia,Yes,High,High,Economic
+196,Disordered Breathing,Yes,Moderate,High,No
+197,Normal,Yes,Moderate,Moderate,No
+198,Normal,Yes,Interrupted,Low,No
+199,Normal,No,Moderate,Moderate,No
+200,Normal,Yes,Interrupted,Moderate,No
+201,Insomnia,No,High,High,Sexual
+202,Insomnia,No,High,High,No
+203,Disordered Breathing,Yes,High,High,No
+204,Normal,Yes,Interrupted,Moderate,No
+205,RLS,No,High,High,Verbal
+206,Normal,Yes,Interrupted,Moderate,No
+207,Disordered Breathing,No,Moderate,Moderate,No
+208,RLS,Yes,High,High,Verbal
+209,Insomnia,Yes,High,High,Sexual
+210,Normal,No,Moderate,Moderate,No
+211,Normal,Yes,Moderate,Moderate,No
+212,Normal,Yes,Interrupted,Moderate,No
+213,RLS,No,High,High,Physical
+214,Normal,Yes,Moderate,Moderate,No
+215,Normal,Yes,Moderate,Moderate,No
+216,Normal,Yes,Moderate,Moderate,No
+217,Normal,Yes,Interrupted,Moderate,No
+218,RLS,No,High,High,Verbal
+219,Insomnia,Yes,High,High,Physical
+220,RLS,No,High,High,Verbal
+221,RLS,Yes,High,High,Verbal
+222,Normal,Yes,Interrupted,Moderate,No
+223,RLS,Yes,High,High,Verbal
+224,Disordered Breathing,No,High,High,No
+225,RLS,No,High,High,Physical
+226,Normal,Yes,Moderate,Moderate,No
+227,Normal,Yes,Moderate,Moderate,No
+228,Normal,Yes,Moderate,Moderate,No
+229,Insomnia,No,High,High,Sexual
+230,Disordered Breathing,No,Moderate,Moderate,No
+231,RLS,Yes,High,High,Verbal
+232,Insomnia,Yes,High,High,Economic
+233,Normal,Yes,Low,Low,No
+234,Disordered Breathing,Yes,Moderate,High,No
+235,Normal,No,Moderate,Moderate,No
+236,Disordered Breathing,Yes,Moderate,Moderate,No
+237,Insomnia,No,High,High,No
+238,Normal,Yes,Interrupted,Moderate,No
+239,Insomnia,Yes,High,High,Sexual
+240,Disordered Breathing,Yes,Moderate,Moderate,No
+241,Insomnia,Yes,High,High,Sexual
+242,Insomnia,Yes,High,High,Economic
+243,Disordered Breathing,Yes,Moderate,Moderate,No
+244,Disordered Breathing,Yes,High,High,No
+245,Disordered Breathing,Yes,High,High,No
+246,Normal,No,Interrupted,Moderate,No
+247,Insomnia,Yes,High,High,Economic
+248,Disordered Breathing,No,Moderate,Moderate,No
+249,RLS,Yes,High,High,Verbal
+250,RLS,Yes,High,High,Verbal
+251,Normal,Yes,Moderate,Moderate,No
+252,Insomnia,Yes,High,High,Economic
+253,Normal,Yes,Interrupted,Low,No
+254,Insomnia,Yes,High,High,Sexual
+255,Normal,Yes,Moderate,Moderate,No
+256,Insomnia,No,High,High,Physical
+257,Normal,Yes,Interrupted,Moderate,No
+258,Insomnia,No,High,High,Economic
+259,Normal,Yes,Interrupted,Low,No
+260,RLS,Yes,High,High,Verbal
+261,Normal,Yes,Interrupted,Low,No
+262,RLS,Yes,High,High,Verbal
+263,Disordered Breathing,No,Moderate,High,No
+264,Insomnia,Yes,High,High,Economic
+265,Insomnia,Yes,High,High,Physical
+266,RLS,Yes,High,High,Verbal
+267,Insomnia,Yes,High,High,No
+268,Disordered Breathing,Yes,Moderate,Moderate,No
+269,Normal,No,Interrupted,Low,No
+270,Insomnia,Yes,High,High,No
+271,Normal,No,Moderate,Moderate,No
+272,RLS,No,High,High,Physical
+273,Normal,Yes,Moderate,Moderate,No
+274,Disordered Breathing,Yes,Moderate,Moderate,No
+275,RLS,Yes,High,High,Verbal
+276,Insomnia,No,High,High,No
+277,Disordered Breathing,Yes,Moderate,Moderate,No
+278,Insomnia,Yes,High,High,Physical
+279,Insomnia,Yes,High,High,Physical
+280,Insomnia,Yes,High,High,Economic
+281,Normal,Yes,Interrupted,Moderate,No
+282,Insomnia,Yes,High,High,Physical
+283,Disordered Breathing,Yes,Moderate,Moderate,No
+284,Insomnia,No,High,High,No
+285,Disordered Breathing,Yes,Moderate,Moderate,No
+286,Insomnia,No,High,High,Economic
+287,RLS,Yes,High,High,Verbal
+288,Insomnia,No,High,High,Economic
+289,Normal,Yes,Moderate,Moderate,No
+290,RLS,Yes,High,High,Physical
+291,Normal,Yes,Interrupted,Low,No
+292,RLS,Yes,High,High,Verbal
+293,RLS,No,High,High,Verbal
+294,Disordered Breathing,Yes,Moderate,High,No
+295,RLS,Yes,High,High,Physical
+296,RLS,Yes,High,High,Verbal
+297,Normal,Yes,Interrupted,Moderate,No
+298,Normal,Yes,Moderate,Moderate,No
+299,RLS,Yes,High,High,Verbal
+300,Normal,Yes,Moderate,Moderate,No
+301,Normal,Yes,Moderate,Moderate,No
+302,Normal,Yes,Interrupted,Low,No
+303,Disordered Breathing,Yes,High,High,No
+304,Insomnia,Yes,High,High,Economic
+305,Disordered Breathing,Yes,High,High,No
+306,Normal,Yes,Moderate,Moderate,No
+307,Normal,Yes,Interrupted,Moderate,No
+308,Normal,Yes,Moderate,Moderate,No
+309,RLS,Yes,High,High,Verbal
+310,Normal,Yes,Interrupted,Low,No
+311,RLS,Yes,High,High,Verbal
+312,Insomnia,Yes,High,High,Economic
+313,Normal,Yes,Moderate,Moderate,No
+314,Normal,No,Moderate,Moderate,No
+315,RLS,Yes,High,High,Verbal
+316,Insomnia,Yes,High,High,Economic
+317,RLS,Yes,High,High,Verbal
+318,Normal,No,Interrupted,Moderate,No
+319,Insomnia,No,High,High,Economic
+320,Normal,Yes,Moderate,Moderate,No
+321,RLS,Yes,High,High,Verbal
+322,RLS,Yes,High,High,Verbal
+323,Normal,No,Interrupted,Low,No
+324,Disordered Breathing,No,Moderate,Moderate,No
+325,RLS,Yes,High,High,Verbal
+326,Disordered Breathing,Yes,Moderate,High,No
+327,RLS,No,High,High,Verbal
+328,Normal,No,Low,Low,No
+329,Disordered Breathing,Yes,Moderate,Moderate,No
+330,Normal,Yes,Moderate,Moderate,No
+331,Normal,No,Moderate,Moderate,No
+332,Insomnia,Yes,High,High,Economic
+333,Insomnia,Yes,High,High,Economic
+334,Insomnia,No,High,High,Physical
+335,Insomnia,No,High,High,Economic
+336,Normal,Yes,Interrupted,Moderate,No
+337,Normal,Yes,Moderate,Moderate,No
+338,Normal,No,Interrupted,Low,No
+339,Normal,No,Interrupted,Moderate,No
+340,Insomnia,Yes,High,High,Economic
+341,Normal,No,Interrupted,Low,No
+342,Insomnia,Yes,High,High,No
+343,RLS,Yes,High,High,Physical
+344,RLS,Yes,High,High,Verbal
+345,RLS,Yes,High,High,Verbal
+346,Normal,Yes,Moderate,Moderate,No
+347,Normal,Yes,Interrupted,Moderate,No
+348,Insomnia,Yes,High,High,Sexual
+349,Disordered Breathing,Yes,High,High,No
+350,Disordered Breathing,Yes,High,High,No
+351,Disordered Breathing,No,High,High,No
+352,Normal,Yes,Interrupted,Moderate,No
+353,Normal,Yes,Interrupted,Low,No
+354,Disordered Breathing,Yes,Moderate,Moderate,No
+355,RLS,Yes,High,High,Verbal
+356,Disordered Breathing,Yes,Moderate,Moderate,No
+357,Disordered Breathing,Yes,High,High,No
+358,Normal,Yes,Low,Low,No
+359,Normal,Yes,Moderate,Moderate,No
+360,Normal,Yes,Low,Low,No
+361,Insomnia,Yes,High,High,Economic
+362,RLS,Yes,High,High,Verbal
+363,RLS,Yes,High,High,Physical
+364,Disordered Breathing,Yes,Moderate,High,No
+365,Disordered Breathing,Yes,High,High,No
+366,Disordered Breathing,No,Moderate,Moderate,No
+367,RLS,Yes,High,High,Verbal
+368,Insomnia,Yes,High,High,Economic
+369,Normal,Yes,Interrupted,Moderate,No
+370,Insomnia,Yes,High,High,Economic
+371,Insomnia,Yes,High,High,Sexual
+372,Disordered Breathing,Yes,High,High,No
+373,Normal,Yes,Interrupted,Low,No
+374,Insomnia,Yes,High,High,No
+375,Normal,Yes,Interrupted,Low,No
+376,Normal,No,Interrupted,Moderate,No
+377,Normal,Yes,Interrupted,Moderate,No
+378,RLS,Yes,High,High,Verbal
+379,Disordered Breathing,Yes,Moderate,Moderate,No
+380,RLS,Yes,High,High,Verbal
+381,Normal,No,Low,Low,No
+382,Normal,Yes,Interrupted,Moderate,No
+383,Insomnia,Yes,High,High,Physical
+384,Normal,Yes,Interrupted,Moderate,No
+385,Normal,Yes,Moderate,Moderate,No
+386,Insomnia,Yes,High,High,Physical
+387,Insomnia,Yes,High,High,No
+388,Normal,Yes,Moderate,Moderate,No
+389,Disordered Breathing,No,Moderate,Moderate,No
+390,Normal,No,Interrupted,Moderate,No
+391,Normal,Yes,Interrupted,Low,No
+392,RLS,Yes,High,High,Physical
+393,Insomnia,No,High,High,Physical
+394,RLS,No,High,High,Verbal
+395,RLS,Yes,High,High,Verbal
+396,Insomnia,Yes,High,High,Physical
+397,Insomnia,Yes,High,High,Sexual
+398,Normal,Yes,Interrupted,Moderate,No
+399,Disordered Breathing,Yes,Moderate,Moderate,No
+400,Disordered Breathing,Yes,Moderate,Moderate,No
+401,Normal,Yes,Interrupted,Moderate,No
+402,RLS,Yes,High,High,Verbal
+403,RLS,Yes,High,High,Verbal
+404,Insomnia,Yes,High,High,No
+405,RLS,Yes,High,High,Physical
+406,RLS,Yes,High,High,Verbal
+407,Normal,Yes,Interrupted,Moderate,No
+408,Disordered Breathing,No,High,High,No
+409,RLS,Yes,High,High,Verbal
+410,Disordered Breathing,Yes,High,High,No
+411,RLS,Yes,High,High,Verbal
+412,Disordered Breathing,No,Moderate,High,No
+413,RLS,Yes,High,High,Physical
+414,Disordered Breathing,Yes,Moderate,High,No
+415,Disordered Breathing,Yes,Moderate,Moderate,No
+416,RLS,Yes,High,High,Verbal
+417,RLS,No,High,High,Verbal
+418,RLS,Yes,High,High,Physical
+419,Normal,No,Interrupted,Low,No
+420,RLS,Yes,High,High,Verbal
+421,RLS,Yes,High,High,Verbal
+422,Disordered Breathing,Yes,Moderate,Moderate,No
+423,Disordered Breathing,Yes,Moderate,Moderate,No
+424,Insomnia,Yes,High,High,No
+425,RLS,Yes,High,High,Verbal
+426,Disordered Breathing,Yes,Moderate,Moderate,No
+427,RLS,Yes,High,High,Verbal
+428,Normal,Yes,Moderate,Moderate,No
+429,Insomnia,Yes,High,High,Physical
+430,Insomnia,No,High,High,Economic
+431,Normal,Yes,Interrupted,Moderate,No
+432,RLS,No,High,High,Physical
+433,Normal,No,Moderate,Moderate,No
+434,RLS,No,High,High,Verbal
+435,RLS,Yes,High,High,Physical
+436,Normal,No,Interrupted,Moderate,No
+437,Normal,No,Moderate,Moderate,No
+438,Normal,No,Interrupted,Moderate,No
+439,RLS,No,High,High,Verbal
+440,RLS,Yes,High,High,Verbal
+441,Normal,No,Low,Low,No
+442,RLS,Yes,High,High,Verbal
+443,Normal,Yes,Interrupted,Low,No
+444,RLS,Yes,High,High,Verbal
+445,Normal,Yes,Interrupted,Moderate,No
+446,RLS,No,High,High,Verbal
+447,Disordered Breathing,Yes,Moderate,High,No
+448,Normal,No,Moderate,Moderate,No
+449,Insomnia,Yes,High,High,Economic
+450,RLS,No,High,High,Verbal
+451,Normal,Yes,Moderate,Moderate,No
+452,Normal,No,Low,Low,No
+453,Normal,Yes,Moderate,Moderate,No
+454,Normal,Yes,Interrupted,Moderate,No
+455,Normal,Yes,Moderate,Moderate,No
+456,Normal,Yes,Moderate,Moderate,No
+457,Insomnia,Yes,High,High,Economic
+458,RLS,No,High,High,Verbal
+459,Normal,Yes,Moderate,Moderate,No
+460,RLS,Yes,High,High,Verbal
+461,Disordered Breathing,No,Moderate,Moderate,No
+462,Disordered Breathing,Yes,Moderate,High,No
+463,Normal,Yes,Moderate,Moderate,No
+464,RLS,Yes,High,High,Verbal
+465,Disordered Breathing,Yes,Moderate,Moderate,No
+466,Disordered Breathing,Yes,Moderate,Moderate,No
+467,Normal,No,Interrupted,Moderate,No
+468,Insomnia,Yes,High,High,Economic
+469,Disordered Breathing,No,Moderate,High,No
+470,Disordered Breathing,No,High,High,No
+471,RLS,Yes,High,High,Verbal
+472,Disordered Breathing,No,Moderate,Moderate,No
+473,RLS,Yes,High,High,Physical
+474,Disordered Breathing,Yes,Moderate,Moderate,No
+475,Insomnia,Yes,High,High,Sexual
+476,Disordered Breathing,Yes,Moderate,Moderate,No
+477,Normal,No,Interrupted,Low,No
+478,Normal,Yes,Moderate,Moderate,No
+479,Normal,Yes,Interrupted,Moderate,No
+480,Normal,Yes,Moderate,Moderate,No
+481,Insomnia,Yes,High,High,Economic
+482,Normal,No,Moderate,Moderate,No
+483,RLS,Yes,High,High,Verbal
+484,Normal,Yes,Moderate,Moderate,No
+485,Insomnia,No,High,High,Physical
+486,RLS,Yes,High,High,Verbal
+487,Insomnia,Yes,High,High,Sexual
+488,Normal,No,Interrupted,Low,No
+489,Normal,No,Moderate,Moderate,No
+490,RLS,Yes,High,High,Verbal
+491,RLS,No,High,High,Verbal
+492,Insomnia,Yes,High,High,Economic
+493,Normal,Yes,Interrupted,Moderate,No
+494,RLS,No,High,High,Verbal
+495,Normal,Yes,Interrupted,Moderate,No
+496,RLS,Yes,High,High,Verbal
+497,Normal,Yes,Moderate,Moderate,No
+498,Insomnia,No,High,High,Economic
+499,Insomnia,Yes,High,High,No
+500,RLS,Yes,High,High,Verbal
+501,Insomnia,No,High,High,Sexual
+502,RLS,No,High,High,Verbal
+503,RLS,Yes,High,High,Verbal
+504,Normal,Yes,Moderate,Moderate,No
+505,Insomnia,No,High,High,No
+506,Normal,No,Moderate,Moderate,No
+507,RLS,Yes,High,High,Verbal
+508,Insomnia,No,High,High,No
+509,Normal,Yes,Moderate,Moderate,No
+510,Disordered Breathing,No,High,High,No
+511,Disordered Breathing,Yes,Moderate,Moderate,No
+512,RLS,No,High,High,Verbal
+513,RLS,Yes,High,High,Verbal
+514,Insomnia,Yes,High,High,Economic
+515,Normal,No,Moderate,Moderate,No
+516,Insomnia,Yes,High,High,Sexual
+517,Insomnia,Yes,High,High,Sexual
+518,Normal,Yes,Interrupted,Moderate,No
+519,Disordered Breathing,Yes,Moderate,Moderate,No
+520,RLS,Yes,High,High,Verbal
+521,Disordered Breathing,Yes,High,High,No
+522,Normal,Yes,Moderate,Moderate,No
+523,Insomnia,Yes,High,High,Economic
+524,RLS,Yes,High,High,Verbal
+525,Normal,Yes,Interrupted,Moderate,No
+526,Normal,Yes,Moderate,Moderate,No
+527,RLS,Yes,High,High,Verbal
+528,Normal,Yes,Interrupted,Low,No
+529,Normal,Yes,Low,Low,No
+530,Normal,Yes,Interrupted,Low,No
+531,RLS,Yes,High,High,Verbal
+532,Insomnia,Yes,High,High,No
+533,Insomnia,Yes,High,High,Physical
+534,RLS,Yes,High,High,Verbal
+535,Normal,No,Moderate,Moderate,No
+536,Insomnia,Yes,High,High,Physical
+537,Normal,Yes,Interrupted,Low,No
+538,Insomnia,Yes,High,High,Sexual
+539,Disordered Breathing,No,Moderate,Moderate,No
+540,Insomnia,No,High,High,Physical
+541,Insomnia,No,High,High,Economic
+542,Insomnia,No,High,High,Sexual
+543,RLS,No,High,High,Verbal
+544,Normal,No,Interrupted,Low,No
+545,Disordered Breathing,Yes,Moderate,Moderate,No
+546,RLS,Yes,High,High,Verbal
+547,Disordered Breathing,No,Moderate,High,No
+548,Insomnia,Yes,High,High,Economic
+549,Normal,No,Moderate,Moderate,No
+550,Normal,Yes,Interrupted,Moderate,No
+551,RLS,Yes,High,High,Verbal
+552,Insomnia,Yes,High,High,Economic
+553,Normal,No,Moderate,Moderate,No
+554,Disordered Breathing,Yes,High,High,No
+555,Insomnia,Yes,High,High,Economic
+556,RLS,Yes,High,High,Verbal
+557,Insomnia,Yes,High,High,Economic
+558,RLS,No,High,High,Verbal
+559,RLS,Yes,High,High,Verbal
+560,Disordered Breathing,Yes,Moderate,Moderate,No
+561,Normal,Yes,Moderate,Moderate,No
+562,RLS,Yes,High,High,Verbal
+563,RLS,Yes,High,High,Verbal
+564,RLS,No,High,High,Verbal
+565,RLS,Yes,High,High,Verbal
+566,Disordered Breathing,Yes,Moderate,Moderate,No
+567,Insomnia,Yes,High,High,Economic
+568,Normal,Yes,Moderate,Moderate,No
+569,RLS,Yes,High,High,Verbal
+570,Insomnia,No,High,High,Economic
+571,RLS,No,High,High,Verbal
+572,Insomnia,Yes,High,High,Economic
+573,RLS,Yes,High,High,Verbal
+574,Normal,Yes,Moderate,Moderate,No
+575,RLS,Yes,High,High,Verbal
+576,Disordered Breathing,Yes,Moderate,Moderate,No
+577,Normal,Yes,Interrupted,Moderate,No
+578,Disordered Breathing,No,High,High,No
+579,Normal,Yes,Interrupted,Low,No
+580,RLS,Yes,High,High,Verbal
+581,Normal,Yes,Low,Low,No
+582,RLS,Yes,High,High,Verbal
+583,Insomnia,Yes,High,High,Physical
+584,RLS,No,High,High,Verbal
+585,Disordered Breathing,No,Moderate,Moderate,No
+586,Insomnia,Yes,High,High,Economic
+587,Disordered Breathing,Yes,Moderate,High,No
+588,Insomnia,Yes,High,High,Sexual
+589,RLS,Yes,High,High,Verbal
+590,Insomnia,Yes,High,High,Physical
+591,Normal,Yes,Moderate,Moderate,No
+592,RLS,Yes,High,High,Verbal
+593,RLS,No,High,High,Verbal
+594,Normal,Yes,Moderate,Moderate,No
+595,Normal,Yes,Moderate,Moderate,No
+596,Insomnia,Yes,High,High,Economic
+597,RLS,Yes,High,High,Verbal
+598,RLS,Yes,High,High,Verbal
+599,Normal,Yes,Low,Low,No
+600,Insomnia,Yes,High,High,Economic
+601,RLS,No,High,High,Verbal
+602,Insomnia,No,High,High,Sexual
+603,Insomnia,Yes,High,High,Physical
+604,RLS,Yes,High,High,Verbal
+605,Normal,Yes,Moderate,Moderate,No
+606,Insomnia,Yes,High,High,Sexual
+607,Disordered Breathing,Yes,High,High,No
+608,RLS,No,High,High,Verbal
+609,RLS,Yes,High,High,Verbal
+610,Insomnia,Yes,High,High,Economic
+611,Normal,Yes,Interrupted,Moderate,No
+612,Normal,No,Interrupted,Moderate,No
+613,Insomnia,Yes,High,High,Sexual
+614,RLS,No,High,High,Verbal
+615,Insomnia,No,High,High,Economic
+616,Insomnia,Yes,High,High,No
+617,RLS,Yes,High,High,Verbal
+618,Disordered Breathing,Yes,Moderate,Moderate,No
+619,Insomnia,Yes,High,High,Economic
+620,RLS,No,High,High,Verbal
+621,Insomnia,Yes,High,High,Economic
+622,RLS,Yes,High,High,Verbal
+623,RLS,Yes,High,High,Verbal
+624,RLS,Yes,High,High,Verbal
+625,Normal,Yes,Interrupted,Low,No
+626,Normal,Yes,Moderate,Moderate,No
+627,Normal,Yes,Interrupted,Moderate,No
+628,RLS,Yes,High,High,Verbal
+629,RLS,Yes,High,High,Verbal
+630,RLS,No,High,High,Physical
+631,RLS,Yes,High,High,Verbal
+632,Normal,Yes,Moderate,Moderate,No
+633,Normal,Yes,Interrupted,Moderate,No
+634,Normal,Yes,Interrupted,Low,No
+635,RLS,Yes,High,High,Verbal
+636,Normal,Yes,Interrupted,Moderate,No
+637,Insomnia,Yes,High,High,Sexual
+638,Insomnia,Yes,High,High,Economic
+639,Disordered Breathing,No,Moderate,Moderate,No
+640,Disordered Breathing,Yes,Moderate,Moderate,No
+641,Normal,Yes,Moderate,Moderate,No
+642,RLS,Yes,High,High,Verbal
+643,Normal,No,Moderate,Moderate,No
+644,Normal,No,Interrupted,Low,No
+645,RLS,No,High,High,Verbal
+646,Normal,Yes,Moderate,Moderate,No
+647,RLS,No,High,High,Verbal
+648,Normal,No,Interrupted,Low,No
+649,Normal,Yes,Moderate,Moderate,No
+650,Normal,Yes,Interrupted,Moderate,No
+651,Normal,Yes,Interrupted,Moderate,No
+652,RLS,Yes,High,High,Verbal
+653,Insomnia,Yes,High,High,Physical
+654,Normal,Yes,Moderate,Moderate,No
+655,Disordered Breathing,Yes,Moderate,Moderate,No
+656,Normal,Yes,Low,Low,No
+657,Disordered Breathing,Yes,Moderate,Moderate,No
+658,RLS,Yes,High,High,Verbal
+659,Disordered Breathing,Yes,Moderate,Moderate,No
+660,Normal,Yes,Moderate,Moderate,No
+661,Normal,Yes,Moderate,Moderate,No
+662,Disordered Breathing,Yes,Moderate,Moderate,No
+663,Insomnia,Yes,High,High,Economic
+664,Normal,No,Low,Low,No
+665,Normal,No,Interrupted,Low,No
+666,Disordered Breathing,Yes,Moderate,High,No
+667,RLS,Yes,High,High,Verbal
+668,RLS,Yes,High,High,Verbal
+669,Normal,Yes,Interrupted,Low,No
+670,RLS,Yes,High,High,Verbal
+671,Insomnia,Yes,High,High,Physical
+672,Insomnia,Yes,High,High,Sexual
+673,Insomnia,Yes,High,High,Economic
+674,Normal,Yes,Interrupted,Moderate,No
+675,RLS,Yes,High,High,Verbal
+676,Insomnia,Yes,High,High,Economic
+677,Normal,No,Moderate,Moderate,No
+678,Normal,Yes,Moderate,Moderate,No
+679,Normal,Yes,Interrupted,Moderate,No
+680,RLS,Yes,High,High,Verbal
+681,RLS,Yes,High,High,Verbal
+682,Insomnia,Yes,High,High,Sexual
+683,RLS,Yes,High,High,Verbal
+684,Normal,Yes,Interrupted,Low,No
+685,RLS,Yes,High,High,Verbal
+686,Insomnia,Yes,High,High,Economic
+687,RLS,Yes,High,High,Verbal
+688,RLS,Yes,High,High,Verbal
+689,RLS,Yes,High,High,Verbal
+690,RLS,No,High,High,Physical
+691,Normal,Yes,Interrupted,Moderate,No
+692,Normal,Yes,Interrupted,Moderate,No
+693,Normal,No,Moderate,Moderate,No
+694,Normal,Yes,Moderate,Moderate,No
+695,Disordered Breathing,No,Moderate,Moderate,No
+696,Normal,Yes,Moderate,Moderate,No
+697,Normal,No,Interrupted,Moderate,No
+698,Disordered Breathing,Yes,High,High,No
+699,Normal,Yes,Interrupted,Moderate,No
+700,Insomnia,Yes,High,High,Economic
+701,Normal,Yes,Interrupted,Low,No
+702,Normal,Yes,Interrupted,Low,No
+703,Disordered Breathing,No,Moderate,Moderate,No
+704,Insomnia,Yes,High,High,Physical
+705,Normal,No,Interrupted,Low,No
+706,Normal,Yes,Interrupted,Low,No
+707,RLS,Yes,High,High,Verbal
+708,Normal,Yes,Moderate,Moderate,No
+709,RLS,Yes,High,High,Verbal
+710,Insomnia,Yes,High,High,No
+711,Normal,Yes,Moderate,Moderate,No
+712,Disordered Breathing,Yes,Moderate,High,No
+713,Insomnia,Yes,High,High,Sexual
+714,Disordered Breathing,Yes,Moderate,High,No
+715,Normal,No,Interrupted,Low,No
+716,RLS,Yes,High,High,Verbal
+717,Insomnia,Yes,High,High,Economic
+718,Normal,Yes,Moderate,Moderate,No
+719,Disordered Breathing,Yes,Moderate,Moderate,No
+720,Normal,Yes,Interrupted,Moderate,No
+721,Disordered Breathing,Yes,High,High,No
+722,Insomnia,Yes,High,High,Physical
+723,Insomnia,Yes,High,High,Economic
+724,RLS,Yes,High,High,Physical
+725,Insomnia,Yes,High,High,Physical
+726,RLS,No,High,High,Verbal
+727,Normal,Yes,Interrupted,Low,No
+728,Normal,No,Interrupted,Moderate,No
+729,RLS,Yes,High,High,Verbal
+730,RLS,Yes,High,High,Verbal
+731,Normal,Yes,Interrupted,Moderate,No
+732,Insomnia,Yes,High,High,Sexual
+733,Disordered Breathing,Yes,Moderate,High,No
+734,RLS,Yes,High,High,Physical
+735,Insomnia,Yes,High,High,Economic
+736,Normal,No,Interrupted,Moderate,No
+737,Insomnia,Yes,High,High,Sexual
+738,RLS,Yes,High,High,Verbal
+739,RLS,Yes,High,High,Verbal
+740,Insomnia,Yes,High,High,Economic
+741,RLS,No,High,High,Verbal
+742,Normal,No,Moderate,Moderate,No
+743,Insomnia,Yes,High,High,Economic
+744,Normal,No,Moderate,Moderate,No
+745,Disordered Breathing,Yes,Moderate,Moderate,No
+746,Normal,Yes,Moderate,Moderate,No
+747,RLS,Yes,High,High,Verbal
+748,Normal,No,Interrupted,Moderate,No
+749,Normal,Yes,Moderate,Moderate,No
+750,Normal,Yes,Interrupted,Moderate,No
+751,RLS,Yes,High,High,Verbal
+752,Normal,Yes,Interrupted,Low,No
+753,Normal,Yes,Interrupted,Low,No
+754,Insomnia,Yes,High,High,Physical
+755,RLS,Yes,High,High,Physical
+756,Insomnia,Yes,High,High,Economic
+757,Disordered Breathing,No,Moderate,High,No
+758,RLS,Yes,High,High,Verbal
+759,RLS,No,High,High,Verbal
+760,Normal,Yes,Interrupted,Low,No
+761,Normal,Yes,Interrupted,Moderate,No
+762,Normal,Yes,Interrupted,Moderate,No
+763,Normal,Yes,Moderate,Moderate,No
+764,Disordered Breathing,Yes,High,High,No
+765,Disordered Breathing,No,Moderate,Moderate,No
+766,Normal,No,Moderate,Moderate,No
+767,Insomnia,Yes,High,High,Economic
+768,RLS,Yes,High,High,Verbal
+769,RLS,Yes,High,High,Physical
+770,Normal,Yes,Interrupted,Moderate,No
+771,Normal,Yes,Moderate,Moderate,No
+772,Normal,Yes,Moderate,Moderate,No
+773,Normal,Yes,Interrupted,Moderate,No
+774,Normal,Yes,Interrupted,Moderate,No
+775,Normal,Yes,Moderate,Moderate,No
+776,Insomnia,No,High,High,Economic
+777,Normal,No,Moderate,Moderate,No
+778,RLS,No,High,High,Verbal
+779,Disordered Breathing,No,Moderate,Moderate,No
+780,Normal,Yes,Interrupted,Low,No
+781,Insomnia,Yes,High,High,Economic
+782,Normal,No,Low,Low,No
+783,Normal,Yes,Moderate,Moderate,No
+784,Disordered Breathing,Yes,Moderate,Moderate,No
+785,RLS,Yes,High,High,Verbal
+786,Disordered Breathing,Yes,High,High,No
+787,RLS,Yes,High,High,Verbal
+788,Insomnia,Yes,High,High,Economic
+789,RLS,No,High,High,Verbal
+790,Insomnia,Yes,High,High,Economic
+791,Normal,Yes,Moderate,Moderate,No
+792,RLS,Yes,High,High,Verbal
+793,RLS,Yes,High,High,Verbal
+794,Normal,Yes,Interrupted,Low,No
+795,Disordered Breathing,Yes,High,High,No
+796,Normal,Yes,Moderate,Moderate,No
+797,Normal,Yes,Moderate,Moderate,No
+798,RLS,Yes,High,High,Verbal
+799,RLS,Yes,High,High,Verbal
+800,Normal,No,Moderate,Moderate,No
+801,Disordered Breathing,Yes,High,High,No
+802,RLS,Yes,High,High,Verbal
+803,Disordered Breathing,Yes,High,High,No
+804,Disordered Breathing,Yes,High,High,No
+805,RLS,Yes,High,High,Verbal
+806,Normal,Yes,Interrupted,Low,No
+807,Insomnia,Yes,High,High,Physical
+808,RLS,Yes,High,High,Verbal
+809,RLS,Yes,High,High,Verbal
+810,Normal,Yes,Low,Low,No
+811,RLS,No,High,High,Verbal
+812,Normal,Yes,Interrupted,Low,No
+813,Normal,Yes,Interrupted,Low,No
+814,Insomnia,Yes,High,High,Physical
+815,Normal,Yes,Interrupted,Moderate,No
+816,Normal,Yes,Interrupted,Moderate,No
+817,Insomnia,Yes,High,High,Economic
+818,Normal,No,Interrupted,Low,No
+819,Normal,Yes,Interrupted,Low,No
+820,Normal,Yes,Moderate,Moderate,No
+821,Normal,Yes,Moderate,Moderate,No
+822,Insomnia,No,High,High,Economic
+823,Normal,Yes,Moderate,Moderate,No
+824,RLS,Yes,High,High,Verbal
+825,Normal,No,Moderate,Moderate,No
+826,Insomnia,Yes,High,High,Economic
+827,Normal,No,Interrupted,Low,No
+828,Insomnia,Yes,High,High,Sexual
+829,RLS,Yes,High,High,Verbal
+830,Normal,Yes,Interrupted,Low,No
+831,Insomnia,Yes,High,High,Physical
+832,Normal,Yes,Interrupted,Moderate,No
+833,Insomnia,No,High,High,Economic
+834,Insomnia,No,High,High,Economic
+835,RLS,Yes,High,High,Verbal
+836,Disordered Breathing,Yes,Moderate,High,No
+837,RLS,Yes,High,High,Verbal
+838,Normal,Yes,Interrupted,Moderate,No
+839,Insomnia,Yes,High,High,Physical
+840,RLS,Yes,High,High,Verbal
+841,Normal,Yes,Moderate,Moderate,No
+842,Insomnia,No,High,High,Sexual
+843,RLS,Yes,High,High,Verbal
+844,Insomnia,Yes,High,High,Economic
+845,Disordered Breathing,Yes,High,High,No
+846,Insomnia,Yes,High,High,Sexual
+847,Disordered Breathing,Yes,High,High,No
+848,Normal,Yes,Interrupted,Moderate,No
+849,Insomnia,Yes,High,High,Sexual
+850,Normal,Yes,Interrupted,Low,No
+851,RLS,Yes,High,High,Physical
+852,Disordered Breathing,Yes,High,High,No
+853,Normal,Yes,Moderate,Moderate,No
+854,RLS,Yes,High,High,Physical
+855,Normal,Yes,Interrupted,Low,No
+856,Normal,Yes,Moderate,Moderate,No
+857,Normal,Yes,Moderate,Moderate,No
+858,Disordered Breathing,Yes,Moderate,Moderate,No
+859,Normal,No,Interrupted,Moderate,No
+860,RLS,No,High,High,Verbal
+861,Normal,Yes,Interrupted,Low,No
+862,Insomnia,Yes,High,High,Economic
+863,Normal,Yes,Interrupted,Moderate,No
+864,RLS,Yes,High,High,Physical
+865,Normal,No,Interrupted,Moderate,No
+866,Disordered Breathing,No,Moderate,High,No
+867,RLS,No,High,High,Verbal
+868,RLS,No,High,High,Verbal
+869,Insomnia,Yes,High,High,Physical
+870,Insomnia,Yes,High,High,Sexual
+871,Insomnia,Yes,High,High,Sexual
+872,Normal,Yes,Interrupted,Moderate,No
+873,Insomnia,Yes,High,High,Physical
+874,Disordered Breathing,Yes,Moderate,Moderate,No
+875,Normal,Yes,Interrupted,Low,No
+876,Normal,Yes,Moderate,Moderate,No
+877,Insomnia,Yes,High,High,No
+878,RLS,No,High,High,Verbal
+879,Insomnia,Yes,High,High,No
+880,Normal,Yes,Moderate,Moderate,No
+881,Normal,Yes,Moderate,Moderate,No
+882,Normal,Yes,Interrupted,Moderate,No
+883,Normal,No,Interrupted,Low,No
+884,RLS,Yes,High,High,Verbal
+885,Insomnia,Yes,High,High,Sexual
+886,Normal,Yes,Interrupted,Low,No
+887,Normal,Yes,Moderate,Moderate,No
+888,RLS,Yes,High,High,Verbal
+889,Normal,Yes,Moderate,Moderate,No
+890,Normal,Yes,Low,Low,No
+891,Insomnia,No,High,High,No
+892,Normal,Yes,Moderate,Moderate,No
+893,Insomnia,Yes,High,High,Physical
+894,RLS,Yes,High,High,Verbal
+895,RLS,Yes,High,High,Verbal
+896,Insomnia,Yes,High,High,Economic
+897,Insomnia,Yes,High,High,Sexual
+898,Insomnia,No,High,High,Sexual
+899,Disordered Breathing,Yes,High,High,No
+900,Disordered Breathing,Yes,High,High,No
+901,Normal,Yes,Interrupted,Low,No
+902,Insomnia,Yes,High,High,Economic
+903,Disordered Breathing,Yes,Moderate,High,No
+904,RLS,Yes,High,High,Verbal
+905,Normal,Yes,Moderate,Moderate,No
+906,RLS,Yes,High,High,Verbal
+907,Normal,Yes,Interrupted,Moderate,No
+908,Disordered Breathing,No,Moderate,Moderate,No
+909,Normal,Yes,Interrupted,Moderate,No
+910,Disordered Breathing,Yes,High,High,No
+911,RLS,Yes,High,High,Verbal
+912,Normal,Yes,Moderate,Moderate,No
+913,Normal,Yes,Moderate,Moderate,No
+914,Disordered Breathing,Yes,Moderate,High,No
+915,Normal,Yes,Moderate,Moderate,No
+916,Insomnia,Yes,High,High,Sexual
+917,Disordered Breathing,Yes,Moderate,Moderate,No
+918,Insomnia,Yes,High,High,No
+919,Disordered Breathing,No,Moderate,High,No
+920,Insomnia,No,High,High,Economic
+921,Insomnia,Yes,High,High,Physical
+922,Disordered Breathing,Yes,Moderate,Moderate,No
+923,Disordered Breathing,Yes,High,High,No
+924,RLS,Yes,High,High,Verbal
+925,Insomnia,No,High,High,Economic
+926,Insomnia,Yes,High,High,Economic
+927,Normal,Yes,Moderate,Moderate,No
+928,Normal,Yes,Moderate,Moderate,No
+929,Disordered Breathing,No,Moderate,Moderate,No
+930,Disordered Breathing,No,High,High,No
+931,RLS,Yes,High,High,Verbal
+932,Insomnia,No,High,High,Physical
+933,Normal,Yes,Interrupted,Moderate,No
+934,Disordered Breathing,Yes,Moderate,High,No
+935,Normal,Yes,Low,Low,No
+936,Normal,Yes,Moderate,Moderate,No
+937,Normal,No,Low,Low,No
+938,Insomnia,Yes,High,High,Physical
+939,Insomnia,No,High,High,Sexual
+940,Insomnia,No,High,High,No
+941,Disordered Breathing,No,High,High,No
+942,RLS,Yes,High,High,Verbal
+943,Normal,Yes,Interrupted,Low,No
+944,Normal,Yes,Interrupted,Low,No
+945,Disordered Breathing,Yes,High,High,No
+946,RLS,Yes,High,High,Verbal
+947,Disordered Breathing,No,Moderate,Moderate,No
+948,Normal,No,Moderate,Moderate,No
+949,Disordered Breathing,Yes,Moderate,Moderate,No
+950,Disordered Breathing,Yes,High,High,No
+951,Disordered Breathing,Yes,Moderate,Moderate,No
+952,RLS,Yes,High,High,Verbal
+953,Normal,Yes,Interrupted,Low,No
+954,Insomnia,Yes,High,High,Economic
+955,RLS,Yes,High,High,Verbal
+956,RLS,Yes,High,High,Verbal
+957,Insomnia,No,High,High,Physical
+958,Insomnia,Yes,High,High,Sexual
+959,Normal,No,Interrupted,Low,No
+960,Insomnia,Yes,High,High,No
+961,Normal,Yes,Interrupted,Low,No
+962,RLS,Yes,High,High,Verbal
+963,Insomnia,Yes,High,High,Economic
+964,Normal,Yes,Interrupted,Low,No
+965,Normal,Yes,Low,Low,No
+966,Insomnia,Yes,High,High,Physical
+967,Normal,Yes,Moderate,Moderate,No
+968,RLS,Yes,High,High,Verbal
+969,Disordered Breathing,No,High,High,No
+970,Disordered Breathing,Yes,Moderate,Moderate,No
+971,Normal,Yes,Moderate,Moderate,No
+972,Insomnia,Yes,High,High,Sexual
+973,RLS,Yes,High,High,Verbal
+974,RLS,No,High,High,Verbal
+975,RLS,Yes,High,High,Verbal
+976,Normal,Yes,Moderate,Moderate,No
+977,RLS,No,High,High,Verbal
+978,Disordered Breathing,Yes,Moderate,High,No
+979,RLS,Yes,High,High,Verbal
+980,Normal,Yes,Interrupted,Moderate,No
+981,Insomnia,Yes,High,High,Economic
+982,RLS,Yes,High,High,Verbal
+983,Disordered Breathing,Yes,High,High,No
+984,Disordered Breathing,Yes,Moderate,Moderate,No
+985,Disordered Breathing,Yes,Moderate,High,No
+986,RLS,No,High,High,Verbal
+987,RLS,Yes,High,High,Verbal
+988,Insomnia,Yes,High,High,Economic
+989,Insomnia,Yes,High,High,Economic
+990,Insomnia,Yes,High,High,Economic
+991,Insomnia,Yes,High,High,Sexual
+992,RLS,Yes,High,High,Verbal
+993,RLS,Yes,High,High,Verbal
+994,Insomnia,Yes,High,High,Economic
+995,RLS,No,High,High,Verbal
+996,Disordered Breathing,No,High,High,No
+997,Disordered Breathing,No,High,High,No
+998,Normal,Yes,Moderate,Moderate,No
+999,Disordered Breathing,Yes,Moderate,Moderate,No
+1000,Disordered Breathing,Yes,High,High,No
+1001,Normal,No,Moderate,Moderate,No
+1002,Insomnia,Yes,High,High,Sexual
+1003,RLS,Yes,High,High,Verbal
+1004,Insomnia,Yes,High,High,Economic
+1005,Normal,Yes,Moderate,Moderate,No
+1006,Insomnia,Yes,High,High,Physical
+1007,Normal,Yes,Interrupted,Low,No
+1008,RLS,Yes,High,High,Verbal
+1009,Insomnia,Yes,High,High,Economic
+1010,Insomnia,Yes,High,High,Economic
+1011,Insomnia,No,High,High,Economic
+1012,Disordered Breathing,Yes,High,High,No
+1013,Normal,Yes,Low,Low,No
+1014,RLS,Yes,High,High,Verbal
+1015,RLS,Yes,High,High,Verbal
+1016,RLS,Yes,High,High,Verbal
+1017,RLS,Yes,High,High,Verbal
+1018,Disordered Breathing,Yes,Moderate,High,No
+1019,Insomnia,Yes,High,High,Economic
+1020,Insomnia,Yes,High,High,Physical
+1021,RLS,Yes,High,High,Verbal
+1022,Insomnia,Yes,High,High,Economic
+1023,Insomnia,No,High,High,Economic
+1024,RLS,Yes,High,High,Verbal
+1025,Normal,Yes,Interrupted,Moderate,No
+1026,Disordered Breathing,No,Moderate,High,No
+1027,Normal,Yes,Interrupted,Moderate,No
+1028,RLS,Yes,High,High,Verbal
+1029,Insomnia,Yes,High,High,Economic
+1030,Normal,No,Interrupted,Moderate,No
+1031,Insomnia,Yes,High,High,Economic
+1032,Disordered Breathing,Yes,Moderate,High,No
+1033,Insomnia,Yes,High,High,Economic
+1034,Insomnia,Yes,High,High,Economic
+1035,Normal,No,Interrupted,Low,No
+1036,Normal,No,Moderate,Moderate,No
+1037,Normal,No,Interrupted,Moderate,No
+1038,RLS,Yes,High,High,Verbal
+1039,Disordered Breathing,Yes,Moderate,Moderate,No
+1040,Insomnia,No,High,High,No
+1041,RLS,No,High,High,Physical
+1042,RLS,Yes,High,High,Verbal
+1043,Normal,Yes,Moderate,Moderate,No
+1044,Normal,No,Moderate,Moderate,No
+1045,Insomnia,Yes,High,High,Sexual
+1046,Normal,Yes,Interrupted,Low,No
+1047,Normal,Yes,Interrupted,Low,No
+1048,Normal,Yes,Moderate,Moderate,No
+1049,Normal,Yes,Moderate,Moderate,No
+1050,Disordered Breathing,Yes,Moderate,Moderate,No
+1051,Normal,Yes,Moderate,Moderate,No
+1052,Insomnia,Yes,High,High,Economic
+1053,Disordered Breathing,No,Moderate,Moderate,No
+1054,RLS,Yes,High,High,Verbal
+1055,RLS,Yes,High,High,Verbal
+1056,Normal,Yes,Moderate,Moderate,No
+1057,Normal,Yes,Interrupted,Moderate,No
+1058,Normal,Yes,Moderate,Moderate,No
+1059,Normal,Yes,Moderate,Moderate,No
+1060,RLS,No,High,High,Verbal
+1061,Insomnia,Yes,High,High,Economic
+1062,Disordered Breathing,Yes,High,High,No
+1063,Normal,Yes,Interrupted,Low,No
+1064,Insomnia,Yes,High,High,No
+1065,Insomnia,Yes,High,High,Economic
+1066,Normal,Yes,Interrupted,Low,No
+1067,Normal,Yes,Interrupted,Low,No
+1068,Insomnia,Yes,High,High,Economic
+1069,Disordered Breathing,Yes,High,High,No
+1070,RLS,Yes,High,High,Physical
+1071,RLS,No,High,High,Verbal
+1072,Insomnia,Yes,High,High,Physical
+1073,Normal,Yes,Interrupted,Low,No
+1074,Insomnia,Yes,High,High,Economic
+1075,Insomnia,Yes,High,High,No
+1076,Disordered Breathing,Yes,Moderate,Moderate,No
+1077,Insomnia,Yes,High,High,Physical
+1078,Insomnia,Yes,High,High,Physical
+1079,Disordered Breathing,Yes,Moderate,Moderate,No
+1080,RLS,Yes,High,High,Verbal
+1081,Disordered Breathing,No,High,High,No
+1082,RLS,Yes,High,High,Verbal
+1083,Normal,Yes,Low,Low,No
+1084,Normal,No,Interrupted,Low,No
+1085,Insomnia,Yes,High,High,Sexual
+1086,Disordered Breathing,Yes,Moderate,High,No
+1087,Insomnia,No,High,High,Economic
+1088,RLS,No,High,High,Physical
+1089,RLS,Yes,High,High,Verbal
+1090,Disordered Breathing,Yes,Moderate,High,No
+1091,RLS,No,High,High,Physical
+1092,RLS,Yes,High,High,Verbal
+1093,Normal,Yes,Interrupted,Moderate,No
+1094,RLS,No,High,High,Verbal
+1095,Normal,Yes,Interrupted,Moderate,No
+1096,Insomnia,Yes,High,High,No
+1097,RLS,Yes,High,High,Verbal
+1098,Normal,Yes,Interrupted,Moderate,No
+1099,Insomnia,No,High,High,Physical
+1100,Insomnia,No,High,High,No
+1101,Normal,Yes,Interrupted,Moderate,No
+1102,Insomnia,No,High,High,No
+1103,Insomnia,Yes,High,High,Economic
+1104,RLS,No,High,High,Verbal
+1105,RLS,No,High,High,Verbal
+1106,Disordered Breathing,Yes,Moderate,Moderate,No
+1107,RLS,Yes,High,High,Verbal
+1108,Normal,No,Moderate,Moderate,No
+1109,RLS,Yes,High,High,Verbal
+1110,RLS,Yes,High,High,Verbal
+1111,Normal,No,Interrupted,Moderate,No
+1112,Normal,Yes,Interrupted,Moderate,No
+1113,Normal,No,Moderate,Moderate,No
+1114,Disordered Breathing,Yes,Moderate,Moderate,No
+1115,Disordered Breathing,Yes,Moderate,Moderate,No
+1116,Normal,Yes,Interrupted,Moderate,No
+1117,Insomnia,No,High,High,Sexual
+1118,RLS,Yes,High,High,Verbal
+1119,Insomnia,Yes,High,High,Economic
+1120,RLS,Yes,High,High,Verbal
+1121,RLS,Yes,High,High,Verbal
+1122,Insomnia,Yes,High,High,Economic
+1123,Normal,Yes,Interrupted,Moderate,No
+1124,Normal,Yes,Low,Low,No
+1125,RLS,Yes,High,High,Verbal
+1126,Normal,No,Interrupted,Low,No
+1127,Normal,Yes,Interrupted,Moderate,No
+1128,Normal,No,Moderate,Moderate,No
+1129,Insomnia,Yes,High,High,Sexual
+1130,Insomnia,Yes,High,High,Physical
+1131,Insomnia,No,High,High,Economic
+1132,Insomnia,Yes,High,High,Physical
+1133,Insomnia,Yes,High,High,Economic
+1134,Insomnia,No,High,High,Sexual
+1135,Normal,No,Low,Low,No
+1136,Normal,No,Interrupted,Low,No
+1137,RLS,Yes,High,High,Verbal
+1138,RLS,Yes,High,High,Verbal
+1139,Normal,No,Interrupted,Low,No
+1140,RLS,Yes,High,High,Verbal
+1141,RLS,No,High,High,Verbal
+1142,Insomnia,Yes,High,High,Economic
+1143,Normal,Yes,Moderate,Moderate,No
+1144,RLS,Yes,High,High,Verbal
+1145,Normal,Yes,Interrupted,Low,No
+1146,Insomnia,Yes,High,High,Economic
+1147,Normal,Yes,Moderate,Moderate,No
+1148,Normal,Yes,Interrupted,Moderate,No
+1149,Normal,Yes,Interrupted,Moderate,No
+1150,Insomnia,No,High,High,Economic
+1151,Disordered Breathing,Yes,High,High,No
+1152,Insomnia,Yes,High,High,Sexual
+1153,Normal,Yes,Moderate,Moderate,No
+1154,Insomnia,No,High,High,No
+1155,RLS,Yes,High,High,Verbal
+1156,Normal,Yes,Moderate,Moderate,No
+1157,Normal,Yes,Moderate,Moderate,No
+1158,Insomnia,No,High,High,Physical
+1159,Normal,Yes,Moderate,Moderate,No
+1160,RLS,Yes,High,High,Verbal
+1161,RLS,Yes,High,High,Verbal
+1162,Normal,No,Moderate,Moderate,No
+1163,Disordered Breathing,Yes,Moderate,Moderate,No
+1164,RLS,Yes,High,High,Verbal
+1165,RLS,Yes,High,High,Verbal
+1166,Normal,Yes,Moderate,Moderate,No
+1167,Disordered Breathing,No,Moderate,Moderate,No
+1168,Insomnia,Yes,High,High,Economic
+1169,RLS,Yes,High,High,Verbal
+1170,Normal,No,Interrupted,Low,No
+1171,Normal,No,Interrupted,Moderate,No
+1172,Insomnia,Yes,High,High,Sexual
+1173,Insomnia,Yes,High,High,Economic
+1174,Insomnia,Yes,High,High,Physical
+1175,Insomnia,Yes,High,High,Sexual
+1176,Insomnia,No,High,High,Economic
+1177,Normal,Yes,Moderate,Moderate,No
+1178,Normal,Yes,Moderate,Moderate,No
+1179,Disordered Breathing,Yes,Moderate,High,No
+1180,RLS,Yes,High,High,Verbal
+1181,RLS,No,High,High,Verbal
+1182,Insomnia,Yes,High,High,Sexual
+1183,Normal,No,Moderate,Moderate,No
+1184,RLS,Yes,High,High,Verbal
+1185,Disordered Breathing,Yes,Moderate,High,No
+1186,Insomnia,Yes,High,High,Sexual
+1187,RLS,No,High,High,Verbal
+1188,RLS,No,High,High,Verbal
+1189,RLS,Yes,High,High,Physical
+1190,RLS,Yes,High,High,Verbal
+1191,Normal,Yes,Moderate,Moderate,No
+1192,RLS,Yes,High,High,Verbal
+1193,RLS,Yes,High,High,Verbal
+1194,Normal,Yes,Moderate,Moderate,No
+1195,Normal,Yes,Moderate,Moderate,No
+1196,Normal,No,Moderate,Moderate,No
+1197,Normal,No,Moderate,Moderate,No
+1198,RLS,No,High,High,Verbal
+1199,RLS,Yes,High,High,Verbal
+1200,Insomnia,Yes,High,High,Economic
+1201,Normal,Yes,Interrupted,Moderate,No
+1202,Normal,Yes,Moderate,Moderate,No
+1203,Normal,Yes,Moderate,Moderate,No
+1204,RLS,Yes,High,High,Verbal
+1205,Insomnia,No,High,High,Physical
+1206,Insomnia,No,High,High,Economic
+1207,RLS,No,High,High,Physical
+1208,RLS,Yes,High,High,Verbal
+1209,Normal,Yes,Moderate,Moderate,No
+1210,Normal,No,Moderate,Moderate,No
+1211,Normal,Yes,Interrupted,Low,No
+1212,Insomnia,Yes,High,High,Economic
+1213,Disordered Breathing,Yes,Moderate,Moderate,No
+1214,Insomnia,No,High,High,Sexual
+1215,Disordered Breathing,Yes,High,High,No
+1216,RLS,Yes,High,High,Verbal
+1217,Disordered Breathing,Yes,High,High,No
+1218,RLS,Yes,High,High,Verbal
+1219,Normal,Yes,Interrupted,Moderate,No
+1220,Normal,Yes,Interrupted,Low,No
+1221,Insomnia,No,High,High,Physical
+1222,Normal,No,Moderate,Moderate,No
+1223,Normal,Yes,Interrupted,Moderate,No
+1224,Disordered Breathing,Yes,Moderate,High,No
+1225,RLS,Yes,High,High,Verbal
+1226,Insomnia,Yes,High,High,Sexual
+1227,Normal,No,Low,Low,No
+1228,RLS,Yes,High,High,Verbal
+1229,Normal,Yes,Moderate,Moderate,No
+1230,RLS,Yes,High,High,Verbal
+1231,RLS,Yes,High,High,Verbal
+1232,Normal,Yes,Moderate,Moderate,No
+1233,Disordered Breathing,No,Moderate,Moderate,No
+1234,RLS,Yes,High,High,Verbal
+1235,Insomnia,Yes,High,High,Sexual
+1236,Disordered Breathing,Yes,Moderate,Moderate,No
+1237,Normal,No,Interrupted,Moderate,No
+1238,RLS,Yes,High,High,Physical
+1239,Normal,Yes,Interrupted,Low,No
+1240,RLS,Yes,High,High,Verbal
+1241,Disordered Breathing,Yes,Moderate,Moderate,No
+1242,Normal,Yes,Interrupted,Low,No
+1243,Normal,No,Interrupted,Moderate,No
+1244,RLS,Yes,High,High,Physical
+1245,Insomnia,Yes,High,High,Sexual
+1246,RLS,Yes,High,High,Verbal
+1247,Insomnia,Yes,High,High,Economic
+1248,Disordered Breathing,No,High,High,No
+1249,RLS,No,High,High,Verbal
+1250,RLS,Yes,High,High,Verbal
+1251,RLS,Yes,High,High,Verbal
+1252,Disordered Breathing,Yes,Moderate,Moderate,No
+1253,Disordered Breathing,Yes,Moderate,High,No
+1254,Disordered Breathing,Yes,Moderate,High,No
+1255,Insomnia,Yes,High,High,No
+1256,Disordered Breathing,Yes,Moderate,Moderate,No
+1257,Normal,Yes,Low,Low,No
+1258,RLS,Yes,High,High,Verbal
+1259,RLS,No,High,High,Physical
+1260,Disordered Breathing,Yes,Moderate,High,No
+1261,Normal,Yes,Interrupted,Moderate,No
+1262,Insomnia,Yes,High,High,Sexual
+1263,Disordered Breathing,No,Moderate,Moderate,No
+1264,Normal,Yes,Moderate,Moderate,No
+1265,Normal,Yes,Moderate,Moderate,No
+1266,RLS,Yes,High,High,Verbal
+1267,Normal,No,Interrupted,Moderate,No
+1268,Insomnia,Yes,High,High,Physical
+1269,Normal,No,Moderate,Moderate,No
+1270,Insomnia,No,High,High,Economic
+1271,Insomnia,Yes,High,High,Sexual
+1272,Normal,Yes,Moderate,Moderate,No
+1273,Normal,Yes,Interrupted,Moderate,No
+1274,Insomnia,Yes,High,High,Economic
+1275,RLS,Yes,High,High,Verbal
+1276,RLS,Yes,High,High,Verbal
+1277,Insomnia,Yes,High,High,Physical
+1278,RLS,No,High,High,Verbal
+1279,RLS,No,High,High,Verbal
+1280,RLS,Yes,High,High,Verbal
+1281,Normal,No,Low,Low,No
+1282,Normal,Yes,Interrupted,Moderate,No
+1283,Insomnia,Yes,High,High,Physical
+1284,Normal,Yes,Moderate,Moderate,No
+1285,Normal,Yes,Interrupted,Moderate,No
+1286,RLS,No,High,High,Verbal
+1287,Insomnia,Yes,High,High,Economic
+1288,RLS,No,High,High,Verbal
+1289,Insomnia,Yes,High,High,Physical
+1290,Insomnia,Yes,High,High,Sexual
+1291,RLS,Yes,High,High,Verbal
+1292,Disordered Breathing,Yes,Moderate,Moderate,No
+1293,Normal,Yes,Moderate,Moderate,No
+1294,Disordered Breathing,No,Moderate,Moderate,No
+1295,Disordered Breathing,Yes,High,High,No
+1296,Normal,Yes,Interrupted,Low,No
+1297,Insomnia,Yes,High,High,Economic
+1298,Insomnia,Yes,High,High,Physical
+1299,Normal,No,Interrupted,Low,No
+1300,Insomnia,Yes,High,High,Physical
+1301,Disordered Breathing,No,Moderate,High,No
+1302,Normal,No,Interrupted,Moderate,No
+1303,Normal,Yes,Moderate,Moderate,No
+1304,Normal,Yes,Interrupted,Low,No
+1305,RLS,Yes,High,High,Verbal
+1306,Normal,Yes,Moderate,Moderate,No
+1307,Disordered Breathing,Yes,Moderate,Moderate,No
+1308,RLS,Yes,High,High,Verbal
+1309,RLS,No,High,High,Verbal
+1310,Normal,No,Moderate,Moderate,No
+1311,RLS,No,High,High,Verbal
+1312,Normal,Yes,Moderate,Moderate,No
+1313,RLS,No,High,High,Verbal
+1314,Normal,Yes,Interrupted,Low,No
+1315,Normal,Yes,Interrupted,Low,No
+1316,Insomnia,Yes,High,High,Sexual
+1317,RLS,No,High,High,Verbal
+1318,Insomnia,Yes,High,High,Sexual
+1319,Insomnia,Yes,High,High,Economic
+1320,Insomnia,Yes,High,High,No
+1321,RLS,Yes,High,High,Verbal
+1322,RLS,Yes,High,High,Verbal
+1323,Normal,No,Moderate,Moderate,No
+1324,Insomnia,Yes,High,High,Economic
+1325,Normal,Yes,Interrupted,Moderate,No
+1326,RLS,Yes,High,High,Verbal
+1327,Normal,Yes,Moderate,Moderate,No
+1328,Normal,No,Moderate,Moderate,No
+1329,RLS,Yes,High,High,Verbal
+1330,Disordered Breathing,Yes,High,High,No
+1331,Normal,No,Interrupted,Low,No
+1332,Normal,Yes,Low,Low,No
+1333,Normal,Yes,Interrupted,Low,No
+1334,Normal,Yes,Interrupted,Moderate,No
+1335,Normal,Yes,Interrupted,Moderate,No
+1336,Insomnia,Yes,High,High,Economic
+1337,Normal,Yes,Interrupted,Moderate,No
+1338,RLS,Yes,High,High,Verbal
+1339,Normal,No,Moderate,Moderate,No
+1340,RLS,Yes,High,High,Physical
+1341,Normal,Yes,Moderate,Moderate,No
+1342,Insomnia,Yes,High,High,Sexual
+1343,RLS,No,High,High,Verbal
+1344,Disordered Breathing,Yes,Moderate,Moderate,No
+1345,RLS,No,High,High,Verbal
+1346,Disordered Breathing,Yes,Moderate,Moderate,No
+1347,Insomnia,Yes,High,High,Economic
+1348,Normal,Yes,Low,Low,No
+1349,Normal,Yes,Low,Low,No
+1350,Normal,Yes,Interrupted,Moderate,No
+1351,Normal,Yes,Interrupted,Low,No
+1352,Normal,Yes,Moderate,Moderate,No
+1353,RLS,Yes,High,High,Verbal
+1354,RLS,Yes,High,High,Verbal
+1355,Normal,No,Moderate,Moderate,No
+1356,Insomnia,No,High,High,Sexual
+1357,Normal,No,Moderate,Moderate,No
+1358,Disordered Breathing,Yes,Moderate,Moderate,No
+1359,Normal,Yes,Interrupted,Moderate,No
+1360,Disordered Breathing,Yes,High,High,No
+1361,Disordered Breathing,Yes,High,High,No
+1362,RLS,Yes,High,High,Verbal
+1363,Normal,Yes,Interrupted,Moderate,No
+1364,Normal,No,Low,Low,No
+1365,RLS,Yes,High,High,Verbal
+1366,Normal,Yes,Interrupted,Moderate,No
+1367,RLS,No,High,High,Verbal
+1368,RLS,Yes,High,High,Verbal
+1369,RLS,Yes,High,High,Verbal
+1370,RLS,Yes,High,High,Verbal
+1371,Normal,Yes,Moderate,Moderate,No
+1372,Normal,Yes,Moderate,Moderate,No
+1373,RLS,No,High,High,Verbal
+1374,Normal,Yes,Interrupted,Low,No
+1375,Insomnia,Yes,High,High,No
+1376,Disordered Breathing,No,High,High,No
+1377,Normal,Yes,Moderate,Moderate,No
+1378,Disordered Breathing,Yes,Moderate,Moderate,No
+1379,Normal,Yes,Moderate,Moderate,No
+1380,Insomnia,Yes,High,High,Sexual
+1381,Normal,Yes,Moderate,Moderate,No
+1382,Normal,Yes,Low,Low,No
+1383,Insomnia,Yes,High,High,Sexual
+1384,Normal,Yes,Low,Low,No
+1385,Insomnia,No,High,High,Sexual
+1386,RLS,No,High,High,Verbal
+1387,Disordered Breathing,Yes,Moderate,Moderate,No
+1388,Normal,Yes,Interrupted,Moderate,No
+1389,Disordered Breathing,No,High,High,No
+1390,Normal,Yes,Moderate,Moderate,No
+1391,Normal,Yes,Interrupted,Moderate,No
+1392,Insomnia,Yes,High,High,Physical
+1393,Insomnia,Yes,High,High,Economic
+1394,Normal,No,Moderate,Moderate,No
+1395,Insomnia,Yes,High,High,Physical
+1396,RLS,Yes,High,High,Verbal
+1397,Insomnia,Yes,High,High,Sexual
+1398,Disordered Breathing,No,High,High,No
+1399,Insomnia,Yes,High,High,Economic
+1400,Normal,No,Low,Low,No
+1401,Insomnia,Yes,High,High,Physical
+1402,RLS,Yes,High,High,Verbal
+1403,Insomnia,No,High,High,Economic
+1404,Normal,Yes,Interrupted,Low,No
+1405,Insomnia,No,High,High,Physical
+1406,Normal,Yes,Moderate,Moderate,No
+1407,Normal,Yes,Interrupted,Moderate,No
+1408,Insomnia,Yes,High,High,Sexual
+1409,Disordered Breathing,Yes,High,High,No
+1410,Disordered Breathing,Yes,Moderate,Moderate,No
+1411,RLS,Yes,High,High,Verbal
+1412,Normal,Yes,Low,Low,No
+1413,Normal,Yes,Moderate,Moderate,No
+1414,RLS,Yes,High,High,Verbal
+1415,Normal,No,Interrupted,Moderate,No
+1416,Normal,No,Interrupted,Moderate,No
+1417,RLS,Yes,High,High,Verbal
+1418,Normal,No,Interrupted,Moderate,No
+1419,Normal,Yes,Interrupted,Low,No
+1420,Insomnia,No,High,High,Sexual
+1421,Normal,Yes,Interrupted,Low,No
+1422,Insomnia,Yes,High,High,Physical
+1423,Insomnia,Yes,High,High,No
+1424,Disordered Breathing,Yes,High,High,No
+1425,RLS,Yes,High,High,Verbal
+1426,Insomnia,Yes,High,High,No
+1427,Normal,Yes,Interrupted,Moderate,No
+1428,Disordered Breathing,Yes,Moderate,Moderate,No
+1429,Normal,Yes,Low,Low,No
+1430,Normal,No,Low,Low,No
+1431,RLS,Yes,High,High,Verbal
+1432,Normal,Yes,Low,Low,No
+1433,RLS,Yes,High,High,Verbal
+1434,Insomnia,Yes,High,High,Economic
+1435,Insomnia,Yes,High,High,Physical
+1436,Normal,No,Interrupted,Low,No
+1437,RLS,No,High,High,Verbal
+1438,RLS,Yes,High,High,Verbal
+1439,RLS,Yes,High,High,Physical
+1440,Normal,Yes,Moderate,Moderate,No
+1441,Insomnia,Yes,High,High,No
+1442,Normal,Yes,Interrupted,Moderate,No
+1443,Normal,Yes,Interrupted,Moderate,No
+1444,Insomnia,Yes,High,High,Economic
+1445,Normal,Yes,Moderate,Moderate,No
+1446,RLS,No,High,High,Verbal
+1447,Disordered Breathing,Yes,High,High,No
+1448,RLS,Yes,High,High,Verbal
+1449,Normal,No,Moderate,Moderate,No
+1450,Disordered Breathing,Yes,Moderate,Moderate,No
+1451,RLS,Yes,High,High,Verbal
+1452,Insomnia,No,High,High,Sexual
+1453,Normal,Yes,Interrupted,Moderate,No
+1454,Insomnia,Yes,High,High,Economic
+1455,Insomnia,Yes,High,High,No
+1456,RLS,No,High,High,Verbal
+1457,Disordered Breathing,No,High,High,No
+1458,RLS,Yes,High,High,Verbal
+1459,Normal,Yes,Low,Low,No
+1460,Insomnia,Yes,High,High,Economic
+1461,Insomnia,Yes,High,High,Physical
+1462,RLS,No,High,High,Verbal
+1463,Normal,No,Low,Low,No
+1464,Insomnia,No,High,High,Economic
+1465,Disordered Breathing,Yes,Moderate,High,No
+1466,Normal,Yes,Interrupted,Low,No
+1467,RLS,No,High,High,Verbal
+1468,RLS,Yes,High,High,Verbal
+1469,Insomnia,No,High,High,Economic
+1470,Normal,Yes,Interrupted,Moderate,No
+1471,Disordered Breathing,Yes,Moderate,Moderate,No
+1472,Insomnia,No,High,High,Physical
+1473,Disordered Breathing,Yes,Moderate,High,No
+1474,Normal,Yes,Low,Low,No
+1475,Normal,Yes,Interrupted,Low,No
+1476,Normal,Yes,Interrupted,Moderate,No
+1477,Normal,Yes,Low,Low,No
+1478,Insomnia,No,High,High,Physical
+1479,Normal,No,Moderate,Moderate,No
+1480,RLS,Yes,High,High,Verbal
+1481,Normal,Yes,Interrupted,Moderate,No
+1482,Normal,Yes,Moderate,Moderate,No
+1483,Insomnia,No,High,High,Sexual
+1484,Insomnia,Yes,High,High,Physical
+1485,RLS,No,High,High,Verbal
+1486,RLS,Yes,High,High,Verbal
+1487,RLS,No,High,High,Verbal
+1488,Disordered Breathing,No,Moderate,High,No
+1489,Normal,Yes,Interrupted,Moderate,No
+1490,RLS,Yes,High,High,Verbal
+1491,Normal,No,Moderate,Moderate,No
+1492,Normal,Yes,Interrupted,Low,No
+1493,RLS,No,High,High,Verbal
+1494,RLS,No,High,High,Verbal
+1495,Insomnia,Yes,High,High,Physical
+1496,Insomnia,No,High,High,Sexual
+1497,Insomnia,Yes,High,High,Economic
+1498,RLS,Yes,High,High,Verbal
+1499,RLS,No,High,High,Verbal
+1500,Normal,Yes,Interrupted,Moderate,No
